@@ -1,0 +1,20 @@
+{
+  "name": "token-counter",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "openai.chatgpt",
+        "ms-python.python"
+      ]
+    }
+  },
+  "runArgs": [
+    "--cap-add=SYS_ADMIN"
+  ],
+  "securityOpt": [
+    "seccomp=unconfined"
+  ],
+}
