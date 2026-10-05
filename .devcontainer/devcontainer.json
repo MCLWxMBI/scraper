@@ -12,9 +12,8 @@
     }
   },
   "runArgs": [
-    "--cap-add=SYS_ADMIN"
-  ],
-  "securityOpt": [
+    "--cap-add=SYS_ADMIN",
+    "--security-opt",
     "seccomp=unconfined"
-  ],
+  ]
 }
