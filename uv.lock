@@ -1070,18 +1070,20 @@ dependencies = [
     { name = "pdfplumber" },
     { name = "playwright" },
     { name = "psycopg" },
+    { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "sqlalchemy" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "anthropic", specifier = ">=0.122.0" },
+    { name = "anthropic", specifier = ">=1.0.0" },
     { name = "beautifulsoup4", specifier = ">=4.15.0" },
     { name = "matplotlib", specifier = ">=3.11.1" },
     { name = "pdfplumber", specifier = ">=0.11.10" },
     { name = "playwright", specifier = ">=1.55.0" },
     { name = "psycopg", specifier = ">=3.3.5" },
+    { name = "pydantic", specifier = ">=2.0.0" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
     { name = "sqlalchemy", specifier = ">=2.0.52" },
 ]
