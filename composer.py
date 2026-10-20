@@ -1,7 +1,7 @@
-"""Traverse indexes, extract articles, and save Claude-structured JSON in .txt files.
+"""Traverse active database indexes and save validated opportunities to PostgreSQL.
 
 Run ``uv run python composer.py`` or use ``--index NAME --limit 1`` for a small
-development run. Output files are overwritten; collection history is not stored.
+development run. Use --txt for JSON-array .txt output instead. History is not tracked.
 ANTHROPIC_API_KEY and CLAUDE_MODEL can be supplied in the project's .env file.
 """
 
@@ -15,15 +15,22 @@ import re
 import sys
 import unicodedata
 from collections.abc import Iterable
+from contextlib import ExitStack
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import Literal
 
 from anthropic import Anthropic
-from dotenv import load_dotenv
+import psycopg
 from playwright.sync_api import Browser, sync_playwright
 
 import helpers
 import traverse
+from database import (
+    DatabaseError, check_opportunity_table, connect_database,
+    load_active_indexes, load_environment,
+)
+from opportunity_storage import OpportunityStorageError, save_opportunity
 from structuring import (
     CLAUDE_TIMEOUT_SECONDS,
     InvalidListingError,
@@ -70,15 +77,21 @@ def compose_indexes(
     *,
     client: Anthropic,
     model: str,
+    output_mode: Literal['db', 'txt'] = 'db',
+    connection: psycopg.Connection | None = None,
 ) -> int:
-    """Write valid records per index and continue after invalid listings or errors.
+    """Save validated records to the selected destination and continue on errors.
 
     The caller owns the browser and API client. Helper Source objects are passed
     unchanged to extraction. Missing deadlines are normal invalid results; API,
-    traversal, extraction, file errors and slug collisions cause a nonzero exit.
+    traversal, extraction, database/file errors and slug collisions cause a nonzero exit.
     """
     if limit is not None and limit <= 0:
         raise ValueError('limit must be a positive integer')
+    if output_mode not in {'db', 'txt'}:
+        raise ValueError('output_mode must be db or txt')
+    if output_mode == 'db' and connection is None:
+        raise ValueError('Database output requires a connection')
     output_dir = Path(output_dir)
     completed = failed = empty = skipped = extracted = valid = invalid = extraction_failed = 0
     identities: dict[str, str] = {}
@@ -93,12 +106,14 @@ def compose_indexes(
         index_failed = False
         index_invalid = 0
         records: list[dict] = []
-        print(f'{name}: traversing; output={path}', flush=True)
+        destination = str(path) if output_mode == 'txt' else 'PostgreSQL'
+        print(f'{name}: traversing; output={destination}', flush=True)
         if limit is not None:
             print(f'{name}: DEVELOPMENT LIMIT: at most {limit} listings', flush=True)
         try:
-            output_dir.mkdir(parents=True, exist_ok=True)
-            _write_records(path, records)
+            if output_mode == 'txt':
+                output_dir.mkdir(parents=True, exist_ok=True)
+                _write_records(path, records)
             try:
                 sources = traverse.traverse_index(name, url, browser)
             except Exception as exc:
@@ -159,7 +174,16 @@ def compose_indexes(
                         continue
 
                     record = opportunity.to_record()
-                    _write_records(path, [*records, record])
+                    if output_mode == 'db':
+                        try:
+                            save_opportunity(connection, opportunity)
+                        except OpportunityStorageError as exc:
+                            index_failed = True
+                            print(f'{name}: DATABASE FAILED: {opportunity.id}: {exc}',
+                                  file=sys.stderr, flush=True)
+                            continue
+                    else:
+                        _write_records(path, [*records, record])
                     records.append(record)
                     identities[identifier] = source_url
                     valid += 1
@@ -173,7 +197,7 @@ def compose_indexes(
         else:
             completed += 1
         print(f'{name}: {"FAILED" if index_failed else "COMPLETE"}: '
-              f'{len(records)} valid, {index_invalid} invalid; output={path}', flush=True)
+              f'{len(records)} valid, {index_invalid} invalid; output={destination}', flush=True)
 
     print(
         f'Summary: {completed} indexes completed ({empty} empty), {failed} indexes failed, '
@@ -197,36 +221,58 @@ def _positive_int(value: str) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--index', metavar='NAME', help='Exact index name (case-insensitive)')
-    parser.add_argument('--output-dir', type=Path, default=Path('output'), help='JSON text file directory (default: output/)')
+    parser.add_argument('--txt', action='store_true', help='Write JSON-array .txt files instead of opportunities to PostgreSQL')
+    parser.add_argument('--output-dir', type=Path, help='Text output directory with --txt (default: output/)')
     parser.add_argument('--limit', type=_positive_int, metavar='N', help='Process at most N listings per index for development')
     parser.add_argument('--model', metavar='MODEL', help='Claude model ID (otherwise use CLAUDE_MODEL)')
     args = parser.parse_args(argv)
 
-    indexes = traverse.INDEXES
-    if args.index:
-        indexes = [(name, url) for name, url in indexes if name.casefold() == args.index.casefold()]
-        if not indexes:
-            parser.error('Unknown index name. Use one of: ' + ', '.join(name for name, _ in traverse.INDEXES))
+    if args.output_dir is not None and not args.txt:
+        parser.error('--output-dir requires --txt')
     if args.model is not None and not args.model.strip():
         parser.error('--model must not be empty')
 
     try:
-        load_dotenv(dotenv_path=Path(__file__).resolve().with_name('.env'), override=False)
-        api_key = os.getenv('ANTHROPIC_API_KEY', '').strip()
-        model = (args.model or os.getenv('CLAUDE_MODEL', '')).strip()
-        if not api_key:
-            raise ValueError('Set ANTHROPIC_API_KEY in .env or the environment')
-        if not model:
-            raise ValueError('Set CLAUDE_MODEL in .env or the environment, or pass --model')
+        load_environment()
+        with ExitStack() as resources:
+            connection = resources.enter_context(connect_database(autocommit=True))
+            indexes = load_active_indexes(connection)
+            if args.index:
+                active_names = [name for name, _ in indexes]
+                indexes = [(name, url) for name, url in indexes
+                           if name.casefold() == args.index.casefold()]
+                if not indexes:
+                    parser.error('Unknown or inactive index name. Active indexes: ' + ', '.join(active_names))
+            if not indexes:
+                print('No active indexes; nothing to collect.', flush=True)
+                return 0
+            if args.txt:
+                connection.close()
+                connection = None
+            else:
+                check_opportunity_table(connection)
+            api_key = os.getenv('ANTHROPIC_API_KEY', '').strip()
+            model = (args.model or os.getenv('CLAUDE_MODEL', '')).strip()
+            if not api_key:
+                raise ValueError('Set ANTHROPIC_API_KEY in .env or the environment')
+            if not model:
+                raise ValueError('Set CLAUDE_MODEL in .env or the environment, or pass --model')
 
-        # This module's listing-level retry budget is the only API retry layer.
-        with Anthropic(api_key=api_key, max_retries=0, timeout=CLAUDE_TIMEOUT_SECONDS) as client:
-            with sync_playwright() as playwright:
-                browser = playwright.chromium.launch(headless=True)
-                try:
-                    return compose_indexes(indexes, browser, args.output_dir, args.limit, client=client, model=model)
-                finally:
-                    browser.close()
+            # This module's listing-level retry budget is the only API retry layer.
+            with Anthropic(api_key=api_key, max_retries=0, timeout=CLAUDE_TIMEOUT_SECONDS) as client:
+                with sync_playwright() as playwright:
+                    browser = playwright.chromium.launch(headless=True)
+                    try:
+                        return compose_indexes(
+                            indexes, browser, args.output_dir or Path('output'), args.limit,
+                            client=client, model=model, output_mode='txt' if args.txt else 'db',
+                            connection=connection,
+                        )
+                    finally:
+                        browser.close()
+    except psycopg.Error:
+        print('Composer failed: database operation failed.', file=sys.stderr, flush=True)
+        return 1
     except Exception as exc:
         print(f'Composer failed: {_error(exc)}', file=sys.stderr, flush=True)
         return 1

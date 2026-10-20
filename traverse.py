@@ -1,4 +1,4 @@
-"""Discover source pages without extracting text or persisting collection state.
+"""Discover source pages for active database indexes without extracting text.
 
 Run ``uv run python traverse.py`` or select one index with ``--index NAME``.
 """
@@ -15,10 +15,14 @@ from dataclasses import dataclass
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
 from bs4 import BeautifulSoup, Tag
+import psycopg
 from playwright.sync_api import Browser, Page, sync_playwright
 
 import helpers
+from database import DatabaseError, connect_database, load_active_indexes, load_environment
 
+# Historical local snapshots retained for reference/tests; CLI selection uses
+# load_active_indexes() exclusively and never falls back to these lists.
 INDEXES = [
     ('Legislative Assembly Environment and Planning Committee', 'https://www.parliament.vic.gov.au/epc-la'),
     ('Legislative Council Environment and Planning Committee', 'https://www.parliament.vic.gov.au/epc-lc'),
@@ -454,11 +458,24 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--index', metavar='NAME', help='Exact index name (case-insensitive)')
     args = parser.parse_args(argv)
-    selected = INDEXES
+    try:
+        load_environment()
+        with connect_database(autocommit=True) as connection:
+            selected = load_active_indexes(connection)
+    except DatabaseError as exc:
+        print(f'Traversal failed: {exc}', file=sys.stderr, flush=True)
+        return 1
+    except psycopg.Error:
+        print('Traversal failed: database operation failed.', file=sys.stderr, flush=True)
+        return 1
     if args.index:
-        selected = [(name, url) for name, url in INDEXES if name.casefold() == args.index.casefold()]
+        active_names = [name for name, _ in selected]
+        selected = [(name, url) for name, url in selected if name.casefold() == args.index.casefold()]
         if not selected:
-            parser.error('Unknown index name. Use one of: ' + ', '.join(name for name, _ in INDEXES))
+            parser.error('Unknown or inactive index name. Active indexes: ' + ', '.join(active_names))
+    if not selected:
+        print('No active indexes; nothing to collect.', flush=True)
+        return 0
     results: dict[str, list[helpers.Source]] = {}
     failures: dict[str, str] = {}
     with sync_playwright() as playwright:

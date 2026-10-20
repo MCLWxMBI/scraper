@@ -6,9 +6,10 @@ import argparse
 from pathlib import Path
 import sys
 
-from dotenv import load_dotenv
 import psycopg
 from psycopg import sql
+
+from database import DatabaseError, connect_database, load_environment
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -76,8 +77,8 @@ def seed_database(conn: psycopg.Connection) -> int:
         (SQL_DIR / 'seed_website_indexes.sql').read_text(encoding='utf-8')
     ).fetchall()
     if ([row[0] for row in expected] != list(range(1, 43))
-            or sum(row[3] for row in expected) != 40):
-        raise SetupError('The local seed must contain IDs 1–42, with 40 active rows.')
+            or sum(row[3] for row in expected) != 38):
+        raise SetupError('The local seed must contain IDs 1–42, with 38 active rows.')
     actual = conn.execute("""
         SELECT id, name, index_url, active, notes FROM public.website_indexes
         WHERE id = ANY(%s) ORDER BY id
@@ -105,10 +106,10 @@ def seed_database(conn: psycopg.Connection) -> int:
 def main(argv: list[str] | None = None) -> int:
     argparse.ArgumentParser(description=__doc__).parse_args(argv)
     try:
-        load_dotenv(PROJECT_DIR / '.env', override=False)
-        with psycopg.connect(connect_timeout=10) as conn:
+        load_environment()
+        with connect_database() as conn:
             extra = seed_database(conn)
-    except SetupError as exc:
+    except (SetupError, DatabaseError) as exc:
         print(f'Database setup failed: {exc}', file=sys.stderr)
         return 1
     except psycopg.Error as exc:
@@ -119,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, UnicodeError):
         print('Database setup failed: could not read local configuration or SQL files.', file=sys.stderr)
         return 1
-    print(f'Seeded 42 website indexes: 40 active, 2 inactive; preserved {extra} additional rows.')
+    print(f'Seeded 42 website indexes: 38 active, 4 inactive; preserved {extra} additional rows.')
     return 0
 
 
