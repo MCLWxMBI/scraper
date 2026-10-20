@@ -1,4 +1,4 @@
-# Opportunity index ordering
+# Source notes: opportunity index ordering
 
 Observed using Playwright on 6 October 2026. Inspected all 42 supplied URLs,
 including intermediate project hubs and up to two pagination/load-more states

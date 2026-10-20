@@ -1,8 +1,7 @@
-"""Reusable helpers for rendering websites and extracting readable text."""
+"""HTML/PDF extraction utilities for rendering websites and extracting readable text."""
 
 import re
 import unicodedata
-from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import urljoin
@@ -12,10 +11,7 @@ from bs4 import BeautifulSoup
 from playwright.sync_api import Browser, Page
 
 
-@dataclass(frozen=True)
-class Source:
-    name: str
-    url: str
+from scraper.models import Source
 
 
 VEWH_SOURCE_NAME = "Victorian Environmental Water Holder"
@@ -25,53 +21,6 @@ SARC_SOURCE_NAME = (
 JOINT_TREATIES_SOURCE_NAME = "Joint Treaties – environment-related only"
 PDF_SOURCE_NAMES = frozenset(
     {VEWH_SOURCE_NAME, SARC_SOURCE_NAME, JOINT_TREATIES_SOURCE_NAME}
-)
-
-
-SOURCES = (
-    Source("Parliament of Victoria – inquiries", "https://www.parliament.vic.gov.au/apartmentrenewables"),
-    Source("Melbourne Water", "https://letstalk.melbournewater.com.au/psp"),
-    Source("Greater Western Water", "https://www.gww.com.au/faults-works/upgrades-projects/planned-works-projects/romsey-water-filtration-plant"),
-    Source("South East Water", "https://southeastwater.com.au/faults-and-works/works/projects/aquarevo/welcome-to-aquarevo/project/"),
-    Source("Yarra Valley Water", "https://engage.yvw.com.au/projects"),
-    Source("Barwon Water", "https://www.barwonwater.vic.gov.au/about-us/news-and-events/news/major-water-storage-site-to-double-in-capacity"),
-    Source("Coliban Water", "https://connect.coliban.com.au/PS28"),
-    Source("East Gippsland Water", "https://egwater.vic.gov.au/community/news/share-your-thoughts-on-our-future-services"),
-    Source("Goulburn Valley Water", "https://watermatters.gvwater.vic.gov.au/shepparton-clear-water-storage-tank"),
-    Source("Gippsland Water", "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/new-treated-water-storage-traralgon"),
-    Source("Grampians Wimmera Mallee Water", "https://gwmwater.org.au/building-and-development/projects/current-projects/east-grampians-rural-pipeline/"),
-    Source("Lower Murray Water", "https://yoursay.lmw.vic.gov.au/price-submission-2028-2033"),
-    Source("North East Water", "https://haveyoursay.newater.com.au/projects"),
-    Source("South Gippsland Water", "https://www.sgwater.com.au/news/wosup-wonthaggi/"),
-    Source("Wannon Water", "https://engage.wannonwater.com.au/share-your-thoughts"),
-    Source("Western Port Water", "https://www.westernportwater.com.au/our-community/projects/current-projects/nextgenerationupgrade/"),
-    Source("Southern Rural Water", "https://www.srw.com.au/initiatives/projects/avon-valley-water-security-project"),
-    Source("Goulburn-Murray Water", "https://yoursay.gmwater.com.au/price-plan-2028"),
-    Source("Essential Services Commission", "https://www.esc.vic.gov.au/current-consultations"),
-    Source("Victorian Auditor-General's Office", "https://www.audit.vic.gov.au/annual-plan"),
-    Source("Commissioner for Environmental Sustainability Victoria", "https://www.ces.vic.gov.au/news/celebrate-national-science-week-2026"),
-    Source("Vic Catchments", "https://viccatchments.com.au/priority-projects/"),
-    Source(VEWH_SOURCE_NAME, "https://www.vewh.vic.gov.au/planning-and-reporting/seasonal-watering-plan"),
-    Source("Engage Victoria", "https://www.vic.gov.au/notice-preparation-regulatory-impact-statement-labour-hire-licensing-amendment-regulations-2026"),
-    Source("Department of Industry, Science and Resources", "https://consult.industry.gov.au/horizon-europe-implementation"),
-    Source("Productivity Commission", "https://www.pc.gov.au/inquiries-and-research/gst-reforms/"),
-    Source("Climate Change Authority", "https://consult.climatechangeauthority.gov.au/2026-apa-consultation-paper"),
-    Source("Australian Energy Market Commission", "https://www.aemc.gov.au/market-reviews-advice/electricity-network-regulation-review-package-2"),
-    Source("Department of Climate Change, Energy, the Environment and Water", "https://consult.dcceew.gov.au/australia-singapore-transboundary-carbon-capture-and-sequestration-bilateral-instrument"),
-    Source("Clean Energy Regulator", "https://cer.gov.au/news-and-media/public-consultations"),
-    Source("Department of Infrastructure, Transport, Regional Development, Communications, Sport and the Arts", "https://www.infrastructure.gov.au/department/media/news/consultation-opens-new-aviation-disability-standards"),
-    Source("Legislative Assembly Environment and Planning Committee", "https://www.parliament.vic.gov.au/apartmentrenewables"),
-    Source("Legislative Council Environment and Planning Committee", "https://www.parliament.vic.gov.au/2026firesinquiry"),
-    Source(SARC_SOURCE_NAME, "https://www.legislation.vic.gov.au/bills/domestic-gas-choice-repeal-gas-appliance-ban-bill-2026"),
-    Source("Senate Environment and Communications", "https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Environment_and_Communications/AIdatacentres48P"),
-    Source("Senate Rural and Regional Affairs and Transport", "https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Rural_and_Regional_Affairs_and_Transport/"),
-    Source("House Climate Change, Energy, Environment and Water", "https://www.aph.gov.au/Parliamentary_Business/Committees/House/Climate_Change_Energy_Environment_and_Water/Solarpanelrecycling"),
-    Source("House Industry, Innovation and Science", "https://www.aph.gov.au/Parliamentary_Business/Committees/House/Industry_Innovation_and_Science/AustralianTyreIndustry"),
-    Source("House Regional Development, Infrastructure and Transport", "https://www.aph.gov.au/Parliamentary_Business/Committees/House/Regional_Development_Infrastructure_and_Transport/LocalGovernmentFunding"),
-    Source("House Primary Industries", "https://www.aph.gov.au/Parliamentary_Business/Committees/House/Primary_Industries/CriticalMinerals"),
-    Source("Joint Aboriginal and Torres Strait Islander Affairs", "https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Aboriginal_and_Torres_Strait_Islander_Affairs/Responsestoracism"),
-    Source(JOINT_TREATIES_SOURCE_NAME, "https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Treaties/2025CITESAmendments/Treaty_being_considered"),
-    Source("Joint Northern Australia", "https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Northern_Australia/Industries"),
 )
 
 

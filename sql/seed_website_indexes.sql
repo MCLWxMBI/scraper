@@ -1,6 +1,7 @@
 -- Source: https://github.com/MCLWxMBI/website/blob/main/seed.sql
 -- Upstream blob: 7c97d041ef7e00ab149c3464dfb52a8504b849e2
--- Values preserved from upstream; the runner owns the transaction.
+-- Local adjustments: IDs 14 (past projects) and 39 (blocked AEMC) are inactive.
+-- Other values are preserved from upstream; the runner owns the transaction.
 -- Return the expected values independently of INSERT RETURNING so verification
 -- also detects changes made by database triggers.
 WITH seed (id, name, index_url, active, notes) AS (
@@ -18,7 +19,7 @@ WITH seed (id, name, index_url, active, notes) AS (
   (11, 'Goulburn Valley Water', 'https://www.gvwater.vic.gov.au/projects', TRUE, NULL),
   (12, 'Gippsland Water', 'https://www.gippswater.com.au/outages-works-and-projects/major-projects', TRUE, NULL),
   (13, 'Grampians Wimmera Mallee Water - Current Projects', 'https://gwmwater.org.au/building-and-development/projects/current-projects/', TRUE, NULL),
-  (14, 'Grampians Wimmera Mallee Water - Past Projects', 'https://gwmwater.org.au/building-and-development/projects/past-projects/', TRUE, NULL),
+  (14, 'Grampians Wimmera Mallee Water - Past Projects', 'https://gwmwater.org.au/building-and-development/projects/past-projects/', FALSE, 'Past projects are excluded from collection.'),
   (15, 'Lower Murray Water', 'https://yoursay.lmw.vic.gov.au/projects', TRUE, NULL),
   (16, 'North East Water', 'https://haveyoursay.newater.com.au/projects', TRUE, NULL),
   (17, 'South Gippsland Water', 'https://www.sgwater.com.au/projects', TRUE, NULL),
@@ -43,7 +44,7 @@ WITH seed (id, name, index_url, active, notes) AS (
   (36, 'Department of Industry, Science and Resources', 'https://consult.industry.gov.au/', TRUE, NULL),
   (37, 'Productivity Commission', 'https://www.pc.gov.au/inquiries-and-research/', TRUE, NULL),
   (38, 'Climate Change Authority', 'https://consult.climatechangeauthority.gov.au/find-consultations', TRUE, NULL),
-  (39, 'Australian Energy Market Commission', 'https://www.aemc.gov.au/news-centre/submissions-to-inquiries', TRUE, NULL),
+  (39, 'Australian Energy Market Commission', 'https://www.aemc.gov.au/news-centre/submissions-to-inquiries', FALSE, 'Unable to access; HTTP 403 during traversal audit.'),
   (40, 'Department of Climate Change, Energy, the Environment and Water', 'https://consult.dcceew.gov.au/find-consultations', TRUE, NULL),
   (41, 'Clean Energy Regulator', 'https://cer.gov.au/news-and-media/public-consultations', TRUE, NULL),
   (42, 'Department of Infrastructure, Transport, Regional Development, Communications, Sport and the Arts', 'https://www.infrastructure.gov.au/have-your-say', TRUE, NULL)

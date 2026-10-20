@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
+from dataclasses import dataclass
 from typing import Annotated, Literal, Self
 from urllib.parse import urlsplit
 
@@ -163,3 +164,11 @@ class Opportunity(OpportunityFields):
             if record[field] is None:
                 del record[field]
         return record
+
+
+@dataclass(frozen=True)
+class Source:
+    """A discovered URL and its extraction-routing name."""
+
+    name: str
+    url: str
