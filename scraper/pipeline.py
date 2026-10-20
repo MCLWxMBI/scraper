@@ -1,37 +1,32 @@
 """Traverse active database indexes and save validated opportunities to PostgreSQL.
 
-Run ``uv run python composer.py`` or use ``--index NAME --limit 1`` for a small
-development run. Use --txt for JSON-array .txt output instead. History is not tracked.
+Run ``uv run python main.py`` or use ``--index NAME --limit 1`` for a small
+development run. Use --text for JSON-array .txt output instead. History is not tracked.
 ANTHROPIC_API_KEY and CLAUDE_MODEL can be supplied in the project's .env file.
 """
 
 from __future__ import annotations
 
 import argparse
-import hashlib
-import json
 import os
-import re
 import sys
-import unicodedata
 from collections.abc import Iterable
 from contextlib import ExitStack
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from typing import Literal
 
 from anthropic import Anthropic
 import psycopg
 from playwright.sync_api import Browser, sync_playwright
 
-import helpers
-import traverse
-from database import (
-    DatabaseError, check_opportunity_table, connect_database,
-    load_active_indexes, load_environment,
+from scraper import extraction, discovery, text_export
+from scraper.config import load_environment
+from scraper.db.connection import DatabaseError, connect_database
+from scraper.db.indexes import load_active_indexes
+from scraper.db.opportunities import (
+    OpportunityStorageError, check_opportunity_table, save_opportunity,
 )
-from opportunity_storage import OpportunityStorageError, save_opportunity
-from structuring import (
+from scraper.structuring import (
     CLAUDE_TIMEOUT_SECONDS,
     InvalidListingError,
     article_slug,
@@ -40,33 +35,8 @@ from structuring import (
 )
 
 
-def index_filename(name: str, url: str) -> str:
-    """Produce a portable filename, distinguishing indexes with similar names."""
-    ascii_name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode()
-    slug = re.sub(r'[^a-z0-9]+', '-', ascii_name.casefold()).strip('-')[:80] or 'index'
-    suffix = hashlib.sha256(url.encode('utf-8')).hexdigest()[:12]
-    return f'{slug}-{suffix}.txt'
-
-
 def _error(exc: Exception) -> str:
     return f'{type(exc).__name__}: {exc}'[:600]
-
-
-def _write_records(path: Path, records: list[dict]) -> None:
-    """Atomically save a complete JSON array, retaining the last successful save."""
-    temporary: Path | None = None
-    try:
-        with NamedTemporaryFile(mode='w', encoding='utf-8', newline='\n',
-                                dir=path.parent, prefix=f'.{path.name}.', suffix='.tmp',
-                                delete=False) as output:
-            temporary = Path(output.name)
-            json.dump(records, output, ensure_ascii=False, indent=2, allow_nan=False)
-            output.write('\n')
-            output.flush()
-        temporary.replace(path)
-    finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
 
 
 def compose_indexes(
@@ -94,18 +64,28 @@ def compose_indexes(
         raise ValueError('Database output requires a connection')
     output_dir = Path(output_dir)
     completed = failed = empty = skipped = extracted = valid = invalid = extraction_failed = 0
+    source_failures = 0
     identities: dict[str, str] = {}
 
     for name, url in indexes:
-        if traverse.is_skipped(url):
+        if discovery.is_skipped(url):
             skipped += 1
             print(f'{name}: SKIPPED (past projects)', flush=True)
             continue
 
-        path = output_dir / index_filename(name, url)
+        path = output_dir / text_export.index_filename(name, url)
         index_failed = False
         index_invalid = 0
+        index_source_failures = 0
         records: list[dict] = []
+
+        def source_failed(source_url: str, reason: str) -> None:
+            nonlocal source_failures, index_source_failures
+            source_failures += 1
+            index_source_failures += 1
+            if output_mode == 'txt':
+                print(f'FAIL {source_url} — {reason}', file=sys.stderr, flush=True)
+
         destination = str(path) if output_mode == 'txt' else 'PostgreSQL'
         print(f'{name}: traversing; output={destination}', flush=True)
         if limit is not None:
@@ -113,12 +93,12 @@ def compose_indexes(
         try:
             if output_mode == 'txt':
                 output_dir.mkdir(parents=True, exist_ok=True)
-                _write_records(path, records)
+                text_export.write_records(path, records)
             try:
-                sources = traverse.traverse_index(name, url, browser)
+                sources = discovery.traverse_index(name, url, browser)
             except Exception as exc:
                 index_failed = True
-                print(f'{name}: TRAVERSAL FAILED: {_error(exc)}', file=sys.stderr, flush=True)
+                print(f'{name}: TRAVERSAL FAILED: {_error(exc)} [index={url}]', file=sys.stderr, flush=True)
             else:
                 selected = sources if limit is None else sources[:limit]
                 print(f'{name}: {len(sources)} listings discovered, {len(selected)} selected', flush=True)
@@ -131,13 +111,15 @@ def compose_indexes(
                 for number, source in enumerate(selected, start=1):
                     print(f'{name}: extracting {number}/{len(selected)}: {source.url}', flush=True)
                     try:
-                        text = helpers.process_single_source(source, browser)
+                        text = extraction.process_single_source(source, browser)
                         if not text.strip():
                             raise ValueError('Extraction returned empty text')
                     except Exception as exc:
                         extraction_failed += 1
                         index_failed = True
-                        print(f'{name}: EXTRACTION FAILED: {source.url}: {_error(exc)}', file=sys.stderr, flush=True)
+                        source_failed(source.url, f'extraction: {_error(exc)}')
+                        if output_mode == 'db':
+                            print(f'{name}: EXTRACTION FAILED: {source.url}: {_error(exc)}', file=sys.stderr, flush=True)
                         continue
                     extracted += 1
 
@@ -147,14 +129,18 @@ def compose_indexes(
                     except ValueError as exc:
                         invalid += 1
                         index_invalid += 1
-                        print(f'{name}: INVALID: {source.url}: {exc}', file=sys.stderr, flush=True)
+                        source_failed(source.url, str(exc))
+                        if output_mode == 'db':
+                            print(f'{name}: INVALID: {source.url}: {exc}', file=sys.stderr, flush=True)
                         continue
                     if identifier in identities and identities[identifier] != source_url:
                         invalid += 1
                         index_invalid += 1
                         index_failed = True
-                        print(f'{name}: INVALID: {source.url}: slug collision for {identifier!r} '
-                              f'with {identities[identifier]}', file=sys.stderr, flush=True)
+                        reason = f'slug collision for {identifier!r} with {identities[identifier]}'
+                        source_failed(source.url, reason)
+                        if output_mode == 'db':
+                            print(f'{name}: INVALID: {source.url}: {reason}', file=sys.stderr, flush=True)
                         continue
 
                     print(f'{name}: structuring with Claude: {source.url}', flush=True)
@@ -164,13 +150,17 @@ def compose_indexes(
                         invalid += 1
                         index_invalid += 1
                         index_failed = index_failed or exc.operational_failure
-                        print(f'{name}: INVALID: {source.url}: {exc}', file=sys.stderr, flush=True)
+                        source_failed(source.url, str(exc))
+                        if output_mode == 'db':
+                            print(f'{name}: INVALID: {source.url}: {exc}', file=sys.stderr, flush=True)
                         continue
                     except Exception as exc:
                         invalid += 1
                         index_invalid += 1
                         index_failed = True
-                        print(f'{name}: INVALID: {source.url}: {_error(exc)}', file=sys.stderr, flush=True)
+                        source_failed(source.url, _error(exc))
+                        if output_mode == 'db':
+                            print(f'{name}: INVALID: {source.url}: {_error(exc)}', file=sys.stderr, flush=True)
                         continue
 
                     record = opportunity.to_record()
@@ -179,15 +169,23 @@ def compose_indexes(
                             save_opportunity(connection, opportunity)
                         except OpportunityStorageError as exc:
                             index_failed = True
+                            source_failed(source.url, str(exc))
                             print(f'{name}: DATABASE FAILED: {opportunity.id}: {exc}',
                                   file=sys.stderr, flush=True)
                             continue
                     else:
-                        _write_records(path, [*records, record])
+                        try:
+                            text_export.write_records(path, [*records, record])
+                        except (OSError, UnicodeError) as exc:
+                            source_failed(source.url, f'output save: {_error(exc)}')
+                            raise
                     records.append(record)
                     identities[identifier] = source_url
                     valid += 1
-                    print(f'{name}: VALID: {opportunity.id}', flush=True)
+                    if output_mode == 'txt':
+                        print(f'PASS {source.url}', flush=True)
+                    else:
+                        print(f'{name}: VALID: {opportunity.id}', flush=True)
         except (OSError, UnicodeError) as exc:
             index_failed = True
             print(f'{name}: FILE FAILED: {path}: {_error(exc)}', file=sys.stderr, flush=True)
@@ -196,15 +194,16 @@ def compose_indexes(
             failed += 1
         else:
             completed += 1
+        counts = (f'{len(records)} PASS, {index_source_failures} FAIL' if output_mode == 'txt'
+                  else f'{len(records)} valid, {index_invalid} invalid')
         print(f'{name}: {"FAILED" if index_failed else "COMPLETE"}: '
-              f'{len(records)} valid, {index_invalid} invalid; output={destination}', flush=True)
+              f'{counts}; output={destination}', flush=True)
 
-    print(
-        f'Summary: {completed} indexes completed ({empty} empty), {failed} indexes failed, '
-        f'{skipped} skipped; {extracted} listings extracted, {valid} valid, {invalid} invalid, '
-        f'{extraction_failed} extraction failures',
-        flush=True,
-    )
+    counts = (f'{valid} PASS, {source_failures} FAIL' if output_mode == 'txt'
+              else f'{extracted} listings extracted, {valid} valid, {invalid} invalid, '
+                   f'{extraction_failed} extraction failures')
+    print(f'Summary: {completed} indexes completed ({empty} empty), {failed} indexes failed, '
+          f'{skipped} skipped; {counts}', flush=True)
     return int(bool(failed))
 
 
@@ -221,14 +220,15 @@ def _positive_int(value: str) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--index', metavar='NAME', help='Exact index name (case-insensitive)')
-    parser.add_argument('--txt', action='store_true', help='Write JSON-array .txt files instead of opportunities to PostgreSQL')
-    parser.add_argument('--output-dir', type=Path, help='Text output directory with --txt (default: output/)')
+    parser.add_argument('--text', '--txt', dest='text', action='store_true',
+                        help='Write JSON-array .txt files and print source PASS/FAIL outcomes')
+    parser.add_argument('--output-dir', type=Path, help='Text output directory with --text (default: output/)')
     parser.add_argument('--limit', type=_positive_int, metavar='N', help='Process at most N listings per index for development')
     parser.add_argument('--model', metavar='MODEL', help='Claude model ID (otherwise use CLAUDE_MODEL)')
     args = parser.parse_args(argv)
 
-    if args.output_dir is not None and not args.txt:
-        parser.error('--output-dir requires --txt')
+    if args.output_dir is not None and not args.text:
+        parser.error('--output-dir requires --text')
     if args.model is not None and not args.model.strip():
         parser.error('--model must not be empty')
 
@@ -246,7 +246,7 @@ def main(argv: list[str] | None = None) -> int:
             if not indexes:
                 print('No active indexes; nothing to collect.', flush=True)
                 return 0
-            if args.txt:
+            if args.text:
                 connection.close()
                 connection = None
             else:
@@ -265,7 +265,7 @@ def main(argv: list[str] | None = None) -> int:
                     try:
                         return compose_indexes(
                             indexes, browser, args.output_dir or Path('output'), args.limit,
-                            client=client, model=model, output_mode='txt' if args.txt else 'db',
+                            client=client, model=model, output_mode='txt' if args.text else 'db',
                             connection=connection,
                         )
                     finally:

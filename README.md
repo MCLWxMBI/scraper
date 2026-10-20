@@ -1,24 +1,31 @@
 # scraper
 
-Open the project with **Dev Containers: Rebuild and Reopen in Container** in VS Code
-to start the Python workspace and PostgreSQL 18. The app waits for the database
-health check before starting. Database data persists in the `postgres-data` Docker
-volume across container rebuilds.
+Collect Victorian and Commonwealth environmental opportunities from active
+website indexes, extract HTML/PDF content, and validate Claude responses before
+saving them to PostgreSQL or JSON-array text files.
 
-Configure `DATABASE_URL` in `.env` for local development inside the app
-container:
+Open the project using **Dev Containers: Rebuild and Reopen in Container**. The
+Compose app waits for PostgreSQL 18 to become healthy. Database data persists in
+the `postgres-data` volume across rebuilds.
+
+## Configuration and setup
+
+Copy `.env.example` to `.env` and configure:
 
 ```dotenv
 DATABASE_URL=postgresql://scraper:scraper@postgres:5432/scraper
+ANTHROPIC_API_KEY=your-api-key
+CLAUDE_MODEL=your-structured-output-model
 ```
 
-The database port is available within the Compose network. All commands load
-`.env` beside the scripts with `override=False`: existing environment variables
-win. A missing or blank `DATABASE_URL` is an error; application connections do
-not fall back to the individual `PG*` settings.
+The URL above works inside the local app container. All commands load the
+repository-root `.env` using `override=False`, regardless of the working
+directory. Supplied environment variables take precedence. A missing or blank
+`DATABASE_URL` is an error; connections do not fall back to individual `PG*`
+variables. `.env` is ignored by Git and credentials are not printed.
 
-In a future GitHub Actions workflow, explicitly map repository secrets into the
-step's environment (no `.env` file is required):
+A future GitHub Actions workflow can invoke the root `main.py` and explicitly
+map repository secrets into the step environment:
 
 ```yaml
 env:
@@ -27,183 +34,136 @@ env:
   CLAUDE_MODEL: ${{ secrets.CLAUDE_MODEL }}
 ```
 
-The Actions database URL must point to a database reachable from that runner;
-the `postgres` hostname above belongs to the local Compose network.
+That database must be reachable from the runner; `postgres` above is a local
+Compose hostname. A workflow has not been added yet.
 
-Create the database tables and seed the website index catalogue manually:
-
-```bash
-uv run python setup_database.py
-```
-
-The command connects using `DATABASE_URL`. It requires no Claude credentials and
-works with the existing persistent database volume.
-SQL files are resolved relative to the script, so it can also be invoked by its
-absolute path from another directory.
-
-Setup applies `sql/schema.sql`, which creates both `public.website_indexes` and
-`public.opportunities`. The index table uses the website project's schema and
-upserts the 42 records from a reviewed local copy of its
-[seed.sql](https://github.com/MCLWxMBI/website/blob/main/seed.sql): 38 active and
-4 inactive. Rerunning restores every seed-owned field for IDs 1–42, including
-locally edited activation flags, while preserving additional rows. Keep those
-IDs reserved for the seed. Updating the upstream seed is an explicit code change;
-the command does not fetch SQL from GitHub at runtime.
-
-Existing index tables must match the expected columns, defaults, primary key,
-and ID sequence settings. Setup verifies stored seed values before committing. Errors
-roll back table creation and row changes and return exit code `1`; success
-returns `0` with a summary. Run setup without concurrent catalogue writers. The
-ID sequence is advanced as needed and never lowered; sequence changes can leave
-gaps after rollback.
-
-The opportunities table follows the
-[opportunity contract](https://github.com/MCLWxMBI/website/blob/main/docs/contracts.md#opportunity)
-and [persistence roadmap](https://github.com/MCLWxMBI/website/blob/main/docs/future-plans.md#opportunity-persistence).
-It stores the stable text ID, title, ordered `full_text TEXT[]`, official source
-URL and organisation, jurisdiction, nullable opening time, required deadline,
-`category TEXT[] NOT NULL`, nullable `tags TEXT[]`, optional summary, and optional
-`location JSONB`. Dates use `TIMESTAMPTZ`; API serialization must produce UTC
-timestamps ending in `Z` and map snake-case column names to camelCase fields.
-Status is derived from the dates rather than stored.
-
-SQL checks enforce required content, supported jurisdictions/categories, date
-order, nonempty arrays, trimmed array elements, case-insensitive uniqueness of
-category/tag labels, and the basic location shape. No tags means SQL `NULL`,
-not an empty array. Full HTTPS URL validation, plain-text validation, canonical
-`Invite-only` spelling, and GeoJSON coordinate/ring validation belong to the
-application's opportunity validation before inserts. Setup creates the table
-but does not populate it. Composer populates it during database-mode runs. Reruns preserve
-existing opportunities; `CREATE TABLE IF NOT EXISTS` does not migrate an existing
-opportunities schema.
-
-`opportunity_storage.py` provides `opportunity_parameters(opportunity)` and
-`save_opportunity(connection, opportunity)` for validated `Opportunity` models.
-The mapper converts camelCase model fields to SQL column names, UTC timestamp
-strings to timezone-aware datetimes, and location to Psycopg `Jsonb`. Absent
-optional fields become SQL `NULL`.
-
-After schema setup, callers can persist a validated model using the existing
-`DATABASE_URL` configuration:
-
-```python
-from database import connect_database, load_environment
-from opportunity_storage import save_opportunity
-
-load_environment()
-with connect_database(autocommit=True) as connection:
-    save_opportunity(connection, opportunity)  # A validated Opportunity model
-```
-
-The writer inserts or updates by opportunity ID only when the stored source URL
-matches. A different URL using the same ID raises `OpportunityStorageError`
-without overwriting the stored record. Each call runs in a transaction; inside
-an existing transaction it uses a savepoint and leaves the outer commit to the
-caller. The caller owns the connection and environment loading. Database error
-messages are sanitized. Composer uses this writer by default.
-
-The local seed disables Barwon Water, VEWH, AEMC, and GWMWater past projects.
-IDs 14 and 39 are intentional adjustments to the upstream seed to reflect the
-existing past-project and blocked-site exclusions. Rerun setup to apply these
-flags to an existing database. Collection never automatically runs setup or
-reseeds the catalogue.
-
-Discover source pages using synchronous Playwright:
+Install dependencies and initialize the database explicitly:
 
 ```bash
 uv sync --locked
 uv run playwright install --with-deps chromium
-uv run python traverse.py
-uv run python traverse.py --index "Melbourne Water"
+uv run python -m scraper setup-db
 ```
 
-Both commands query `public.website_indexes WHERE active = TRUE` at startup,
-ordered by case-insensitive name and ID. `--index` matches a complete active
-name, ignoring case; unknown or inactive names are argument errors. Edit
-activation flags in the database to control collection. The historical Python
-lists are no longer used for command-line index selection. Past-project route
-safeguards remain in traversal.
+Setup needs no Claude credentials. It applies `sql/schema.sql` and upserts all
+42 index records: **38 active and 4 inactive**. The local seed disables Barwon
+Water, VEWH, AEMC, and GWMWater past projects; IDs 14 and 39 intentionally differ
+from the [upstream seed](https://github.com/MCLWxMBI/website/blob/main/seed.sql).
 
-Database lookup failures stop the run, with no fallback to local lists. No
-active indexes means a successful no-op before browser or Claude startup.
-`traverse.py` prints discovered URLs; `composer.py` processes those discoveries.
+Rerunning setup restores seed-owned values for IDs 1–42, including activation
+flags, and preserves additional rows and existing opportunities. Existing index
+schemas are checked before seeding. Table/row changes roll back on error;
+sequence advancement never moves backward but may leave gaps after rollback.
+Run setup without concurrent catalogue writers. Setup does not migrate an
+existing opportunities schema. Collection never creates tables or reseeds.
 
-Traversal discovers open/upcoming consultations and current project candidates.
-News, bills, and uncertain project candidates still need eligibility and relevance
-checks downstream. Results are kept in memory and printed; there is no processing
-history checkpoint or scheduled workflow yet. A failed index
-is reported separately from an empty listing; the remaining indexes continue and
-the process exits nonzero.
+## Commands
 
-Use the existing helpers after discovery:
-
-```python
-from playwright.sync_api import sync_playwright
-from helpers import process_single_source
-from traverse import traverse_index
-
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    try:
-        sources = traverse_index(
-            "Melbourne Water", "https://letstalk.melbournewater.com.au/projects", browser
-        )
-        for source in sources:
-            text = process_single_source(source, browser)
-    finally:
-        browser.close()
-```
-
-Collect listings, extract HTML/PDF text, and ask Claude for structured opportunity
-metadata using Pydantic. Copy `.env.example` to `.env` and fill in:
-
-```dotenv
-ANTHROPIC_API_KEY=your-api-key
-CLAUDE_MODEL=claude-sonnet-4-6
-```
-
-`python-dotenv` loads `.env` beside `composer.py`, regardless of the working
-directory. Existing environment variables take precedence; `.env` is ignored by
-Git. Both the key and a model supporting structured outputs must be configured
-before running. `--model MODEL` overrides `CLAUDE_MODEL`.
-
-Save validated opportunities to PostgreSQL by default, or select text output:
+Run these commands from the repository root:
 
 ```bash
-uv run python composer.py
-uv run python composer.py --index "Melbourne Water" --limit 1
-uv run python composer.py --txt --output-dir /tmp/scraper-output --limit 1
+# Discover source URLs without extraction or Claude calls
+uv run python -m scraper discover
+uv run python -m scraper discover --index "Melbourne Water"
+
+# Collect and save validated opportunities to PostgreSQL
+uv run python main.py
+uv run python main.py --index "Melbourne Water" --limit 1
+
+# Save JSON-array .txt files and print source PASS/FAIL results
+uv run python main.py --text --index "Melbourne Water" --limit 1
+uv run python main.py --text --output-dir /tmp/scraper-output
 ```
 
-The composer reads active indexes from PostgreSQL and passes each discovered source
-unchanged to the existing HTML/PDF extraction helpers. Each extracted article is
-then passed to Claude. `--index` matches a complete name, ignoring case. `--limit`
-is a positive maximum per index for development; limited runs are labeled in the
-terminal. Both output modes require `DATABASE_URL` to load active indexes.
-`--output-dir` requires `--txt`.
+`--txt` remains an alias for `--text`. `--output-dir` requires text mode and
+defaults to `output/`. `--model MODEL` overrides `CLAUDE_MODEL`. For a command
+launched elsewhere, use `uv run --directory /path/to/scraper ...`, or invoke the
+absolute path to `main.py` with the project interpreter.
 
-Default mode checks opportunity-table access before collection, then commits each
-validated opportunity independently. Existing records with the same ID and URL
-are updated; cross-URL ID collisions fail without overwriting data. Database
-mode creates no output files or directories. Empty and invalid-only indexes
-leave existing records untouched. Write failures are reported, cause exit `1`,
-and do not count as successes; remaining listings continue.
+Both discovery and collection first query `website_indexes WHERE active = TRUE`,
+ordered by case-insensitive name and ID. `--index` matches a complete active name,
+ignoring case. Unknown/inactive names are argument errors. Empty active results
+exit successfully before browser/Claude startup. Query failures stop the run;
+there is no hard-coded fallback list. Past-project discovery safeguards remain.
 
-`--txt` closes its database connection after index selection and performs no
-opportunity writes.
+`--limit N` currently selects at most N sources per index **after complete
+source discovery**. It does not yet limit pagination. Limited work is labeled.
+See the [roadmap](docs/roadmap.md) for planned discovery budgets and history.
 
-With `--txt`, files are saved under `output/` by default, which is ignored by Git. Each UTF-8
-filename contains a sanitized index name and a short hash of its URL. Each `.txt`
-contains a JSON array of accepted opportunity records, matching the
-[ECHO opportunity contract](https://github.com/MCLWxMBI/website/blob/main/docs/contracts.md#opportunity).
-It contains JSON only, with no text headers or error sections. Claude minimally
-cleans `fullText` into ordered paragraphs, preserving the source wording and
-detail while fixing obvious formatting artifacts. It also provides the title,
-publisher, jurisdiction, dates, categories, tags, a 20–30-word summary, and
-optional geography. Required nullable fields (`startDate` and `tags`) remain in
-the JSON; absent summary and location fields are omitted.
+## Runtime flow and file responsibilities
 
-For example, an index's text file has this structure:
+```mermaid
+flowchart TD
+    Main["main.py"] --> Pipeline["pipeline.py: collection"]
+    Commands["scraper/__main__.py"] --> Discovery["discovery.py: discover source URLs"]
+    Commands --> Setup["db/setup.py"]
+    Pipeline --> Config["config.py: paths and .env"]
+    Discovery --> Config
+    Setup --> Config
+    Config --> Connection["db/connection.py: DATABASE_URL"]
+    Connection --> Indexes["db/indexes.py: active indexes"]
+    Pipeline --> Discovery
+    Indexes --> Discovery
+    Discovery --> Sources["models.py: Source"]
+    Sources --> Extraction["extraction.py: rendered HTML / PDF text"]
+    Extraction --> Structuring["structuring.py: Claude and validation"]
+    Structuring --> Opportunity["models.py: Opportunity"]
+    Opportunity --> Database["db/opportunities.py: committed upsert"]
+    Opportunity --> Text["text_export.py: atomic JSON file"]
+    Setup --> Schema["sql/schema.sql"]
+    Setup --> Seed["sql/seed_website_indexes.sql"]
+```
+
+| File | Responsibility and flow |
+| --- | --- |
+| `main.py` | Root collection entry point for local runs and Actions; forwards arguments and returns the pipeline exit code. |
+| `scraper/__main__.py` | Routes `discover` to discovery and `setup-db` to explicit database setup. |
+| `scraper/__init__.py`, `scraper/db/__init__.py` | Define the application and database packages without running collection. |
+| `scraper/config.py` | Resolves repository-root `.env` and SQL paths; loads environment defaults without overriding supplied values. |
+| `scraper/models.py` | Defines immutable `Source` objects, opportunity fields, and validated geography/content models. |
+| `scraper/discovery.py` | Reads active indexes for its CLI, traverses supported listings and pagination, and returns original routing-aware Sources. |
+| `scraper/extraction.py` | Renders each source, waits for stable content, and extracts HTML text or the supported special PDFs. |
+| `scraper/structuring.py` | Calls Claude, validates the response, derives canonical source identity, and returns a complete Opportunity. |
+| `scraper/pipeline.py` | Owns the collection CLI and resource lifecycle; orchestrates discovery, extraction, validation, persistence, and terminal summaries. |
+| `scraper/text_export.py` | Generates stable per-index filenames and atomically replaces JSON-array text files. |
+| `scraper/db/connection.py` | Connects using DATABASE_URL with a bounded timeout and sanitized diagnostics. |
+| `scraper/db/indexes.py` | Retrieves all active index names/URLs in deterministic order. |
+| `scraper/db/opportunities.py` | Maps models to SQL parameters, checks table access, and transactionally upserts records while protecting against cross-URL slug collisions. |
+| `scraper/db/setup.py` | Applies schema, checks index-table compatibility, seeds and verifies records, and advances the ID sequence. |
+| `sql/schema.sql` | Defines website indexes, opportunities, and basic opportunity constraints. |
+| `sql/seed_website_indexes.sql` | Holds the reviewed, pinned index seed with documented local exclusions; returns expected values for verification. |
+
+Tests live in `tests/`. [Source notes](docs/source-notes.md) record discovery
+ordering findings; [the roadmap](docs/roadmap.md) records future work.
+`.agents/current-state.md` contains agent handoff information.
+
+## Persistence and text-mode results
+
+Default mode checks opportunity-table access before extraction and commits each
+validated opportunity independently. It creates no output files or directories.
+A record with the same ID and source URL is updated; a different URL sharing an
+ID fails without overwriting the stored record. Empty/invalid-only runs leave
+existing records untouched. Write failures do not count as successful saves.
+
+Text mode still needs the database to read active indexes. It closes that
+connection before collection and makes no opportunity writes. Each attempted
+source prints one final result, including its original URL:
+
+```text
+PASS https://example.gov.au/project
+FAIL https://example.gov.au/other — No deadline timestamp returned
+```
+
+`PASS` is printed only after validation and a successful file save. `FAIL`
+includes invalid metadata, missing deadlines, URL/slug problems, extraction/API
+errors, and file-save failures, with a reason. Index and run summaries combine
+these into PASS/FAIL counts. Skipped indexes and intentionally limited work are
+reported separately; traversal failures identify the index URL.
+
+Failures do not introduce error sections into files. Each selected index starts
+with `[]`, then its UTF-8 `.txt` file is atomically updated after each accepted
+listing. Filenames contain a sanitized index name plus a URL hash. Files for
+other indexes remain untouched. Files contain only that run's successful records:
 
 ```json
 [
@@ -217,64 +177,63 @@ For example, an index's text file has this structure:
     "startDate": null,
     "submissionDeadline": "2026-10-23T06:00:00Z",
     "category": ["Water & resources"],
-    "tags": null,
-    "summary": "A short description of the consultation."
+    "tags": null
   }
 ]
 ```
 
-`id` comes from the article URL slug in Python, never from the title or Claude.
-For treaty helper URLs ending in `Treaty_being_considered`, the parent inquiry
-provides both the slug and official `sourceUrl`. Fragments and known tracking
-parameters are removed; meaningful query parameters are preserved. Generic
-query-based pages require one identifiable `slug`, `article`, `project`, or `id`
-parameter. Ambiguous URLs are logged as invalid; different URLs producing the
-same slug are reported as collisions. URL-derived IDs remain stable while the
-publisher keeps the same article slug.
+Normal invalid rejections count as FAIL in text output but do not by themselves
+make the command fail. Exit codes remain `0` for completed work, `1` for
+configuration or operational errors/collisions, and `2` for argument errors.
 
-The Claude extraction model permits `submissionDeadline: null`. A listing is
-accepted only when it has a valid deadline timestamp and validates against the
-complete contract. Dates without a closing time or sufficient timezone
-information remain unknown; Claude is instructed not to invent an instant.
-`CLAUDE_RETRY_COUNT = 1` at the top of `structuring.py` allows one retry after an
-unsuccessful response or API error, for two attempts total. SDK retries are
-disabled. After exhaustion, the source URL and reason are logged as `INVALID` and
-processing continues. Invalid listings are excluded from the selected output.
+## Opportunity validation and database mapping
 
-In text mode, each selected index's file is overwritten on every run; files for
-other indexes are left alone. Each attempt starts with `[]`. After every accepted
-listing, the array is flushed to a temporary file and atomically replaces the index's output,
-preserving the last completed save if interrupted. Empty indexes and indexes
-with no accepted listings contain `[]`; skipped indexes create no file. The
-terminal distinguishes empty results, invalid listings, failures, and limited
-runs and prints a final summary. To retain those diagnostics in a scheduled run,
-keep its terminal logs alongside the output artifacts.
+The model follows the [ECHO opportunity contract](https://github.com/MCLWxMBI/website/blob/main/docs/contracts.md#opportunity)
+and [persistence requirements](https://github.com/MCLWxMBI/website/blob/main/docs/future-plans.md#opportunity-persistence).
+Claude returns minimally cleaned, ordered full-text paragraphs and a separate
+20–30-word summary. Wording and detail are preserved in full text. The complete
+extracted text is supplied to Claude with the index name and canonical URL.
 
-Failures at one index or listing do not stop the rest. The composer exits `0` when
-all attempted work succeeds (including listings rejected for missing deadlines
-or invalid metadata), `1` for configuration/API/traversal/extraction/browser/file
-or database errors or slug collisions, and `2` for invalid arguments. One
-synchronous API client and one Chromium browser are reused and closed at the
-end. Collection history and GitHub Actions configuration remain deferred. The
-future scheduled workflow can supply configuration through its environment,
-invoke composer, and retain its logs and any requested text files.
+Extraction permits a null deadline; accepted opportunities require an
+authoritative UTC timestamp ending in `Z`. Do not infer closing times or
+coordinates. One initial attempt plus one retry is the complete Claude attempt
+budget; SDK retries are disabled. The model is explicitly configured, with no
+hard-coded default.
 
-Run the deterministic checks without a browser or network access:
+IDs come from URL slugs, not titles or Claude. Canonicalization removes known
+tracking parameters and fragments while preserving meaningful queries. Treaty
+helper URLs map to the parent inquiry. Ambiguous URLs and cross-URL slug
+collisions are rejected.
 
-```bash
-uv run python -m unittest test_composer test_structuring test_opportunity test_traverse test_helpers
-uv run python -m unittest test_setup_database
-uv run python -m unittest test_opportunity_storage test_database
-```
+SQL uses snake-case columns, `TIMESTAMPTZ` dates, ordered `TEXT[]` full text,
+required `category TEXT[]`, nullable `tags TEXT[]`, optional summary, and optional
+`location JSONB`. SQL checks basic content, dates, arrays, supported values, and
+location shape; the application validates full URLs and GeoJSON coordinates and
+rings. There is no stored open/upcoming/closed status. API serialization must
+map field names, render UTC dates ending in `Z`, preserve required nulls, and
+omit absent summary/location.
 
-Run the opt-in database setup integration checks against the Compose PostgreSQL
-service from the devcontainer:
+`opportunity_parameters()` and `save_opportunity()` are available in
+`scraper.db.opportunities`. The writer uses a savepoint inside an existing
+transaction; its caller owns the connection and outer commit. Composer uses an
+autocommit connection so each record's transaction commits independently.
+Processing-history tracking and refresh rules remain deferred.
+
+## Validation
+
+Run deterministic tests without a browser, database connection, or API calls:
 
 ```bash
-SETUP_DATABASE_INTEGRATION=1 uv run python -m unittest -v test_setup_database
+uv run python -m unittest discover -s tests -t .
 ```
 
-Integration checks load `DATABASE_URL` from `.env` or the environment and require
-a role with `CREATEDB` permission (the local Compose role has it). They create
-uniquely named test databases on that service and remove them afterward; the configured
-`scraper` database is not modified by the tests.
+Run opt-in PostgreSQL integration tests on the Compose service:
+
+```bash
+SETUP_DATABASE_INTEGRATION=1 uv run python -m unittest tests.test_setup
+```
+
+Integration checks load DATABASE_URL from `.env` or the environment and require
+`CREATEDB` (available to the Compose role). They create uniquely named test
+databases, mock browser/Claude operations, and remove the test databases afterward.
+The configured persistent database is not modified by the tests.

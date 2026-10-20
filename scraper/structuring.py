@@ -10,8 +10,7 @@ from urllib.parse import parse_qsl, unquote, urlencode, urlsplit, urlunsplit
 from anthropic import Anthropic
 from pydantic import Field, ValidationError
 
-from helpers import Source
-from opportunity import NonemptyText, Opportunity, OpportunityFields
+from scraper.models import NonemptyText, Opportunity, OpportunityFields, Source
 
 
 CLAUDE_RETRY_COUNT = 1

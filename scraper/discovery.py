@@ -1,6 +1,6 @@
 """Discover source pages for active database indexes without extracting text.
 
-Run ``uv run python traverse.py`` or select one index with ``--index NAME``.
+Run ``uv run python -m scraper discover`` or select one index with ``--index NAME``.
 """
 
 from __future__ import annotations
@@ -18,58 +18,10 @@ from bs4 import BeautifulSoup, Tag
 import psycopg
 from playwright.sync_api import Browser, Page, sync_playwright
 
-import helpers
-from database import DatabaseError, connect_database, load_active_indexes, load_environment
-
-# Historical local snapshots retained for reference/tests; CLI selection uses
-# load_active_indexes() exclusively and never falls back to these lists.
-INDEXES = [
-    ('Legislative Assembly Environment and Planning Committee', 'https://www.parliament.vic.gov.au/epc-la'),
-    ('Legislative Council Environment and Planning Committee', 'https://www.parliament.vic.gov.au/epc-lc'),
-    ('Scrutiny of Acts and Regulations Committee', 'https://www.parliament.vic.gov.au/sarc'),
-    ('Melbourne Water', 'https://letstalk.melbournewater.com.au/projects'),
-    ('Great Western Water', 'https://www.gww.com.au/faults-works/upgrades-projects/planned-works-projects'),
-    ('South East Water', 'https://southeastwater.com.au/faults-and-works/works/projects'),
-    ('Yarra Valley Water', 'https://engage.yvw.com.au/projects'),
-    ('Coliban Water', 'https://connect.coliban.com.au/projects'),
-    ('East Gippsland Water', 'https://egwater.vic.gov.au/community/news'),
-    ('Goulburn Valley Water', 'https://www.gvwater.vic.gov.au/projects'),
-    ('Gippsland Water', 'https://www.gippswater.com.au/outages-works-and-projects/major-projects'),
-    ('Grampians Wimmera Mallee Water - Current Projects', 'https://gwmwater.org.au/building-and-development/projects/current-projects/'),
-    ('Grampians Wimmera Mallee Water - Past Projects', 'https://gwmwater.org.au/building-and-development/projects/past-projects/'),
-    ('Lower Murray Water', 'https://yoursay.lmw.vic.gov.au/projects'),
-    ('North East Water', 'https://haveyoursay.newater.com.au/projects'),
-    ('South Gippsland Water', 'https://www.sgwater.com.au/projects'),
-    ('Wannon Water', 'https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives'),
-    ('Western Port Water', 'https://www.westernportwater.com.au/our-community/projects'),
-    ('Southern Rural Water', 'https://www.srw.com.au/initiatives/projects'),
-    ('Goulburn-Murray Water', 'https://g-mwater.com.au/customer-services-resources/projects'),
-    ('Essential Services Commission', 'https://www.esc.vic.gov.au/current-consultations'),
-    ('Commissioner for Environmental Sustainability Victoria', 'https://www.ces.vic.gov.au/news'),
-    ('Vic Catchments', 'https://viccatchments.com.au/priority-projects'),
-    ('Engage Victoria', 'https://engage.vic.gov.au/project'),
-    ('Senate Environment and Communications', 'https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Environment_and_Communications'),
-    ('Senate Rural and Regional Affairs and Transport', 'https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Rural_and_Regional_Affairs_and_Transport'),
-    ('House Climate Change, Energy, Environment and Water', 'https://www.aph.gov.au/Parliamentary_Business/Committees/House/Climate_Change_Energy_Environment_and_Water'),
-    ('House Industry, Innovation and Science', 'https://www.aph.gov.au/Parliamentary_Business/Committees/House/Industry_Innovation_and_Science'),
-    ('House Regional Development, Infrastructure and Transport', 'https://www.aph.gov.au/Parliamentary_Business/Committees/House/Regional_Development_Infrastructure_and_Transport'),
-    ('House Primary Industries', 'https://www.aph.gov.au/Parliamentary_Business/Committees/House/Primary_Industries'),
-    ('Joint Aboriginal and Torres Strait Islander Affairs', 'https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Aboriginal_and_Torres_Strait_Islander_Affairs'),
-    ('Joint Treaties', 'https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Treaties'),
-    ('Joint Northern Australia', 'https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Northern_Australia'),
-    ('Department of Industry, Science and Resources', 'https://consult.industry.gov.au/'),
-    ('Productivity Commission', 'https://www.pc.gov.au/inquiries-and-research/'),
-    ('Climate Change Authority', 'https://consult.climatechangeauthority.gov.au/find-consultations'),
-    ('Department of Climate Change, Energy, the Environment and Water', 'https://consult.dcceew.gov.au/find-consultations'),
-    ('Clean Energy Regulator', 'https://cer.gov.au/news-and-media/public-consultations'),
-    ('Department of Infrastructure, Transport, Regional Development, Communications, Sport and the Arts', 'https://www.infrastructure.gov.au/have-your-say'),
-]
-
-BLOCKED_INDEXES = [
-    ('Barwon Water', 'https://www.barwonwater.vic.gov.au/about-us/major-projects'),
-    ('Victorian Environmental Water Holder', 'https://www.vewh.vic.gov.au/planning-and-reporting/seasonal-watering-plan'),
-    ('Australian Energy Market Commission', 'https://www.aemc.gov.au/news-centre/submissions-to-inquiries'),
-]
+from scraper import extraction
+from scraper.config import ConfigurationError, load_environment
+from scraper.db.connection import DatabaseError, connect_database
+from scraper.db.indexes import load_active_indexes
 
 MAX_TRANSITIONS = 100
 NAVIGATION_TIMEOUT = 45_000
@@ -429,7 +381,7 @@ def is_skipped(url: str) -> bool:
     return _host(url) == 'gwmwater.org.au' and urlsplit(url).path.rstrip('/') == PAST_PROJECTS_PATH
 
 
-def traverse_index(name: str, url: str, browser: Browser) -> list[helpers.Source]:
+def traverse_index(name: str, url: str, browser: Browser) -> list[extraction.Source]:
     """Discover a complete index; raise TraversalError rather than return partial results.
 
     Historical project indexes are intentionally outside this discovery scope.
@@ -442,10 +394,10 @@ def traverse_index(name: str, url: str, browser: Browser) -> list[helpers.Source
         urls = _dispatch(page, url)
         source_name = name
         if _host(url) == 'parliament.vic.gov.au' and urlsplit(url).path.rstrip('/') == '/sarc':
-            source_name = helpers.SARC_SOURCE_NAME
+            source_name = extraction.SARC_SOURCE_NAME
         elif _host(url) == 'aph.gov.au' and urlsplit(url).path.rstrip('/').endswith('/Joint/Treaties'):
-            source_name = helpers.JOINT_TREATIES_SOURCE_NAME
-        return [helpers.Source(source_name, target) for target in dict.fromkeys(urls)]
+            source_name = extraction.JOINT_TREATIES_SOURCE_NAME
+        return [extraction.Source(source_name, target) for target in dict.fromkeys(urls)]
     except TraversalError:
         raise
     except Exception as exc:
@@ -462,7 +414,7 @@ def main(argv: list[str] | None = None) -> int:
         load_environment()
         with connect_database(autocommit=True) as connection:
             selected = load_active_indexes(connection)
-    except DatabaseError as exc:
+    except ConfigurationError as exc:
         print(f'Traversal failed: {exc}', file=sys.stderr, flush=True)
         return 1
     except psycopg.Error:
@@ -476,7 +428,7 @@ def main(argv: list[str] | None = None) -> int:
     if not selected:
         print('No active indexes; nothing to collect.', flush=True)
         return 0
-    results: dict[str, list[helpers.Source]] = {}
+    results: dict[str, list[extraction.Source]] = {}
     failures: dict[str, str] = {}
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)

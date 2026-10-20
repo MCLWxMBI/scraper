@@ -5,7 +5,8 @@ from datetime import datetime
 import psycopg
 from psycopg.types.json import Jsonb
 
-from opportunity import Opportunity
+from scraper.models import Opportunity
+from scraper.db.connection import DatabaseError
 
 
 class OpportunityStorageError(RuntimeError):
@@ -72,3 +73,14 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity) -> None
     except psycopg.Error as exc:
         state = f' (SQLSTATE {exc.sqlstate})' if exc.sqlstate else ''
         raise OpportunityStorageError(f'Opportunity database write failed{state}.') from None
+
+
+def check_opportunity_table(connection: psycopg.Connection) -> None:
+    try:
+        connection.execute('''
+            SELECT id, title, full_text, source_url, source_org, jurisdiction,
+                   start_date, submission_deadline, category, tags, summary, location
+            FROM public.opportunities LIMIT 0
+        ''')
+    except psycopg.Error:
+        raise DatabaseError('Opportunity table is unavailable; check schema setup and permissions.') from None

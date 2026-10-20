@@ -3,17 +3,13 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
 
 import psycopg
 from psycopg import sql
 
-from database import DatabaseError, connect_database, load_environment
-
-
-PROJECT_DIR = Path(__file__).resolve().parent
-SQL_DIR = PROJECT_DIR / 'sql'
+from scraper.config import ConfigurationError, SQL_DIR, load_environment
+from scraper.db.connection import connect_database
 
 
 class SetupError(Exception):
@@ -109,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
         load_environment()
         with connect_database() as conn:
             extra = seed_database(conn)
-    except (SetupError, DatabaseError) as exc:
+    except (SetupError, ConfigurationError) as exc:
         print(f'Database setup failed: {exc}', file=sys.stderr)
         return 1
     except psycopg.Error as exc:
