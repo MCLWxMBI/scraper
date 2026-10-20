@@ -1,8 +1,9 @@
 {
-  "name": "token-counter",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+  "name": "scraper",
+  "dockerComposeFile": "compose.yaml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/scraper",
+  "shutdownAction": "stopCompose",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -10,10 +11,5 @@
         "ms-python.python"
       ]
     }
-  },
-  "runArgs": [
-    "--cap-add=SYS_ADMIN",
-    "--security-opt",
-    "seccomp=unconfined"
-  ]
+  }
 }

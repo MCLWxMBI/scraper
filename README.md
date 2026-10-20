@@ -1,5 +1,70 @@
 # scraper
 
+Open the project with **Dev Containers: Rebuild and Reopen in Container** in VS Code
+to start the Python workspace and PostgreSQL 18. The app waits for the database
+health check before starting. Database data persists in the `postgres-data` Docker
+volume across container rebuilds.
+
+From the devcontainer, connect to `postgres:5432` with database, username, and
+password all set to `scraper` (local development credentials). The app container
+sets the standard `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD`
+environment variables, so `psycopg.connect()` can use them directly. The database
+port is available within the Compose network. The scraper does not yet store
+results in PostgreSQL.
+
+Create the database tables and seed the website index catalogue manually:
+
+```bash
+uv run python setup_database.py
+```
+
+The command uses the existing `PG*` environment variables. It also loads `.env`
+beside the script without overriding supplied environment variables. It requires
+no Claude credentials and works with the existing persistent database volume.
+SQL files are resolved relative to the script, so it can also be invoked by its
+absolute path from another directory.
+
+Setup applies `sql/schema.sql`, which creates both `public.website_indexes` and
+`public.opportunities`. The index table uses the website project's schema and
+upserts the 42 records from a reviewed local copy of its
+[seed.sql](https://github.com/MCLWxMBI/website/blob/main/seed.sql): 40 active and
+2 inactive. Rerunning restores every seed-owned field for IDs 1–42, including
+locally edited activation flags, while preserving additional rows. Keep those
+IDs reserved for the seed. Updating the upstream seed is an explicit code change;
+the command does not fetch SQL from GitHub at runtime.
+
+Existing index tables must match the expected columns, defaults, primary key,
+and ID sequence settings. Setup verifies stored seed values before committing. Errors
+roll back table creation and row changes and return exit code `1`; success
+returns `0` with a summary. Run setup without concurrent catalogue writers. The
+ID sequence is advanced as needed and never lowered; sequence changes can leave
+gaps after rollback.
+
+The opportunities table follows the
+[opportunity contract](https://github.com/MCLWxMBI/website/blob/main/docs/contracts.md#opportunity)
+and [persistence roadmap](https://github.com/MCLWxMBI/website/blob/main/docs/future-plans.md#opportunity-persistence).
+It stores the stable text ID, title, ordered `full_text TEXT[]`, official source
+URL and organisation, jurisdiction, nullable opening time, required deadline,
+`category TEXT[] NOT NULL`, nullable `tags TEXT[]`, optional summary, and optional
+`location JSONB`. Dates use `TIMESTAMPTZ`; API serialization must produce UTC
+timestamps ending in `Z` and map snake-case column names to camelCase fields.
+Status is derived from the dates rather than stored.
+
+SQL checks enforce required content, supported jurisdictions/categories, date
+order, nonempty arrays, trimmed array elements, case-insensitive uniqueness of
+category/tag labels, and the basic location shape. No tags means SQL `NULL`,
+not an empty array. Full HTTPS URL validation, plain-text validation, canonical
+`Invite-only` spelling, and GeoJSON coordinate/ring validation belong to the
+application's opportunity validation before inserts. Setup creates the table
+but does not populate it or change the composer's file output. Reruns preserve
+existing opportunities; `CREATE TABLE IF NOT EXISTS` does not migrate an existing
+opportunities schema.
+
+Upstream marks Barwon Water and VEWH inactive, but AEMC and GWMWater past projects
+active. These flags are preserved even though local traversal blocks AEMC and
+skips past projects. Discovery still uses the Python index lists; the catalogue
+does not yet control scraper behavior or track processing history.
+
 Discover source pages using synchronous Playwright:
 
 ```bash
@@ -15,9 +80,10 @@ explicitly skipped. Edit these lists locally as needed.
 
 Traversal discovers open/upcoming consultations and current project candidates.
 News, bills, and uncertain project candidates still need eligibility and relevance
-checks downstream. Results are kept in memory and printed; there is no database,
-checkpoint, or scheduled workflow yet. A failed index is reported separately from
-an empty listing; the remaining indexes continue and the process exits nonzero.
+checks downstream. Results are kept in memory and printed; there is no processing
+checkpoint, database-backed discovery, or scheduled workflow yet. A failed index
+is reported separately from an empty listing; the remaining indexes continue and
+the process exits nonzero.
 
 Use the existing helpers after discovery:
 
@@ -128,12 +194,25 @@ all attempted work succeeds (including listings rejected for missing deadlines
 or invalid metadata), `1` for configuration/API/traversal/extraction/browser/file
 errors or slug collisions, and `2` for invalid arguments. One synchronous API
 client and one Chromium browser are reused and closed at the end. Collection
-history, database storage, and GitHub Actions configuration are deferred. The
-future scheduled workflow can supply the key through its environment, invoke the
-composer, and retain its text files and logs.
+history, opportunity database storage, and GitHub Actions configuration are
+deferred. The future scheduled workflow can supply the key through its
+environment, invoke the composer, and retain its text files and logs.
 
 Run the deterministic checks without a browser or network access:
 
 ```bash
 uv run python -m unittest test_composer test_structuring test_opportunity test_traverse test_helpers
+uv run python -m unittest test_setup_database
 ```
+
+Run the opt-in database setup integration checks against the Compose PostgreSQL
+service from the devcontainer:
+
+```bash
+SETUP_DATABASE_INTEGRATION=1 uv run python -m unittest -v test_setup_database
+```
+
+Integration checks use the standard `PG*` environment and require a role with
+`CREATEDB` permission (the local Compose role has it). They create uniquely named
+test databases on that service and remove them afterward; the configured
+`scraper` database is not modified by the tests.
