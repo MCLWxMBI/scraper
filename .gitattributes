@@ -1,0 +1,4 @@
+# Fixture checksums cover exact stored bytes, independent of core.autocrlf.
+tests/fixtures/wayback/**/*.html text eol=lf
+tests/fixtures/wayback/**/*.json text eol=lf
+tests/fixtures/wayback/**/*.pdf -text

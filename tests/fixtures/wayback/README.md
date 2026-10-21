@@ -8,7 +8,6 @@ listing discovery. It calls **real Claude**, needs `ANTHROPIC_API_KEY` and
 
 ```bash
 uv run python main.py --fixtures --index "Coliban Water" --limit 1
-uv run python -m unittest tests.test_fixtures
 ```
 
 Tests mock Claude and never refresh the data or make external requests.
@@ -58,7 +57,10 @@ seed identity, activation flag, coverage reason, listings and articles.
 - Resources record the original URL, requested and actual capture timestamps,
   replay URL, content type, relative path and SHA-256 checksum. Paths are
   relative to this directory and grouped by two-digit seed ID. Filename hashes
-  distinguish content; checksums cover downloaded, decompressed file bytes.
+  identify the original downloads and remain unchanged. Manifest checksums verify
+  the exact stored bytes: downloaded, decompressed HTML normalized to LF line
+  endings, and unmodified PDF bytes. Git attributes preserve these bytes across
+  checkouts regardless of `core.autocrlf`.
 
 HTML is archived source content, not a browser-rendered DOM. Embedded listing
 data is retained inside the original HTML; scripts and external assets are
@@ -76,8 +78,9 @@ Wayback URLs, go to Claude and determine opportunity identities.
 
 1. Choose an archived listing/article and record its original URL and actual
    capture timestamp. Preserve a link to the referring listing.
-2. Download only archived HTML and required PDFs. Keep their original content,
-   calculate SHA-256 checksums and add resource descriptors. Never include
+2. Download only archived HTML and required PDFs. Normalize HTML CRLF line
+   endings to LF before calculating SHA-256 checksums; preserve PDF bytes exactly.
+   Keep content and provenance intact and add resource descriptors. Never include
    credentials, authenticated sessions or generated Claude responses.
 3. Review the saved body, extraction route and any expected text fragments
    against the source. Keep extractor limitations explicit; do not invent
