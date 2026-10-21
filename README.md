@@ -90,6 +90,40 @@ there is no hard-coded fallback list. Past-project discovery safeguards remain.
 source discovery**. It does not yet limit pagination. Limited work is labeled.
 See the [roadmap](docs/roadmap.md) for planned discovery budgets and history.
 
+## Local runs using saved articles
+
+```bash
+uv run python main.py --fixtures
+uv run python main.py --fixtures --index "Coliban Water" --limit 1
+uv run python main.py --fixtures --output-dir output/local-test
+```
+
+`--fixtures` reads the bundled historical article samples in
+`tests/fixtures/wayback/manifest.json`. It starts at saved articles rather than
+replaying listing discovery. HTML text extraction and the supported PDF routes
+run locally; original article URLs remain the source identities and Claude
+context. Referenced files are confined to the fixture directory and checked
+against their SHA-256 checksums. Missing resources never trigger downloads.
+
+**This mode calls real Claude and incurs API usage.** Set `ANTHROPIC_API_KEY`
+and `CLAUDE_MODEL` as usual, or supply `--model`. No `DATABASE_URL`, PostgreSQL,
+browser installation or website access is needed. The only network client used
+during fixture runs is Claude. Automated tests mock Claude.
+
+Results always use the usual JSON-array text files and PASS/FAIL reporting,
+with `output/fixtures/` as the default destination. `--text` and `--txt` are
+accepted but unnecessary. Repeated runs replace each selected index's file and
+call Claude again; fixture mode does not implement processing history.
+
+`--index` selects a manifest index by its full name, ignoring case, including
+inactive seed indexes. `--limit` counts distinct saved article samples rather
+than live discoveries. There are up to three samples per index. Indexes without
+usable archived articles are skipped with their recorded coverage reason;
+missing or corrupt files referenced by selected samples cause FAIL and a nonzero
+exit. Read the [fixture README](tests/fixtures/wayback/README.md) for provenance,
+archive gaps and how to extend the collection. Fixtures are never refreshed by
+ordinary test runs.
+
 ## Runtime flow and file responsibilities
 
 ```mermaid
@@ -103,6 +137,8 @@ flowchart TD
     Config --> Connection["db/connection.py: DATABASE_URL"]
     Connection --> Indexes["db/indexes.py: active indexes"]
     Pipeline --> Discovery
+    Pipeline --> Fixtures["fixtures.py: saved article manifest with --fixtures"]
+    Fixtures --> Extraction
     Indexes --> Discovery
     Discovery --> Sources["models.py: Source"]
     Sources --> Extraction["extraction.py: rendered HTML / PDF text"]
@@ -123,6 +159,7 @@ flowchart TD
 | `scraper/models.py` | Defines immutable `Source` objects, opportunity fields, and validated geography/content models. |
 | `scraper/discovery.py` | Reads active indexes for its CLI, traverses supported listings and pagination, and returns original routing-aware Sources. |
 | `scraper/extraction.py` | Renders each source, waits for stable content, and extracts HTML text or the supported special PDFs. |
+| `scraper/fixtures.py` | Loads the bundled historical manifest, verifies local HTML/PDF resources, and supplies original Sources and saved article text without HTTP or a browser. |
 | `scraper/structuring.py` | Calls Claude, validates the response, derives canonical source identity, and returns a complete Opportunity. |
 | `scraper/pipeline.py` | Owns the collection CLI and resource lifecycle; orchestrates discovery, extraction, validation, persistence, and terminal summaries. |
 | `scraper/text_export.py` | Generates stable per-index filenames and atomically replaces JSON-array text files. |
@@ -145,7 +182,7 @@ A record with the same ID and source URL is updated; a different URL sharing an
 ID fails without overwriting the stored record. Empty/invalid-only runs leave
 existing records untouched. Write failures do not count as successful saves.
 
-Text mode still needs the database to read active indexes. It closes that
+Live text mode still needs the database to read active indexes. It closes that
 connection before collection and makes no opportunity writes. Each attempted
 source prints one final result, including its original URL:
 
