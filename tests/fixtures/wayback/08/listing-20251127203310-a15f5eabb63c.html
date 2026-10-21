@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Major projects - Barwon Water</title>
+    
+    <!-- LogRocket Nested Scripts -->
+        
+    
+    
+    
+<!-- SEO - Basic Metadata //-->
+
+<!-- User Defined //-->
+<meta name="keywords" content="" />
+<meta name="description" content="We‘re working on a number of innovative projects to ensure we deliver secure and efficient services that support the future growth of our region." />
+<meta name="author" content="" />
+<meta name="copyright" content="" />
+<meta name="page_title" content="Major projects - Barwon Water" />
+<meta name="date" content="000019708601" />
+
+<!-- SEO - Open Graph //-->
+
+<!-- Required //-->
+<meta property="og:title" content="Major projects" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.barwonwater.vic.gov.au/about-us/major-projects" />
+<meta property="og:image" content="" />
+
+<!-- Optional //-->
+<meta property="og:audio" content="https://www.barwonwater.vic.gov.au/about-us/major-projects" />
+<meta property="og:site_name" content="Barwon Water" />
+
+<!-- SEO - Twitter Card //-->
+
+<!-- Card //-->
+<meta property="twitter:title" content="Major projects" />
+<meta property="twitter:image" content="" />
+<meta property="twitter:image_width" content="" />
+<meta property="twitter:image_height" content="" />
+
+<!-- Products //-->
+
+<!-- iPhone App //-->
+
+<!-- iPad App //-->
+
+<!-- Google Play //-->
+
+
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/files/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/files/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/files/favicon-16x16.png">
+<link rel="manifest" href="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/files/site.webmanifest">
+<link rel="mask-icon" href="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/files/safari-pinned-tab.svg" color="#6292a1">
+<meta name="msapplication-TileColor" content="#273e5d">
+<meta name="msapplication-TileImage" content="./?a=104:static/mstile-144x144.png">
+<meta name="theme-color" content="#ffffff">
+
+    <!-- State - Site -->
+    <!-- begin src-matrix/nested-content/head/global-design-head-site-state.html -->
+
+<script>
+    var window = window || {}; var sq = sq || {}; window.sq = (function (exports) {
+    'use strict';
+    
+    // # General Utility Functions
+    //
+    // ## Debug
+    // Wrap a function or object to see the output in console.
+    // ### Usage
+    // ```
+    // const reduce = data => (debug({url: data.url}))
+    // ```
+    // ### Function
+    var debug = function (obj, trace) {
+        if ( trace === void 0 ) trace = false;
+    
+        console.log(obj);
+        if (trace) {
+            console.trace();
+        }
+    
+        return obj;
+    };
+    
+    
+    
+    //const DIRTY = /&|<|>|"|script|iframe|=|\(|\)|\[|\]/gi;
+    //javascript:alert
+    var DIRTY = /data:text\/html|script|iframe|javascript:|<|>|\(|\)|\[|\]/gi;
+    var clean = function (str) {
+        str = str.replace(DIRTY, " ");
+        return str.replace(/'/gi, "&#39;").replace(/"/gi, "&#34;");
+    };
+    
+    // ## Immutable Copy
+    // Create a new version of an object
+    var copy = function (obj) { return JSON.parse(JSON.stringify(obj)); };
+    
+    // ## Immutable
+    // Make a new copy of a value if it is an object and not a function
+    var immutable = function (item) { return typeof item.target !== "undefined"
+            ? item // If is object and not a function then copy the object
+            : typeof item === "object" && typeof item !== "function"
+              ? copy(item)
+              : item; };
+    
+    // ## immutableAll
+    // Create new copies of arguments and return as an array
+    var immutableAll = function () {
+        var args = [], len = arguments.length;
+        while ( len-- ) args[ len ] = arguments[ len ];
+    
+        return args.map(immutable);
+    };
+    
+    // ## pipe
+    // Push result through a series of functions
+    // ### Usage
+    // ```js
+    // const __convert = pipe(function1, function2, function3);
+    // const result = __convert(...args);
+    // // function1(...args) -> function2(resultFunction1) -> function3(resultFunction2) -> resultFunction3
+    // ```
+    //
+    // ### Function
+    var pipe = function (fn) {
+        var fns = [], len = arguments.length - 1;
+        while ( len-- > 0 ) fns[ len ] = arguments[ len + 1 ];
+    
+        return function () {
+        var args = [], len = arguments.length;
+        while ( len-- ) args[ len ] = arguments[ len ];
+    
+        return fns.reduce(function (acc, fn) {
+            return fn(acc);
+        }, fn.apply(void 0, immutableAll.apply(void 0, args)));
+    };
+    };
+    
+    // ## compose
+    // Classic compose function for functional style programming.  Results are piped through each function from right to left.
+    // ### Usage
+    // ```js
+    // const result = compose(function3, function2, function1);
+    // // function1(...args) -> function2(resultFunction1) -> function3(resultFunction2) -> resultFunction3
+    // ```
+    //
+    // ### Function
+    var compose = function () {
+        var fns = [], len = arguments.length;
+        while ( len-- ) fns[ len ] = arguments[ len ];
+    
+        return pipe.apply(void 0, fns.reverse());
+    };
+    
+    // ## __flatten
+    // Flattens nested arrays into a flat array.
+    // ### Usage
+    // ```js
+    // const result = __flatten([1, [2, [3, 4, [5, 6, 7]]);
+    // // [1, 2, 3, 4, 5, 6, 7]
+    // ```
+    //
+    // ### Function
+    var __flatten = function (out) { return function (list) {
+        list.forEach(function (item) {
+            if (Array.isArray(item)) {
+                out = __flatten(out)(item);
+            } else {
+                out = out.concat(item);
+            }
+        });
+        return out;
+    }; };
+    
+    // ## flatten
+    // Alias for __flatten.  See __flatten for details.
+    var flatten = function (nlist) { return __flatten([])(nlist); };
+    
+    // ## generateUUID
+    // Generates a uuid.
+    // ### Usage
+    // ```js
+    // const uuid = generateUUID();
+    // //
+    // ```
+    //
+    // ### Function
+    
+    
+    // ## r
+    // Route helper for hyper app router event listener.
+    // ### Usage
+    // ```js
+    // // When the routes '/' or '/search' is activated in window.location then call the function funnelbackRequest.
+    // app({
+    //   events: {
+    //      route: [
+    //        r('/search', funnelbackRequest),
+    //        r('/', funnelbackRequest)
+    //    ],
+    // });
+    // ```
+    //
+    // ### Function
+    
+    
+    // ## htmlDecode
+    // Decode html entities.
+    // ### Usage
+    // ```js
+    // htmlDecode('&amp; &lt; &#60;');
+    // // "& < <"
+    // ```
+    //
+    // ### Function
+    var htmlDecode = function (html) {
+        var txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
+    };
+    
+    // ## __replaceParams
+    // Replace a param in a query string
+    // ### Usage
+    // ```js
+    // // window.location.search === '?facet=blue&query=bingo+jones'
+    // const result = __replaceParams(location.pathname + location.search)('query', 'hello+world');
+    // // /search?facet=blue&query=hello+world
+    // ```
+    //
+    // ### Function
+    var __replaceParams = function (str) { return function (param, value) {
+        var qsplit = str.split("?");
+        var query = qsplit[1] || "";
+        if (query.match(param)) {
+            var querySplit = query.split("&");
+            var next = true,
+                i = 0,
+                final = querySplit.length;
+            while (next) {
+                var item = querySplit[i];
+                if (final === i) {
+                    next = false;
+                } else if (item.indexOf(param) !== -1) {
+                    str = str.replace(item, (param + "=" + value));
+                    next = false;
+                }
+                i++;
+            }
+            return str;
+        } else {
+            var newQstring = param + "=" + value;
+            return query
+                ? str + "" + (str.substr("-1") == "&" ? "" : "&") + newQstring
+                : str + "?" + newQstring;
+        }
+    }; };
+    
+    // ## getURLParameter
+    // Get the value of a parameter from a query string.
+    // ### Usage
+    // ```js
+    // // location.search == '?query=hello+world'
+    // const result = getURLParameter('query', location.search);
+    // // 'hello+world'
+    // ```
+    //
+    // ### Function
+    function getUrlParameter(name, url) {
+        if ( url === void 0 ) url = null;
+    
+        name = name
+            .replace(/[\[]/, "\\[")
+            .replace(/[\]]/, "\\]")
+            .replace(/\./gi, "\\.")
+            .replace(/\+/gi, "\\+");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+        var results = regex.exec(url ? url : location.search);
+        return results === null
+            ? ""
+            : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+    
+    // ## qparts
+    // Split query param by space
+    /**
+     * Splits the query into words
+     * @param query
+     */
+    var qparts = function (query) { return query.split(" "); };
+    
+    // ## highlight
+    // Highlights a word 'qpart' in a string.
+    // ### Usage
+    // ```js
+    // const result = highlight('juice', 'juicer');
+    // // <strong>juice</strong>r
+    // ```
+    //
+    // ### Function
+    /**
+     * Highlights a word 'qpart' in a string
+     * @param qpart
+     * @param str
+     */
+    
+    
+    var __xhighlight = function (queryParts) { return function (strPart) {
+        var keyword = queryParts.find(
+            function (keyword) { return keyword.length > 2 &&
+                strPart.match(new RegExp(("(" + keyword + ")"), "gi")); }
+        );
+        return keyword
+            ? strPart.replace(
+                  new RegExp(("(" + keyword + ")"), "gi"),
+                  "<strong>$1</strong>"
+              )
+            : strPart;
+    }; };
+    
+    // ## highlightWords
+    // Highlights all words in the query against matches in the title
+    // ### Usage
+    // ```js
+    // const result = highlightWords('english', 'happy birthday english');
+    // // happy birthday <strong>english</strong>
+    // ```
+    //
+    // ### Function
+    /**
+     * Highlights all words in the query against matches in the title
+     * @param query
+     * @param str
+     */
+    var highlightWords = function (query, str) {
+        if (str) {
+            var highlight = __xhighlight(qparts(query));
+            return qparts(str)
+                .map(highlight)
+                .join(" ");
+        } else {
+            return "";
+        }
+    };
+    
+    // ## slugify
+    // Converts a string into something that can be used in a URI with no spaces and funny characters.
+    // ### Usage
+    // ```js
+    // const result = slugify('hello world');
+    // // hello-world
+    // ```
+    //
+    // ### Function
+    /**
+     * @returns {string}
+     */
+    var slugify = function (text) {
+        return text
+            .toString()
+            .toLowerCase()
+            .replace(/\s+/g, "-") // Replace spaces with -
+            .replace(/[^\w\-]+/g, "") // Remove all non-word chars
+            .replace(/\-\-+/g, "-") // Replace multiple - with single -
+            .replace(/^-+/, "") // Trim - from start of text
+            .replace(/-+$/, ""); // Trim - from end of text
+    };
+    
+    // ## KeyValue
+    // Creates a key value object.
+    // ### Usage
+    // ```js
+    // const result = KeyValue('query', 'hello+world');
+    // // result.key result.value
+    // ```
+    //
+    // ### Function
+    var KeyValue = function KeyValue(key, value) {
+        this.key = key;
+        this.value = value;
+    };
+    
+    var keyValue = function (key, value) { return new KeyValue(key, value); };
+    
+    // ## objToQueryString
+    // Converts an object to a list of KeyValue objects.
+    // ### Usage
+    // ```js
+    // const result = objToQueryString({query: 'hello+world', category: 'blue'});
+    // // [KeyValue(hello, world), KeyValue(category, blue)]
+    // ```
+    //
+    // ### Function
+    
+    
+    // ## _parseQuery
+    // Takes a string and converts to Array<KeyValue>
+    // ### Usage
+    // ```js
+    // const result = _parseQuery('query=hello+world&category=blue');
+    // // [KeyValue(hello, world), KeyValue(category, blue)]
+    // ```
+    //
+    // ### Function
+    var _parseQuery = function (str) { return str.split("&").map(function (qpart) { return new (Function.prototype.bind.apply( KeyValue, [ null ].concat( qpart.split("=")) )); }); };
+    
+    // ## mergeQuery
+    // Takes two queries of type Array<KeyValue> and merges them.
+    // ### Usage
+    // ```js
+    // const result = mergeQuery(
+    //   objToQueryString({query: '!padrenull', cat: 'blue'}),
+    //   _parseQuery('query=hello+world')
+    // );
+    // // [KeyValue(query, hello+world), KeyValue(cat, blue)]
+    // ```
+    //
+    // ### Function
+    var mergeQuery = function (defaultQuery, query) { return defaultQuery
+            .filter(function (param) {
+                return !query.find(function (qparam) { return qparam.key == param.key; });
+            })
+            .concat(query); };
+    
+    // ## generateQuery
+    // Generate an Array<KeyValue> from a string and a default Array<KeyValue>.
+    // ### Usage
+    // ```js
+    // const result = generateQuery('query=hello+world', [new KeyValue('query', '!padrenull')]);
+    // // [KeyValue(query, hello+world)]
+    // ```
+    //
+    // ### Function
+    var generateQuery = function (str, defaultQuery) { return mergeQuery(defaultQuery, _parseQuery(str)); };
+    
+    // ## parseQuery
+    // parse a query string using a default query.
+    // ### Usage
+    // ```js
+    // const result = parseQuery('query=hello+world', [new KeyValue('query', '!padrenull')]);
+    // // [KeyValue(query, hello+world)]
+    // ```
+    //
+    // ### Function
+    var parseQuery = function (str, defaultQuery) {
+            if ( defaultQuery === void 0 ) defaultQuery = [];
+    
+            return str && str.substr(0, 1) === "?"
+            ? generateQuery(str.substr(1), defaultQuery)
+            : str ? generateQuery(str, defaultQuery) : defaultQuery;
+    };
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    // ## isLocalhost
+    // Check if is local development server
+    var isLocalhost = function () { return location && location.hostname === "localhost"; };
+    
+    var createMarkup = function (markup) { return ({ __html: markup }); };
+    
+    var reactKey = function (namespace, state, index) { return (namespace + "-" + (state.id) + "-" + index); };
+    
+    var capitalize = function (string) { return string.charAt(0).toUpperCase() + string.slice(1); };
+    
+    var isItems = function (items) { return Object.keys(items).length; };
+    
+    var arrayFromSet = function (set) {
+        var final = [];
+        set.forEach(function (item) { return final.push(item); });
+        return final;
+    };
+    
+    var filterByKeys = function (keys, obj) {
+        var result = {};
+        keys.forEach(function (key) {
+            if (obj[key]) {
+                result[key] = obj[key];
+            }
+        });
+        return result;
+    };
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    var baseUniqueUrl =
+        "_~getRandomVcryp0123456789bfhijklqsuvwxzABCDEFGHIJKLMNOPQSTUWXYZ";
+    
+    var getUnique = function (crypto, url, size) {
+        var id = "";
+        var bytes = crypto.getRandomValues(new Uint8Array(size));
+        while (0 < size--) {
+            id += url[bytes[size] & 63];
+        }
+        return id;
+    };
+    
+    var __uniqueId = function (store, url, win) {
+        if ( store === void 0 ) store = {};
+        if ( url === void 0 ) url = baseUniqueUrl;
+        if ( win === void 0 ) win = window;
+    
+        return function (
+        key,
+        size,
+        useLocal
+    ) {
+        if ( size === void 0 ) size = 12;
+        if ( useLocal === void 0 ) useLocal = true;
+    
+        var crypto = win.crypto || win.msCrypto;
+        if (win.localStorage && useLocal) {
+            if (!win.localStorage.getItem(key)) {
+                win.localStorage.setItem(key, getUnique(crypto, url, size));
+            }
+            return win.localStorage.getItem(key);
+        } else {
+            if (typeof store[key] === "undefined") {
+                store[key] = getUnique(crypto, url, size);
+            }
+            return store[key];
+        }
+    };
+    };
+    
+    var METHODS = ['Day', 'Date', 'FullYear', 'Hours', 'Minutes', 'Month', 'Seconds'];
+    var DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    var MONTH = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December'
+    ];
+    var convert = function (f, k) { return (f[k] > 8 ? f[k] + 1 : ("0" + (f[k] + 1))); };
+    var convertTime = function (f, k) { return (f[k] > 9 ? ("" + (f[k])) : ("0" + (f[k]))); };
+    var nth = function (n) { return ("" + (parseInt(n, 10)) + (['st', 'nd', 'rd'][((parseInt(n, 10) + 90) % 100 - 10) % 10 - 1] || 'th')); };
+    
+    /**
+     *
+     * Creates a date object of type FriendlyDate from a date object
+     * export type FriendlyDate = {
+     *   dayLong: string,
+     *   dayShort: string,
+     *   day: string,
+     *   monthLong: string,
+     *   monthShort: string,
+     *   month: string,
+     *   shortYear: string,
+     *   json: string,
+     *   date: number,
+     *   dateSuffix: string,
+     *   fullyear: number,
+     *   hours: number,
+     *   minutes: number,
+     *   month: number,
+     *   seconds: number
+     * }; *
+     * @example sq.friendlyDate(new Date())
+     * @param date
+     */
+    var friendlyDate = function (date) {
+        var final = {
+            json: date.toJSON()
+        };
+        METHODS.forEach(function (item) {
+            final[item.toLowerCase()] = date['get' + item]();
+        });
+    
+        return Object.assign(final, {
+            dayLong: DAY[final['day']],
+            dayShort: DAY[final['day']].substr(0, 3),
+            day: ("" + (final.date)),
+            monthLong: MONTH[final['month']],
+            monthShort: MONTH[final['month']].substr(0, 3),
+            month: convert(final, 'month'),
+            yearShort: ("" + (final.fullyear)).substr(2, 2),
+            fullYear: ("" + (final.fullyear)),
+            friendlyHours: convertTime(final, 'hours'),
+            friendlyMinutes: convertTime(final, 'minutes'),
+            dateSuffix: nth(final.date)
+        });
+    };
+    
+    /**
+     * Creates a date object of type FriendlyDate from a date object in string format
+     * export type FriendlyDate = {
+     *   dayLong: string,
+     *   dayShort: string,
+     *   day: string,
+     *   monthLong: string,
+     *   monthShort: string,
+     *   month: string,
+     *   shortYear: string,
+     *   json: string,
+     *   date: number,
+     *   fullyear: number,
+     *   hours: number,
+     *   minutes: number,
+     *   month: number,
+     *   seconds: number
+     * };
+     * @example
+     * var dateVar = sq.friendlyDateFromString((new Date()).toString())
+     * @param date
+     * @returns {FriendlyDate}
+     */
+    var friendlyDateFromString = function (date) { return friendlyDate(new Date(Date.parse(date))); };
+    
+    // this is a closure dummy
+    var ReactRender = function (getElement) { return function (Component, props) {
+        // how does this even work?
+        var domContainerNode = getElement();
+        ///console.log(domContainerNode);
+    
+        var reactElement = React.createElement(Component, props);
+        ReactDOM.render(reactElement, domContainerNode);
+        //ReactDOM.unmountComponentAtNode(domContainerNode)
+    }; };
+    
+    /**
+     *
+     * AppInstance
+     *
+     * Can be used to review data.  Call render, and update state via actions.
+     * @example
+     * let appInstance = app({...});
+     * // call update action
+     * appInstance = appInstance.emit('update');
+     * // call updateByValue action
+     * appInstance = appInstance.emit('updateByValue', 3);
+     * // call render
+     * const renderResult = appInstance.render(Component, {state: appInstance.state, actions})
+     * @param {function} emit returns AppInstance
+     * @param {object} state the current state
+     * @param {function} render the passed in render function.  This available for testing purposes.
+     * @param {undefined|object} lastAction the result of the last action
+     * @constructor
+     */
+    
+    
+    // TODO: add idAlias to all
+    // TODO: add action.emit to all
+    var app = function (obj) {
+        var state = copy(obj.state);
+        var tmp = obj._tmp || {};
+        var actions = {};
+        var actionFn = function (action) {
+            var params = [], len = arguments.length - 1;
+            while ( len-- > 0 ) params[ len ] = arguments[ len + 1 ];
+    
+            if (!actions[action]) {
+                console.error(("action '" + action + "' does not exist in your actions for app with id: '" + (obj.state.id) + "'"));
+            }
+            return out(actions[action].apply(actions, params));
+        };
+    
+        function out(lastAction) {
+            if ( lastAction === void 0 ) lastAction = null;
+    
+            return { emit: actionFn, state: copy(state), render: obj.render, lastAction: lastAction, views: obj.views };
+        }
+    
+        Object.keys(obj.actions).forEach(function (action) {
+            var actionWrapper = function () {
+                var params = [], len = arguments.length;
+                while ( len-- ) params[ len ] = arguments[ len ];
+    
+                var nstate = copy(state);
+                nstate._tmp = tmp;
+                var result = (ref = obj.actions)[action].apply(ref, [ nstate, actions ].concat( params ));
+                if (result) {
+                    state = copy(Object.assign(state, result));
+                    state._tmp = result._tmp ? Object.assign({}, tmp, result._tmp) : tmp;
+                    obj.render(obj.views[state.view], { state: state, actions: actions });
+                }
+                return result;
+                var ref;
+            };
+            actionWrapper.refName = action;
+            actionWrapper.ref = obj.actions[action];
+            actions[action] = actionWrapper;
+        });
+        obj.render(obj.views[state.view], { state: state, actions: actions });
+        return out();
+    };
+    
+    
+    
+    function StateResource(stype, resource, mockResponse, reuse) {
+        if ( reuse === void 0 ) reuse = true;
+    
+        this.type = stype;
+        this.resource = resource;
+        this.mockResponse = mockResponse;
+        this.reuse = reuse;
+    }
+    
+    var stateJson = function (resource, mockResponse) { return new StateResource('json', resource, mockResponse); };
+    
+    var pass = function (data) { return data; };
+    
+    /**
+     * When there is a value of item function pass the value to fn
+     * @param item
+     * @param fn
+     */
+    var ready = function (item, fn, wait) {
+        if ( wait === void 0 ) wait = 4;
+    
+        return (item() ? fn(item()) : setTimeout(function () { return ready(item, fn); }, wait));
+    };
+    
+    var tryRemoteAction = function (sq, id, action) {
+        var params = [], len = arguments.length - 3;
+        while ( len-- > 0 ) params[ len ] = arguments[ len + 3 ];
+    
+        id = sq.aliases[id] || id;
+        var app = sq[id];
+        if (!app) {
+            console.warn(("'" + id + "' component does not exist."));
+        } else {
+            app.emit.apply(app, [action].concat(params));
+        }
+    };
+    
+    function appRequest(sq, name, stateResource, thenHandler, debug$$1) {
+        fetch(stateResource.resource, { credentials: 'include' })
+            .then(function (response) {
+                if (stateResource.mockResponse) {
+                    response = {
+                        status: stateResource.mockResponse.status,
+                        json: function () { return Promise.resolve(JSON.parse(JSON.stringify(stateResource.mockResponse.body))); }
+                    };
+                    console.log(response);
+                }
+                if (response.status === 200) {
+                    if (!!location && location.search.toString().match(/dump/)) {
+                        console.log(("Response for " + name + ":"));
+                        console.log(response);
+                    }
+                    var jsonResult;
+                    try {
+                        jsonResult = response.json();
+                    } catch (e) {
+                        return Promise.reject(e);
+                    }
+    
+                    return jsonResult.then(function (res) {
+                        if (typeof res.info === 'object') {
+                            return Promise.reject(res);
+                        }
+                        return res;
+                    });
+                } else if (response.status === 304) {
+                    return Promise.reject({ aliasId: 'authStatus', action: 'authFail' });
+                } else {
+                    return Promise.reject({});
+                }
+            })
+            .then(thenHandler(stateResource.resource))
+            .catch(function (err) {
+                if ( err === void 0 ) err = {};
+    
+                console.log('appRequest error: ', err);
+                console.log('appRequest stateResource.resource: ', stateResource.resource);
+                tryRemoteAction(sq, err.aliasId || 'globalModalAlias', err.action || 'globalModalError');
+            });
+    }
+    
+    var appInstance = function (
+        name,
+        domElement,
+        viewsActionsState,
+        stateResources,
+        runRequest,
+        sq,
+        debug$$1
+    ) {
+        if ( stateResources === void 0 ) stateResources = null;
+        if ( runRequest === void 0 ) runRequest = appRequest;
+        if ( sq === void 0 ) sq = window.sq;
+        if ( debug$$1 === void 0 ) debug$$1 = debug$$1;
+    
+        //TODO: Refactor all this stuff away to lib/sq.js
+        if (!sq) {
+            sq = window.sq;
+        }
+        if (viewsActionsState.state.idAlias) {
+            sq.aliases[viewsActionsState.state.idAlias] = name;
+        }
+        sq.componentViews = Object.assign({}, sq.componentViews, viewsActionsState.views);
+        if (!sq.aliases) {
+            sq.aliases = {};
+        }
+        if (viewsActionsState.state.idAlias) {
+            sq.aliases[viewsActionsState.state.idAlias] = name;
+        }
+        var mainThenHandler = function (response) {
+            var responseHandler = viewsActionsState.actions.responseHandler || pass;
+            if (!sq[name]) {
+                var preState = viewsActionsState.state
+                    ? Object.assign({}, viewsActionsState.state, copy(response))
+                    : copy(response);
+                var finalState = Object.assign({}, {instName: name}, preState);
+                var appObj = Object.assign({}, viewsActionsState,
+                    {state: Object.assign({}, finalState, responseHandler(finalState, {}, response)),
+                    render: ReactRender(function () { return domElement; })});
+                sq[name] = app(appObj);
+            } else {
+                sq[name].emit('responseHandler', response);
+            }
+        };
+    
+        var thenHandler = function (key) { return function (response) {
+            sq[key] = response;
+            mainThenHandler(response);
+        }; };
+    
+        if (domElement && !sq[name]) {
+            // Use this stateResource Type so if multiple apps need the same resource we only call that once
+            if (stateResources) {
+                if (viewsActionsState.state.view === 'Loading') {
+                    sq[name] = app(Object.assign({}, viewsActionsState,
+                        {render: ReactRender(function () { return domElement; })}));
+                }
+                stateResources = [].concat(stateResources);
+                stateResources.forEach(function (stateResource) {
+                    if (stateResource.type === 'json') {
+                        if (
+                            !stateResource.reuse ||
+                            (stateResource.reuse && typeof sq[stateResource.resource] === 'undefined')
+                        ) {
+                            sq[stateResource.resource] = false;
+                            runRequest(sq, name, stateResource, thenHandler, debug$$1);
+                        } else {
+                            ready(function () { return sq[stateResource.resource]; }, mainThenHandler);
+                        }
+                    }
+                });
+            } else {
+                sq[name] = app(Object.assign({}, viewsActionsState,
+                    {render: ReactRender(function () { return domElement; })}));
+            }
+        } else {
+            sq[name] = null;
+        }
+    };
+    
+    var __loader = function (extendFiles, registry, loading, sq) {
+        if ( registry === void 0 ) registry = {};
+        if ( loading === void 0 ) loading = {};
+        if ( sq === void 0 ) sq = window.sq;
+    
+        return function (
+        filename,
+        fn,
+        extend
+    ) {
+        if ( extend === void 0 ) extend = false;
+    
+        var root = document.getElementById('extend-scripts');
+        var maybeLoad = function (script) {
+            if (typeof loading[script] === 'undefined') {
+                loading[script] = true;
+                var nScript = document.createElement('script');
+                nScript.onload = function () {
+                    registry[script] = true;
+                };
+                root.appendChild(nScript);
+                nScript.src = script;
+            }
+        };
+    
+        var items = [].concat(extend ? extendFiles : []).concat(filename);
+    
+        if (extend) {
+            extendFiles.forEach(function (script) { return maybeLoad(script); });
+            ready(function () { return extendFiles.every(function (item) { return !!registry[item]; }); }, function () { return maybeLoad(filename); });
+        } else {
+            maybeLoad(filename);
+        }
+    
+        sq.ready(function () { return items.every(function (item) { return !!registry[item]; }); }, function () { return fn(); });
+    };
+    };
+    
+    var run = function (filename, camel, id, state, extend) {
+        var sq = window.sq;
+        var innerRun = function () {
+            try {
+                sq[camel](id, Object.assign({}, sq.state, sq.aliases, sq.componentViews, JSON.parse(state)));
+            } catch (e) {
+                console.log(e);
+                console.trace();
+                console.error(("Could not render component \"" + camel + "\" with id \"" + id + "\""));
+            }
+        };
+        sq.loader(filename, innerRun, extend);
+    };
+    
+    /**
+     *
+     * @param state
+     * @param actions
+     * @param subscriber
+     */
+    var subscribeHandler = function (state, actions, subscriber) {
+        var final = {
+            _subscribers: state._subscribers || {}
+        };
+        if (typeof final._subscribers[subscriber.event] === 'undefined') {
+            final._subscribers[subscriber.event] = [];
+        }
+        if (
+            !final._subscribers[subscriber.event].find(
+                function (item) { return item.action === subscriber.action && item.id === subscriber.id; }
+            )
+        ) {
+            final._subscribers[subscriber.event] = final._subscribers[subscriber.event].concat(subscriber);
+        }
+        return final;
+    };
+    
+    var getSubscribers = function (state, event) { return state._subscribers && state._subscribers[event] ? state._subscribers[event] : []; };
+    
+    var tryId = function (id) {
+        if (typeof window.sq[id] === 'undefined') {
+            throw ("'" + id + "' does not exist in 'window.sq[id]'.  Its likely you have a typo in your id or this app instance was not successfully instantiated after 10 seconds of the page load.");
+        }
+        return window.sq[id];
+    };
+    
+    var __publish = function (eventsObject) { return function (state, actions, data) {
+        if (!state) {
+            return eventsObject;
+        }
+        if (!data.event) {
+            console.error(
+                ("You have not specified an event for the publish action using data\n" + (JSON.stringify(data, null, 2)))
+            );
+            console.trace();
+        }
+        if (data.after) {
+            var result = eventsObject[data.event](state, actions, data);
+            getSubscribers(state, data.event).forEach(function (subscriber) {
+                tryId(subscriber.id).emit(subscriber.action, { data: data, result: result });
+            });
+            return result;
+        } else if (data.before) {
+            getSubscribers(state, data.event).forEach(function (subscriber) {
+                tryId(subscriber.id).emit(subscriber.action, { data: data });
+            });
+            return eventsObject[data.event](state, actions, data);
+        } else {
+            return eventsObject[data.event](state, actions, data);
+        }
+    }; };
+    
+    var allSubscribers = function (state, event, data) { return getSubscribers(state, event).forEach(function (subscriber) {
+            tryId(subscriber.id).emit(subscriber.action, data);
+        }); };
+    
+    var subscribe = function (id, subscriber) {
+        setTimeout(function () {
+            tryId(id);
+        }, 10000);
+        window.sq.ready(function () { return window.sq[id]; }, function (app) { return app.emit('subscribe', subscriber); }, 50);
+    };
+    
+    // Builds the event object to be merged into the actions object
+    var events = function (eventsObject) { return ({
+        publish: __publish(eventsObject),
+        subscribe: subscribeHandler
+    }); };
+    
+    var MINIMUM_TWO_PARAMETERS = "actions.emit expects a minimum of two parameters.  \n1. the id or alias of the app dom element.  \n2. the action of the dom element";
+    
+    var missingElement = function (first) { return (first + " does not exist as an element ID in the dom or an alias.\nIts preferable to use the app event system to avoid these issues.\n"); };
+    
+    var emit = function (state, actions) {
+        var params = [], len = arguments.length - 2;
+        while ( len-- > 0 ) params[ len ] = arguments[ len + 2 ];
+    
+        if (!params.length > 1) {
+            console.error(MINIMUM_TWO_PARAMETERS);
+        }
+        var first = params.shift();
+    
+        var app = actions[first] || window.sq[first] || window.sq[window.sq.aliases[first]];
+        if (!app) {
+            console.error(missingElement(first));
+        }
+        console.log(("Calling action '" + (params[0]) + "' on app '" + first + "'"));
+        app.emit.apply(app, params);
+    };
+    
+    var addFunctionId = function (fn, id) {
+        fn.functionId = id;
+        return fn;
+    };
+    
+    var addDomAction = function (state, actions, event, actionName, fn) {
+        if (actions[actionName] && actions[actionName].functionId !== fn.functionId) {
+            throw ("'" + actionName + "' clashes with another name in actions");
+        }
+        var dom = actions.document || document;
+        if (!actions[actionName]) {
+            actions[actionName] = fn;
+        }
+        dom.addEventListener(event, actions[actionName]);
+    };
+    
+    var removeDomAction = function (state, actions, event, actionName) {
+        var dom = actions.document || document;
+        dom.removeEventListener(event, actions[actionName]);
+    };
+    
+    var mergeEvents = function (actions) {
+        var initEventsObject = {};
+        if (actions.publish) {
+            initEventsObject = actions.publish();
+        }
+        return events(Object.assign({}, initEventsObject));
+    };
+    
+    var baseActions = function (actions) { return (Object.assign({}, {emit: emit,
+        addDomAction: addDomAction,
+        removeDomAction: removeDomAction},
+        actions,
+        mergeEvents(actions))); };
+    
+    exports = {
+        state: {},
+        components: {},
+        componentViews: {},
+        aliases: {},
+        __replaceParams: __replaceParams,
+        addFunctionId: addFunctionId,
+        allSubscribers: allSubscribers,
+        app: app,
+        appInstance: appInstance,
+        capitalize: capitalize,
+        clean: clean,
+        compose: compose,
+        copy: copy,
+        createMarkup: createMarkup,
+        debug: debug,
+        baseActions: baseActions,
+        __loader: __loader,
+        events: events,
+        flatten: flatten,
+        filterByKeys: filterByKeys,
+        friendlyDate: friendlyDate,
+        friendlyDateFromString: friendlyDateFromString,
+        getUrlParameter: getUrlParameter,
+        highlightWords: highlightWords,
+        htmlDecode: htmlDecode,
+        immutable: immutable,
+        arrayFromSet: arrayFromSet,
+        isItems: isItems,
+        isLocalhost: isLocalhost,
+        keyValue: keyValue,
+        KeyValue: KeyValue,
+        run: run,
+        parseQuery: parseQuery,
+        pipe: pipe,
+        reactKey: reactKey,
+        ready: ready,
+        slugify: slugify,
+        stateJson: stateJson,
+        subscribe: subscribe,
+        uniqueId: __uniqueId()
+    };
+    
+    return exports;
+    
+    }({}));
+
+</script>
+<script>
+    (function(sq) {
+        sq.state.site = {"barwonClientUrl":"https://www.barwonwater.vic.gov.au/_webservices/json","logoURL":"https://www.barwonwater.vic.gov.au/__data/assets/file/0014/824/logo-barwon-water.svg","legalName":"Barwon Region Water Corporation","siteName":"Barwon Water","homeURL":"https://www.barwonwater.vic.gov.au","menu":[{"asset_assetid":"363","asset_name":"Billing and accounts","asset_url_path":"/billing-and-accounts"},{"asset_assetid":"644","asset_name":"Water and waste","asset_url_path":"/water-and-waste"},{"asset_assetid":"425","asset_name":"Properties and development","asset_url_path":"/properties-and-development"},{"asset_assetid":"746","asset_name":"Community and education","asset_url_path":"/community-and-education"},{"asset_assetid":"463","asset_name":"About us","asset_url_path":"/about-us"}],"siteLegalName":"Barwon Region Water Corporation","footerAdHocContent":"<p>Barwon Water acknowledges Aboriginal peoples as the Traditional Owners and custodians of the land on which we live and work, and the water on which we rely. We pay our respect to Elders, past and present.<br /> <br />Aboriginal and Torres Strait Islander peoples are advised that this website may contain images or names of people who have passed away.</p>","hasFooterAdHocContent":true,"subscribeUrl":"https://barwonwater.createsend.com/t/r/s/ukuityi/","feedbackFormAction":"https://www.barwonwater.vic.gov.au/feedback?&SQ_DESIGN_NAME=json&SQ_PAINT_LAYOUT_NAME=form-error","subscribeId":"cm-ukuityi-ukuityi","instagramUrl":"https://www.instagram.com/barwonwater/","linkedinUrl":"https://www.linkedin.com/company/1132911/","twitterUrl":"https://twitter.com/barwonwater","facebookUrl":"https://www.facebook.com/barwonwater","youtubeUrl":"https://www.youtube.com/user/barwonwater","webServiceHome":"https://www.barwonwater.vic.gov.au/_webservices/json/home","reportAFault":"https://www.barwonwater.vic.gov.au/water-and-waste/alerts-and-updates/snap-send-solve","faultsEmergencies":"","matrixSearchPage":"https://www.barwonwater.vic.gov.au/search","billHistory":"","_webserviceSuggestUrl":"/_webservices/json/suggest-main-funnelback","_webserviceSearchUrl":"/_webservices/json/search-main-funnelback","_webserviceDashboard":"https://www.barwonwater.vic.gov.au/_webservices/json/dashboard","loginURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/_login","facebookLoginURL":"https://www.barwonwater.vic.gov.au/facebook-registration","googleLoginURL":"https://www.barwonwater.vic.gov.au/google-registration","matrixUserCreationURL":"https://www.barwonwater.vic.gov.au/register-with-barwon","passwordResetURL":"https://www.barwonwater.vic.gov.au/billing-and-accounts/billing-and-accounts-not-in-ia/forgot-my-password","userRegistrationURL":"https://www.barwonwater.vic.gov.au/register","userDashboardURL":"","_webserviceAddress":"https://www2.barwonwater.vic.gov.au/apps/typeahead/typeAhead.cfm","queryObject":{"query":"!padrenull","collection":"barwon-site-search","form":"matrix_json"}}
+    })(sq);
+</script>
+
+<script src="https://www.barwonwater.vic.gov.au?SQ_DESIGN_NAME=menu"></script>
+
+
+<!-- /end src-matrix/nested-content/head/global-design-head-site-state.html -->    <!-- State - Page -->
+    <!-- begin src-matrix/nested-content/head/global-design-head-page-state.html -->
+
+<script>
+    sq.state.page = {"lineage":["101","463","480"],"lineageDetail":[{"asset_assetid":"101","asset_name":"Barwon Water","asset_url":"https://www.barwonwater.vic.gov.au"},{"asset_assetid":"463","asset_name":"About us","asset_url":"https://www.barwonwater.vic.gov.au/about-us"},{"asset_assetid":"480","asset_name":"Major projects","asset_url":"https://www.barwonwater.vic.gov.au/about-us/major-projects"}],"frontend_asset_name":"Major projects","l1Header":"About us"}
+</script>
+<!-- /end src-matrix/nested-content/head/global-design-head-page-state.html -->    <!-- State - User -->
+    <!-- begin src-matrix/nested-content/head/global-design-head-user-state.html -->
+
+<script>
+    sq.state.user = {"isResidential":false,"isUserLoggedIn":false,"loggedInOverride":false,"customer_id":0,"customer_plumber_flag":"","customer_land_developer_flag":"","customer_solicitor_flag":"","customer_account_primary":0,"customer_account_selected":0,"customer_account_status":"","customer_login_type":"matrix","first_name":"","last_name":"","email":"","accountMenu":[{"accountItemClass":"nav-account__link nav-account__link--dashboard","name":"","url":""},{"accountItemClass":"nav-account__link nav-account__link--update","name":"","url":""},{"accountItemClass":"nav-account__link nav-account__link--switch-account","name":"","url":""},{"accountItemClass":"nav-account__link nav-account__link--payment","name":"","url":""},{"accountItemClass":"nav-account__link nav-account__link--history","name":"","url":""},{"accountItemClass":"nav-account__link nav-account__link--password","name":"","url":""},{"accountItemClass":"nav-account__link nav-account__link--sign-out","url":"?SQ_ACTION=logout","name":"Sign out"}]}
+    window.dataLayer = window.dataLayer || [{ userID: sq.uniqueId('anonLocalStorage')}];
+</script>
+<!-- /end src-matrix/nested-content/head/global-design-head-user-state.html -->
+
+<div id="content_container_224163">
+<script>
+    (function()
+    {
+        var script  = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src  = "https://webchat.mitel.io/bootstrapper.js?accountid%3DYjA2OWFiMTgtODk3Yy00ZjVmLWE2YTEtOTllZjA1ZGEyYWFj%26chatname%3DV2ViIENoYXQ%3D";
+        document.head.appendChild(script);
+    })();
+    
+    // Define a function to allow chat to be opened by other actions.
+    function invokeChat() {
+        document.getElementById("cloudlink-chat-overlay-contact-us-button").click();
+    }
+    
+    // Invoke chat on page load if url param contains "livechat"
+    var urlParams = window.location.search;
+    if (urlParams.includes("livechat")) {
+        document.body.onload = function()
+        {
+            // Create a mutation observer to find DOM changes
+            // Select the node that will be observed for mutations
+            const targetNode = document.body;
+            
+            // Options for the observer (which mutations to observe)
+            const config = { attributes: true, childList: true, subtree: true };
+            
+            // Callback function to execute when mutations are observed
+            const callback = function(mutationsList, observer) {
+                // Use traditional 'for loops' for IE 11
+                for(const mutation of mutationsList) {
+                    if (mutation.type === 'childList') {
+                        var element = document.getElementById("cloudlink-chat-overlay-contact-us-button");
+                        if(typeof(element) != 'undefined' && element != null){
+                            invokeChat();
+                            observer.disconnect();
+                        }
+                    }
+                }
+            };
+            
+            // Create an observer instance linked to the callback function
+            const observer = new MutationObserver(callback);
+            
+            // Start observing the target node for configured mutations
+            observer.observe(targetNode, config);
+        };
+    }
+</script>
+</div>
+
+    <!-- Site Configuration -->
+    
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/vendor/modernizr.min.js"></script>
+
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default,fetch,Array.prototype.find,Array.prototype.from,Array.prototype.keys,Array.prototype.findIndex,Array.prototype.includes,String.prototype.padStart"></script>
+
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/vendor/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/vendor/react-dom.production.min.js" crossorigin="anonymous"></script>
+
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/vendor/prop-types.min.js" crossorigin="anonymous"></script>
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/vendor/create-react-class.min.js" crossorigin="anonymous"></script>
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/vendor/moment.min.js" crossorigin="anonymous"></script>
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/vendor/en-au.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/main.css?h=f097ce1">
+<link rel="stylesheet" href="https://www.barwonwater.vic.gov.au/_design/css/ad-hoc/site-extras.css?v=0.1.14">
+<!-- Site Layout Footer Scripts -->
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/sq-swagger-client.js?h=f097ce1"></script>
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/navigation.js?h=bb1f957"></script>
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/global-footer.js?h=bb1f957"></script>
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/lhs.js?h=bb1f957"></script>
+<!-- /Site Head -->
+
+    <!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WJPBF5C');</script>
+<!-- End Google Tag Manager -->
+
+
+
+    <!-- Page Configuration -->
+    
+
+    <!-- Site Configuration - Metadata -->
+    
+    <meta name="asset_id" content="480" />
+    <meta name="site_internal_domains" content="" />
+    
+        <!-- Facebook Pixel Code -->
+    <script>
+    ! function(f, b, e, v, n, t, s) {
+      if (f.fbq) return;
+      n = f.fbq = function() { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) };
+      if (!f._fbq) f._fbq = n;
+      n.push = n;
+      n.loaded = !0;
+      n.version = '2.0';
+      n.queue = [];
+      t = b.createElement(e);
+      t.async = !0;
+      t.src = v;
+      s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '901068086759438');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=901068086759438&ev=PageView&noscript=1" /></noscript>
+    <!-- End Facebook Pixel Code -->    
+    <!-- Facebook domain verification -->
+    <meta name="facebook-domain-verification" content="w28udl8xbg2ww5gq4mfxwa8os8zqzo" />
+    
+  
+<!--
+  Running Squiz Matrix
+  Developed by Squiz - http://www.squiz.net
+  Squiz, Squiz Matrix, MySource, MySource Matrix and Squiz.net are registered Trademarks of Squiz Pty Ltd
+  Page generated: 28 November 2025 07:33:11
+-->
+
+
+</head>
+
+  <body>
+    <input type="hidden" name="token" value="901d9b0757bfc046322ebfb8d85b3047f8920107"  class="sq-form-field" id="token" />        <!-- begin src-matrix/nested-content/header/global-design-skip-to-content.html -->
+<div id="skip-links" class="skip-links" aria-hidden="true">
+    <ul class="skip-links__list">
+        <li class="skip-links__item"><a class="skip-links__link" href="#main">Skip to content</a></li>
+        <li class="skip-links__item"><a class="skip-links__link" href="#navigation">Skip to navigation</a></li>
+    </ul>
+</div>
+<!-- /end src-matrix/nested-content/header/global-design-skip-to-content.html -->    <div id="page-wrapper" class="page-wrapper">
+      <!-- begin src-matrix/nested-content/header/global-design-header.html -->
+<!--noindex-->
+<script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/global-modal.js"></script>
+<div id="global-modal"></div>
+<script>
+sq.globalModal('global-modal', {});
+</script>
+
+
+    <header role="banner" class="header" id="header">
+        
+<!-- begin src-matrix/nested-content/header/global-site-header.html -->
+<div class="header__contents"><div class="header__bar"><div class="header__container"><a href="https://www.barwonwater.vic.gov.au" class="header-logo" title="Barwon Water"><img src="https://www.barwonwater.vic.gov.au/__data/assets/file/0014/824/logo-barwon-water.svg" alt="Barwon Water" class="header-logo__image"></img></a><div class="header-controls"><button type="button" id="toggle-header-search" aria-controls="header-search" aria-pressed="false" class="header-control header-control--search"><span class="sr-only">Toggle Header Search</span></button><button type="button" id="toggle-login" aria-controls="modal-login" aria-pressed="false" class="header-control header-control--account"><span class="header-control__text header-control__text--account">Sign In</span></button><button type="button" id="toggle-nav-main" aria-controls="header-drawer-contents" aria-pressed="false" class="header-control header-control--nav"><span class="sr-only">Toggle Main Nav Menu</span></button></div></div></div><div class="header-drawer" id="header-drawer"><div id="header-drawer-contents" class="undefined"><button type="button" id="close-header-search-mobile" aria-controls="header-search" class="header-control header-control--close-search-mobile"><span class="sr-only">Close Header Search</span></button><div class="header-menus"><nav id="nav-main" class="nav-main" role="navigation"><ul id="nav-main-list-base" aria-label="Main Navigation Menu" class="nav-main__list nav-main__list--level-1"><li role="none" class="nav-main__item nav-main__item--level-1"><a href="/billing-and-accounts" aria-expanded="false" class="nav-main__link nav-main__link--level-1">Billing and accounts</a></li><li role="none" class="nav-main__item nav-main__item--level-1"><a href="/properties-and-development" aria-expanded="false" class="nav-main__link nav-main__link--level-1">Properties and development</a></li><li role="none" class="nav-main__item nav-main__item--level-1"><a href="/about-us" aria-expanded="false" class="nav-main__link nav-main__link--level-1">About us</a></li><li role="none" class="nav-main__item nav-main__item--level-1"><a href="/water-and-waste" aria-expanded="false" class="nav-main__link nav-main__link--level-1">Water and waste</a></li><li role="none" class="nav-main__item nav-main__item--level-1"><a href="/community-and-education" aria-expanded="false" class="nav-main__link nav-main__link--level-1">Community and education</a></li></ul></nav></div></div></div></div>
+<script>
+    // begin src-matrix/nested-content/header/site-layout-header-navigation-transducer.js
+    
+    (function (exports,sq) {
+    'use strict';
+    
+    var generateItems = function (menu, final) {
+        if (menu.meta) {
+            var meta = menu.meta;
+            delete menu['meta'];
+            final[meta.assetid] = meta;
+            Object.keys(menu).forEach(function (item) {
+                var menuItem = menu[item];
+                if (Object.keys(menuItem).length) {
+                    menu[item] = generateItems(menuItem, final);
+                }
+            });
+        }
+        return menu;
+    };
+    
+    var navigationTransducer = function (ref) {
+        var state = ref.state;
+        var menu = ref.menu;
+    
+        menu = sq.copy(menu);
+        menu.meta = { assetid: 'base' };
+        var final = Object.assign(sq.copy(state.site),
+            sq.copy(state.user));
+        final.items = generateItems(menu, final);
+        return final;
+    };
+    
+    sq.navigationTransducer = navigationTransducer;
+    
+    
+    
+    }({},sq));
+
+    // /end src-matrix/nested-content/header/site-layout-header-navigation-transducer.js
+    document.getElementById('header').innerHTML = '';
+    /**
+     *  Dependencies:
+     *  - State: src-matrix/nested-content/head/global-design-head-site-state.html
+     */
+    sq.navigation('header', sq.navigationTransducer({state: sq.state, menu: sq.siteTree}));
+</script>
+<!-- /end src-matrix/nested-content/header/global-site-header.html -->
+<div id="extend-scripts"></div>
+<script>
+    (function(sq) {
+        sq.loader = sq.__loader([
+            'https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/sq-extend.js?h=f097ce1',
+            'https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/form.js?h=f097ce1',
+        ]);
+    })(sq)
+</script>
+
+    </header>
+
+
+<!--endnoindex-->
+<!-- /end src-matrix/nested-content/header/global-design-header.html -->      <div class="main-wrapper">
+        <!-- begin src-matrix/nested-content/main/global-design-body-main.html -->
+<!--noindex-->
+
+<!--endnoindex-->
+
+    
+        <!--noindex-->
+        <script src="https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/banner.js"></script>
+        <div class="banner" style="background-image: url('https://www.barwonwater.vic.gov.au/__data/assets/image/0016/20176/Banner-AboutUs.jpg')">
+            <div class="container">
+                <h2 class="banner__heading">About us</h2>
+            </div>
+         </div>
+         <!--endnoindex-->
+    
+    <div class="container">
+        <div class="row justify-content-center">
+            
+                <!--noindex-->
+                <div class="col-sm-12">
+                    <!-- begin src-matrix/nested-content/main/breadcrumbs.html -->
+
+    <nav class="breadcrumbs" id="breadcumbs">
+        <p id="breadcrumb__label" class="visuallyhidden">You are here:</p>
+        <ol itemscope itemtype="http://schema.org/BreadcrumbList"  class="breadcrumbs__list" aria-labelledby="breadcrumb__label">
+            <li itemprop="itemListElement" itemscope
+        itemtype="http://schema.org/ListItem" class="breadcrumbs__item">
+        <a itemprop="item"  class="breadcrumbs__link index-0" href="/">
+            <span itemprop="name">Home</span>
+        </a>
+        <meta itemprop="position" content="1" />
+    </li><li itemprop="itemListElement" itemscope
+        itemtype="http://schema.org/ListItem" class="breadcrumbs__item">
+            <span itemprop="name">About us</span>
+        <meta itemprop="position" content="1" />
+    </li>
+        </ol>
+    </nav>
+<!-- end src-matrix/nested-content/main/breadcrumbs.html -->
+                 </div>
+                 <!--endnoindex-->
+            
+            
+                <!--noindex-->
+                <div class="col-sm-12 col-lg-3">
+                    <!-- Show Left Sidebar True -->
+                    
+                    <!-- Show Left Site Sidebar True -->
+                    
+                        
+<!-- begin src-matrix/nested-content/main/site-layout-sidebar-left.html -->
+<div id="nav-lhs" class="nav lhs"></div>
+<script>
+    (function(sq){
+        sq.lhs('nav-lhs', {
+            lineage: sq.state.page.lineage,
+            siteTree: sq.siteTree
+        });
+    })(sq);
+</script>
+<!-- /end src-matrix/nested-content/main/site-layout-sidebar-left.html -->
+
+                    
+                    
+                </div>
+                <!--endnoindex-->
+                <div class="col-sm-12 col-lg-9">
+                    <main class="main" id="main">
+                        <div class="content-viewport ">
+                            
+                                <!--noindex-->
+                                <h1>Major projects</h1>
+                                <!--endnoindex-->
+                            
+                            
+<div id="intro_482">
+<p class="text__leader">We&rsquo;re working on a number of innovative projects to ensure we deliver secure and efficient services that support the future growth of our region.</p><div id="content_container_100627"></div>
+</div>
+<script>console['info']("Begin 'transducer' for container #feature-boxes-159896 featureBoxes")</script><script>console['info']("Complete 'transducer' for container #feature-boxes-159896 featureBoxes")</script><script>console['info']("Begin 'featureBoxes' for container #feature-boxes-159896")</script><!-- Begin container id #feature-boxes-159896 'featureBoxes' -->
+<div><div id="feature-boxes-159896" class="feature-boxes-wrapper"></div><script>sq.run( 'https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js?v=2025-09-15T013833.308Z', 'featureBoxes', 'feature-boxes-159896', '{"cls":"feature-boxes-wrapper","namespace":"feature-boxes","assetid":"159896","id":"feature-boxes-159896","camel":"featureBoxes","_webservice":"https://www.barwonwater.vic.gov.au/_webservices/json/paymentoptionsbpay","src":"https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js","containerType":"div","intro":{"heading":"","contents":""},"boxes":[{"type":"plain","heading":"Renewable Organics Networks","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EBarwon%20Water%20is%20partnering%20with%20the%20five%20councils%20in%20the%20G21%20region%20and%20major%20export%20manufacturers%20on%20opportunities%20for%20two%20Renewable%20Organics%20Networks%20that%20will%20leverage%20existing%20water%20and%20sewage%20infrastructure%20to%20significantly%20reduce%20waste%20going%20to%20landfill%20and%20create%20jobs.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/renewable-organics-networks","actionText":"Learn more on the Renewable Organics Networks"},{"type":"plain","heading":"Porronggitj Karrong and aqueduct","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EHeritage%20Victoria%20has%20granted%20Barwon%20Water%20a%20permit%20to%20remove%204%20of%20the%2014%20spans%20of%20the%20heritage-listed%20Ovoid%20Sewer%20Aqueduct%20in%20Breakwater.%20In%20considering%20the%20future%20of%20the%20aqueduct%2C%20we%20have%20investigated%20options%20for%20improving%20public%20access%20to%20the%20Barwon%20River%20and%20surrounding%20land%2C%20while%20balancing%20heritage%20values%2C%20Aboriginal%20cultural%20values%2C%20ensuring%20public%20safety%2C%20opening%20up%20public%20access%20and%20managing%20cost%20implications%20for%20our%20customers.%20The%20project%20will%20create%20a%20new%20cultural%20and%20community%20precinct%2C%20to%20be%20called%20%3Cem%3EPorronggitj%20Karrong%3C%2Fem%3E%2C%20meaning%20%26lsquo%3Bplace%20of%20the%20Brolga%26rsquo%3B%20in%20Wadawurrung%20language.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/aqueduct-structure-proposal","actionText":"Learn more on Porronggitj Karrong and aqueduct"}]}', false);</script></div>
+<!-- End container id #feature-boxes-159896 'featureBoxes' -->
+<script>console['info']("Complete 'featureBoxes' for container #feature-boxes-159896")</script>
+<script>console['info']("Begin 'transducer' for container #feature-boxes-199349 featureBoxes")</script><script>console['info']("Complete 'transducer' for container #feature-boxes-199349 featureBoxes")</script><script>console['info']("Begin 'featureBoxes' for container #feature-boxes-199349")</script><!-- Begin container id #feature-boxes-199349 'featureBoxes' -->
+<div><div id="feature-boxes-199349" class="feature-boxes-wrapper"></div><script>sq.run( 'https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js?v=2025-09-15T013833.308Z', 'featureBoxes', 'feature-boxes-199349', '{"cls":"feature-boxes-wrapper","namespace":"feature-boxes","assetid":"199349","id":"feature-boxes-199349","camel":"featureBoxes","_webservice":"https://www.barwonwater.vic.gov.au/_webservices/json/paymentoptionsbpay","src":"https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js","containerType":"div","intro":{"heading":"","contents":""},"boxes":[{"type":"plain","heading":"Birregurra water supply upgrade","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EWe%26rsquo%3Bre%20pleased%20to%20announce%20that%20we%20have%20completed%20building%20a%20new%20underground%20pipeline%20to%20connect%20Birregurra%20to%20the%20Colac%20water%20supply%20system.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/birregurra-water-supply-upgrade","actionText":"Learn more about the Birregurra water supply upgrade project"},{"type":"plain","heading":"Colac Water Pipeline Upgrade","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EBarwon%20Water%20is%20planning%20to%20upgrade%20sections%20of%20the%20Colac%20water%20pipeline%20to%20ensure%20we%20can%20continue%20to%20provide%20high%20quality%2C%20secure%20and%20affordable%20services%20for%20our%20customers.%3C%2Fp%3E%3Cp%3EThe%20Colac%20pipeline%20%28approximately%2026%20kilometres%29%20provides%20water%20supply%20to%20Colac%20from%20reservoirs%20in%20the%20Otways%20%28West%20Gellibrand%20and%20Olangolah%20Reservoirs%29.%3C%2Fp%3E%3Cp%3EThe%20sections%20are%20planned%20to%20be%20upgraded%20and%20replaced%20in%20two%20parts%3A%3C%2Fp%3E%3Cul%20type%3D%22disc%22%3E%3Cli%3EPart%201%3A%26nbsp%3B%3Cstrong%3ESections%2019%2C%2020%2C%2021%2C%2023%20%26amp%3B%2025i%3C%2Fstrong%3E%3C%2Fli%3E%3Cli%3EPart%202%3A%26nbsp%3B%3Cstrong%3ESections%206%2C%2025ii%2C%2026%2C%2028ii%20%26amp%3B%2035%3C%2Fstrong%3E%3C%2Fli%3E%3C%2Ful%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/Learn-more-about-the-Colac-water-supply-upgrade-project","actionText":"Learn more about the Colac water supply upgrade project"}],"used":true}', false);</script></div>
+<!-- End container id #feature-boxes-199349 'featureBoxes' -->
+<script>console['info']("Complete 'featureBoxes' for container #feature-boxes-199349")</script>
+<script>console['info']("Begin 'transducer' for container #feature-boxes-159947 featureBoxes")</script><script>console['info']("Complete 'transducer' for container #feature-boxes-159947 featureBoxes")</script><script>console['info']("Begin 'featureBoxes' for container #feature-boxes-159947")</script><!-- Begin container id #feature-boxes-159947 'featureBoxes' -->
+<div><div id="feature-boxes-159947" class="feature-boxes-wrapper"></div><script>sq.run( 'https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js?v=2025-09-15T013833.308Z', 'featureBoxes', 'feature-boxes-159947', '{"cls":"feature-boxes-wrapper","namespace":"feature-boxes","assetid":"159947","id":"feature-boxes-159947","camel":"featureBoxes","_webservice":"https://www.barwonwater.vic.gov.au/_webservices/json/paymentoptionsbpay","src":"https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js","containerType":"div","intro":{"heading":"","contents":""},"boxes":[{"type":"plain","heading":"Water mains replacements","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EEvery%20year%2C%20we%20replace%20up%20to%2020%20kilometres%20of%20old%20and%20damaged%20pipes%2C%20at%20a%20cost%20of%20around%20%244%20million.%3C%2Fp%3E%3Cp%3EThis%20important%20ongoing%20maintenance%20program%20minimises%20repairs%2C%20reduces%20supply%20interruptions%20and%20ensures%20continued%20water%20quality.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/water-mains-replacements","actionText":"Learn more on water mains replacements"},{"type":"plain","heading":"Sewer mains replacement and rehabilitation","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EDuring%20the%20program%26rsquo%3Bs%20five%20year%20period%2C%20we%20will%20replace%20up%20to%20150%20kilometres%20of%20old%20and%20damaged%20pipes%2C%20at%20a%20cost%20of%20around%20%2421%20million.%20This%20important%20ongoing%20maintenance%20program%20renews%20the%20mains%2C%20extending%20their%20life%20and%20minimising%20risk%20of%20blockages%2C%20sewer%20spills%20and%20improves%20sewerage%20services.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/sewer-mains-replacement-and-rehabilitation","actionText":"Learn more on sewer mains replacement"}],"used":true}', false);</script></div>
+<!-- End container id #feature-boxes-159947 'featureBoxes' -->
+<script>console['info']("Complete 'featureBoxes' for container #feature-boxes-159947")</script>
+<script>console['info']("Begin 'transducer' for container #feature-boxes-159949 featureBoxes")</script><script>console['info']("Complete 'transducer' for container #feature-boxes-159949 featureBoxes")</script><script>console['info']("Begin 'featureBoxes' for container #feature-boxes-159949")</script><!-- Begin container id #feature-boxes-159949 'featureBoxes' -->
+<div><div id="feature-boxes-159949" class="feature-boxes-wrapper"></div><script>sq.run( 'https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js?v=2025-09-15T013833.308Z', 'featureBoxes', 'feature-boxes-159949', '{"cls":"feature-boxes-wrapper","namespace":"feature-boxes","assetid":"159949","id":"feature-boxes-159949","camel":"featureBoxes","_webservice":"https://www.barwonwater.vic.gov.au/_webservices/json/paymentoptionsbpay","src":"https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js","containerType":"div","intro":{"heading":"","contents":""},"boxes":[{"type":"plain","heading":"Boundary Creek and Big Swamp remediation","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EWe%20are%20committed%20to%20the%20remediation%20of%20Boundary%20Creek%20and%20Big%20Swamp%2C%20addressing%20the%20impacts%20of%20historic%20groundwater%20extraction%20from%20the%20Barwon%20Downs%20Borefield.%3C%2Fp%3E%3Cp%3EWorking%20with%20technical%20experts%20and%20the%20community%20we%20will%20implement%20a%20remediation%20plan%20to%20improve%20environmental%20outcomes%20for%20this%20catchment.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/boundary-creek-and-big-swamp-remediation","actionText":"Learn more on Boundary Creek and Big Swamp"},{"type":"plain","heading":"Pressure management","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EWe%20are%20rolling%20out%20a%20pressure%20management%20program%20in%20greater%20Geelong%2C%20reducing%20leaks%2C%20bursts%20and%20water%20supply%20interruptions.%3C%2Fp%3E%3Cp%3EThe%20program%20targets%20areas%20of%20high%20water%20pressure%2C%20which%20can%20cause%20pipes%20to%20leak%20and%20water%20mains%20to%20burst.%20Excessive%20water%20pressure%20can%20damage%20household%20plumbing%20and%20lead%20to%20higher%20water%20usage.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/pressure-management","actionText":"Learn more on pressure management"}],"used":true}', false);</script></div>
+<!-- End container id #feature-boxes-159949 'featureBoxes' -->
+<script>console['info']("Complete 'featureBoxes' for container #feature-boxes-159949")</script>
+<script>console['info']("Begin 'transducer' for container #feature-boxes-159951 featureBoxes")</script><script>console['info']("Complete 'transducer' for container #feature-boxes-159951 featureBoxes")</script><script>console['info']("Begin 'featureBoxes' for container #feature-boxes-159951")</script><!-- Begin container id #feature-boxes-159951 'featureBoxes' -->
+<div><div id="feature-boxes-159951" class="feature-boxes-wrapper"></div><script>sq.run( 'https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js?v=2025-09-15T013833.308Z', 'featureBoxes', 'feature-boxes-159951', '{"cls":"feature-boxes-wrapper","namespace":"feature-boxes","assetid":"159951","id":"feature-boxes-159951","camel":"featureBoxes","_webservice":"https://www.barwonwater.vic.gov.au/_webservices/json/paymentoptionsbpay","src":"https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js","containerType":"div","intro":{"heading":"","contents":""},"boxes":[{"type":"plain","heading":"Forrest wastewater investigation","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EWith%20tourism%20booming%20and%20the%20increased%20stress%20on%20existing%20septic%20systems%2C%20we%26rsquo%3Bve%20partnered%20with%20the%20Colac%20Otway%20Shire%20Council%20and%20the%20Forrest%20community%20to%20investigate%20opportunities%20for%20wastewater%20improvements%20in%20the%20town.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/forrest-wastewater-investigation","actionText":"Learn more on Forrest wastewater"},{"type":"plain","heading":"Anglesea borefield","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EThe%20Anglesea%20borefield%20is%20one%20of%20a%20number%20of%20water%20sources%20that%20can%20supplement%20the%20greater%20Geelong%20water%20supply%20system.%3C%2Fp%3E%3Cp%3EOur%20access%20to%20groundwater%20from%20the%20Anglesea%20borefield%20is%20governed%20by%20a%20bulk%20entitlement%2C%20issued%20by%20the%20Victorian%20Government.%3C%2Fp%3E%3Cp%3EThe%20borefield%20operates%20in%20conjunction%20with%20an%20extensive%20environmental%20monitoring%20program.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/anglesea-borefield","actionText":"Learn more on the Anglesea borefield"}],"used":true}', false);</script></div>
+<!-- End container id #feature-boxes-159951 'featureBoxes' -->
+<script>console['info']("Complete 'featureBoxes' for container #feature-boxes-159951")</script>
+<script>console['info']("Begin 'transducer' for container #feature-boxes-159958 featureBoxes")</script><script>console['info']("Complete 'transducer' for container #feature-boxes-159958 featureBoxes")</script><script>console['info']("Begin 'featureBoxes' for container #feature-boxes-159958")</script><!-- Begin container id #feature-boxes-159958 'featureBoxes' -->
+<div><div id="feature-boxes-159958" class="feature-boxes-wrapper"></div><script>sq.run( 'https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js?v=2025-09-15T013833.308Z', 'featureBoxes', 'feature-boxes-159958', '{"cls":"feature-boxes-wrapper","namespace":"feature-boxes","assetid":"159958","id":"feature-boxes-159958","camel":"featureBoxes","_webservice":"https://www.barwonwater.vic.gov.au/_webservices/json/paymentoptionsbpay","src":"https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js","containerType":"div","intro":{"heading":"","contents":""},"boxes":[{"type":"plain","heading":"South Geelong redevelopment","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%20style%3D%22border%3A%200px%22%3EThe%20former%20Barwon%20Water%20depot%20located%20at%20Lonsdale%20Street%20South%20Geelong%20is%20no%20longer%20being%20used%20for%20our%20operations.%20At%20this%20stage%2C%20Barwon%20Water%20does%20not%20have%20a%20defined%20plan%20for%20the%20site%2C%20which%20is%20approximately%201.2%20hectares.%3C%2Fp%3E%3Cp%3EThe%20City%20of%20Greater%20Geelong%20Council%20adopted%20the%20South%20Geelong%20Urban%20Design%20Framework%20%28UDF%29%2C%20which%20includes%20the%20former%20Barwon%20Water%20depot%20site%2C%20in%20September%202022.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/south-geelong-redevelopment","actionText":"Learn more on the South Geelong redevelopment"},{"type":"plain","heading":"Murrk Ngubitj Yarram Yaluk","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%20data-olk-copy-source%3D%22MessageBody%22%3EThe%20environmental%20and%20community%20place%20planned%20for%20the%20former%20Bellarine%20Basin%20at%20the%20corner%20of%20Grubb%20and%20Swan%20Bay%20roads%20has%20been%20named%20Murrk%20Ngubitj%20Yarram%20Yaluk%2C%20meaning%20%26lsquo%3Bheadwaters%20of%20continuous%20flowing%20river%26rsquo%3B%20in%20Wadawurrung%20language.%3C%2Fp%3E%3Cp%3EWe%20have%20received%20%24650%2C000%20funding%20under%20the%20Victorian%20Government%26rsquo%3Bs%20Distinctive%20Areas%20and%20Landscapes%20program%20and%20have%20contributed%20the%20same%20amount%20to%20the%20%241.3-million%20project%20to%20remediate%20and%20revegetate%20the%20site.%20Wadawurrung%20Traditional%20Owners%20have%20also%20received%20%24445%2C000%20to%20lead%20the%20project%20through%20Nature%20Fund%20in%20collaboration%20with%20Barwon%20Water.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/bellarine-basin-rehabilitation","actionText":"Learn more about Murrk Ngubitj Yarram Yaluk"}],"used":true}', false);</script></div>
+<!-- End container id #feature-boxes-159958 'featureBoxes' -->
+<script>console['info']("Complete 'featureBoxes' for container #feature-boxes-159958")</script>
+<script>console['info']("Begin 'transducer' for container #feature-boxes-181162 featureBoxes")</script><script>console['info']("Complete 'transducer' for container #feature-boxes-181162 featureBoxes")</script><script>console['info']("Begin 'featureBoxes' for container #feature-boxes-181162")</script><!-- Begin container id #feature-boxes-181162 'featureBoxes' -->
+<div><div id="feature-boxes-181162" class="feature-boxes-wrapper"></div><script>sq.run( 'https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js?v=2025-09-15T013833.308Z', 'featureBoxes', 'feature-boxes-181162', '{"cls":"feature-boxes-wrapper","namespace":"feature-boxes","assetid":"181162","id":"feature-boxes-181162","camel":"featureBoxes","_webservice":"https://www.barwonwater.vic.gov.au/_webservices/json/paymentoptionsbpay","src":"https://www.barwonwater.vic.gov.au/__data/assets/git_bridge/0005/104/static/feature-boxes.js","containerType":"div","intro":{"heading":"","contents":""},"boxes":[{"type":"plain","heading":"Recycled water on the Bellarine","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EWe%26rsquo%3Bre%20expanding%20the%20supply%20of%20recycled%20water%20on%20the%20Bellarine%20Peninsula.%20Maximising%20the%20use%20of%20recycled%20water%20supports%20production%2C%20growth%2C%20economic%20development%20and%20regional%20prosperity%20on%20the%20Bellarine.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/recycled-water-on-the-bellarine","actionText":"Learn more on recycled water on the Bellarine"},{"type":"plain","heading":"Hydrogen","imageURL":"","imageAltText":"","imageSources":"","contents":"%3Cp%3EWe%26rsquo%3Bre%20supportive%20of%20%26lsquo%3Bgreen%26rsquo%3B%20renewable%20hydrogen%20projects%20within%20our%20region%20to%20generate%20a%20clean%20source%20of%20energy%20to%20diversify%20energy%20sources.%3C%2Fp%3E","billerCode":"","actionURL":"https://www.barwonwater.vic.gov.au/about-us/major-projects/renewable-hydrogen","actionText":"Learn more on Hydrogen projects"}],"used":true}', false);</script></div>
+<!-- End container id #feature-boxes-181162 'featureBoxes' -->
+<script>console['info']("Complete 'featureBoxes' for container #feature-boxes-181162")</script>
+
+                        </div>
+                        
+                            <!--noindex-->
+                            <div class="social-share">
+    <h2 class="social-share__heading">Share This Page</h2>
+    <ul class="addthis_toolbox addthis_default_style social-share__list">
+        <li class="social-share__item">
+            <a class="addthis_button_facebook icon-social-facebook-coloured social-share__link social-share__link--facebook"><span class="visuallyhidden">Facebook</span></a>
+        </li>
+        <li class="social-share__item">
+            <a class="addthis_button_twitter icon-social-twitter social-share__link social-share__link--twitter"><span class="visuallyhidden">Twitter</span></a>
+        </li>
+        <li class="social-share__item">
+            <a class="addthis_button_email icon-social-email-coloured social-share__link social-share__link--email"><span class="visuallyhidden">Email</span></a>
+        </li>
+    </ul>
+</div>
+                            <!--endnoindex-->
+                        
+                    </main>
+                </div>
+            
+            
+        </div>
+    </div>
+
+<!--noindex-->
+
+<!--endnoindex-->
+<!-- /end src-matrix/nested-content/main/global-design-body-main.html -->        <!-- begin src-matrix/nested-content/footer/global-design-footer.html -->
+<!--noindex-->
+
+
+<!-- Show Footer True -->
+
+<div id="global-footer-170"></div>
+<script>
+    (function(sq) {
+        sq.state.footer = {"footerLinks":[{"asset_name":"Legal disclaimer and copyright","asset_url_path":"/legal/legal"},{"asset_name":"Protecting your privacy","asset_url_path":"/legal/privacy"},{"asset_name":"Accessibility statement","asset_url_path":"/legal/accessibility"},{"asset_name":"In your language","asset_url_path":"/about-us/contact-us/in-your-language"}]};
+        sq.globalFooter('global-footer-170', Object.assign(
+            {},
+            sq.state.site,
+            {
+                user: sq.state.user,
+                lineage: sq.state.page.lineage
+            },
+            sq.state.footer,
+            {
+                siteTree: sq.siteTree
+            })
+        );
+    })(sq);
+</script>
+<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5a2a25a975ec241c" async="async"></script>
+
+
+
+<!--endnoindex-->
+<!-- /end src-matrix/nested-content/footer/global-design-footer.html -->      </div>
+    </div>
+    
+  
+
+</body>
+
+</html>
