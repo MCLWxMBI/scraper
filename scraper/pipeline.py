@@ -2,7 +2,8 @@
 
 Run ``uv run python main.py`` or use ``--index NAME --limit 1`` for a small
 development run. Use --text for JSON-array .txt output instead, or --fixtures for
-saved historical HTML/PDF input and text output. History is not tracked.
+saved historical HTML/PDF input and text output. Live discovery skips deleted
+URLs and successful unchanged article content before Claude calls.
 ANTHROPIC_API_KEY and CLAUDE_MODEL can be supplied in the project's .env file.
 """
 
@@ -22,9 +23,11 @@ from playwright.sync_api import Browser, sync_playwright
 
 from scraper import extraction, discovery, text_export
 from scraper.config import load_environment
+from scraper.decision_log import DecisionLog, DecisionLogError, DEFAULT_LOG
 from scraper.fixtures import FixtureCollection
 from scraper.db.connection import DatabaseError, connect_database
 from scraper.db.indexes import load_active_indexes
+from scraper.db.history import HistoryError, check_history_table
 from scraper.db.opportunities import (
     OpportunityStorageError, check_opportunity_table, save_opportunity,
 )
@@ -52,6 +55,7 @@ def compose_indexes(
     output_mode: Literal['db', 'txt'] = 'db',
     connection: psycopg.Connection | None = None,
     fixtures: FixtureCollection | None = None,
+    decision_log: DecisionLog | None = None,
 ) -> int:
     """Save validated records to the selected destination and continue on errors.
 
@@ -66,14 +70,16 @@ def compose_indexes(
         raise ValueError('output_mode must be db or txt')
     if fixtures is not None and output_mode != 'txt':
         raise ValueError('Fixture input requires text output')
-    if output_mode == 'db' and connection is None:
-        raise ValueError('Database output requires a connection')
+    if fixtures is None and connection is None:
+        raise ValueError('Live discovery requires a history database connection')
     output_dir = Path(output_dir)
     completed = failed = empty = skipped = extracted = valid = invalid = extraction_failed = 0
     source_failures = 0
+    history_skipped = 0
     identities: dict[str, str] = {}
 
     for name, url in indexes:
+        decision = decision_log.for_index(name, url) if decision_log else None
         skip_reason = (fixtures.skip_reason(url) if fixtures is not None
                        else 'past projects' if discovery.is_skipped(url) else None)
         if skip_reason is not None:
@@ -86,9 +92,12 @@ def compose_indexes(
         index_invalid = 0
         index_source_failures = 0
         records: list[dict] = []
+        selected_hashes = {}
 
-        def source_failed(source_url: str, reason: str) -> None:
+        def source_failed(source_url: str, reason: str, *, phase='processing', logged=False) -> None:
             nonlocal source_failures, index_source_failures
+            if decision is not None and not logged:
+                decision(source_url, 'failed', reason=phase, current_hash=selected_hashes.get(source_url))
             source_failures += 1
             index_source_failures += 1
             if output_mode == 'txt':
@@ -104,34 +113,55 @@ def compose_indexes(
                 output_dir.mkdir(parents=True, exist_ok=True)
                 text_export.write_records(path, records)
             try:
-                sources = (fixtures.sources(url) if fixtures is not None
-                           else discovery.traverse_index(name, url, browser))
+                if fixtures is not None:
+                    prepared = discovery.prepare_articles(
+                        fixtures.sources(url), lambda source: fixtures.extract(source, url),
+                        lambda urls: {}, limit=limit, decision=decision,
+                    )
+                else:
+                    prepared = discovery.discover_articles(name, url, browser, connection, limit=limit,
+                                                          **({'decision': decision} if decision else {}))
+            except DecisionLogError:
+                raise
+            except HistoryError as exc:
+                print(f'{name}: HISTORY FAILED: {_error(exc)} [index={url}]', file=sys.stderr, flush=True)
+                return 1
             except Exception as exc:
+                if decision is not None:
+                    decision(url, 'failed', reason='traversal')
                 index_failed = True
                 print(f'{name}: TRAVERSAL FAILED: {_error(exc)} [index={url}]', file=sys.stderr, flush=True)
             else:
-                selected = sources if limit is None else sources[:limit]
-                print(f'{name}: {len(sources)} listings discovered, {len(selected)} selected', flush=True)
-                if len(selected) < len(sources):
+                selected = prepared.articles
+                selected_hashes = {article.source.url: article.hash for article in selected}
+                print(f'{name}: {prepared.discovered} listings discovered, {len(selected)} selected', flush=True)
+                if len(selected) < prepared.discovered:
                     print(f'{name}: LIMITED RUN: remaining listings were intentionally not processed', flush=True)
-                if not sources:
+                if not prepared.discovered:
                     empty += 1
                     print(f'{name}: EMPTY: no listings discovered', flush=True)
 
-                for number, source in enumerate(selected, start=1):
-                    print(f'{name}: extracting {number}/{len(selected)}: {source.url}', flush=True)
-                    try:
-                        text = (fixtures.extract(source, url) if fixtures is not None
-                                else extraction.process_single_source(source, browser))
-                        if not text.strip():
-                            raise ValueError('Extraction returned empty text')
-                    except Exception as exc:
-                        extraction_failed += 1
-                        index_failed = True
-                        source_failed(source.url, f'extraction: {_error(exc)}')
-                        if output_mode == 'db':
-                            print(f'{name}: EXTRACTION FAILED: {source.url}: {_error(exc)}', file=sys.stderr, flush=True)
+                for number, article in enumerate(selected, start=1):
+                    source = article.source
+                    if article.skipped:
+                        history_skipped += 1
+                        if article.skipped == 'unchanged':
+                            extracted += 1
+                        print(f'{name}: SKIPPED ({article.skipped}): {source.url}', flush=True)
                         continue
+                    if article.error is not None:
+                        if article.invalid:
+                            invalid += 1
+                            index_invalid += 1
+                            source_failed(source.url, article.error, logged=True)
+                        else:
+                            extraction_failed += 1
+                            index_failed = True
+                            source_failed(source.url, f'extraction: {article.error}', logged=True)
+                            if output_mode == 'db':
+                                print(f'{name}: EXTRACTION FAILED: {source.url}: {article.error}', file=sys.stderr, flush=True)
+                        continue
+                    text = article.text
                     extracted += 1
 
                     try:
@@ -140,7 +170,7 @@ def compose_indexes(
                     except ValueError as exc:
                         invalid += 1
                         index_invalid += 1
-                        source_failed(source.url, str(exc))
+                        source_failed(source.url, str(exc), phase='validation')
                         if output_mode == 'db':
                             print(f'{name}: INVALID: {source.url}: {exc}', file=sys.stderr, flush=True)
                         continue
@@ -161,7 +191,7 @@ def compose_indexes(
                         invalid += 1
                         index_invalid += 1
                         index_failed = index_failed or exc.operational_failure
-                        source_failed(source.url, str(exc))
+                        source_failed(source.url, str(exc), phase='validation')
                         if output_mode == 'db':
                             print(f'{name}: INVALID: {source.url}: {exc}', file=sys.stderr, flush=True)
                         continue
@@ -169,7 +199,7 @@ def compose_indexes(
                         invalid += 1
                         index_invalid += 1
                         index_failed = True
-                        source_failed(source.url, _error(exc))
+                        source_failed(source.url, _error(exc), phase='claude')
                         if output_mode == 'db':
                             print(f'{name}: INVALID: {source.url}: {_error(exc)}', file=sys.stderr, flush=True)
                         continue
@@ -177,10 +207,10 @@ def compose_indexes(
                     record = opportunity.to_record()
                     if output_mode == 'db':
                         try:
-                            save_opportunity(connection, opportunity)
+                            save_opportunity(connection, opportunity, content_hash=article.hash)
                         except OpportunityStorageError as exc:
                             index_failed = True
-                            source_failed(source.url, str(exc))
+                            source_failed(source.url, str(exc), phase='database_save')
                             print(f'{name}: DATABASE FAILED: {opportunity.id}: {exc}',
                                   file=sys.stderr, flush=True)
                             continue
@@ -188,8 +218,17 @@ def compose_indexes(
                         try:
                             text_export.write_records(path, [*records, record])
                         except (OSError, UnicodeError) as exc:
-                            source_failed(source.url, f'output save: {_error(exc)}')
+                            source_failed(source.url, f'output save: {_error(exc)}', phase='output_save')
                             raise
+                    if decision is not None:
+                        if output_mode == 'db':
+                            # A nested transaction is only a savepoint; do not
+                            # claim a successful commit on behalf of its caller.
+                            if connection.info.transaction_status == psycopg.pq.TransactionStatus.IDLE:
+                                decision(source.url, 'saved', current_hash=article.hash, destination='db')
+                        else:
+                            decision(source.url, 'saved', current_hash=article.hash,
+                                     destination='text', history_advanced=False)
                     records.append(record)
                     identities[identifier] = source_url
                     valid += 1
@@ -214,7 +253,7 @@ def compose_indexes(
               else f'{extracted} listings extracted, {valid} valid, {invalid} invalid, '
                    f'{extraction_failed} extraction failures')
     print(f'Summary: {completed} indexes completed ({empty} empty), {failed} indexes failed, '
-          f'{skipped} skipped; {counts}', flush=True)
+          f'{skipped} indexes skipped, {history_skipped} articles skipped; {counts}', flush=True)
     return int(bool(failed))
 
 
@@ -230,6 +269,8 @@ def _positive_int(value: str) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--log-file', type=Path, default=DEFAULT_LOG,
+                        help='Article decision JSONL log (default: project output/logs/scraper.jsonl)')
     parser.add_argument('--fixtures', action='store_true',
                         help='Read bundled saved articles; call real Claude and write text output without PostgreSQL')
     parser.add_argument('--index', metavar='NAME', help='Exact index name (case-insensitive)')
@@ -249,6 +290,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         load_environment()
         with ExitStack() as resources:
+            decision_log = resources.enter_context(DecisionLog(args.log_file))
             fixtures = FixtureCollection() if args.fixtures else None
             connection = None
             if fixtures is not None:
@@ -272,11 +314,10 @@ def main(argv: list[str] | None = None) -> int:
                     print(f'{name}: SKIPPED ({fixtures.skip_reason(url)})', flush=True)
                 print(f'Summary: {len(indexes)} skipped; 0 PASS, 0 FAIL', flush=True)
                 return 0
-            if args.text and connection is not None:
-                connection.close()
-                connection = None
-            elif fixtures is None:
-                check_opportunity_table(connection)
+            if fixtures is None:
+                check_history_table(connection)
+                if not args.text:
+                    check_opportunity_table(connection)
             api_key = os.getenv('ANTHROPIC_API_KEY', '').strip()
             model = (args.model or os.getenv('CLAUDE_MODEL', '')).strip()
             if not api_key:
@@ -290,7 +331,7 @@ def main(argv: list[str] | None = None) -> int:
                     print('Fixture input: saved pages only; real Claude calls incur API usage.', flush=True)
                     return compose_indexes(
                         indexes, None, args.output_dir or Path('output/fixtures'), args.limit,
-                        client=client, model=model, output_mode='txt', fixtures=fixtures,
+                        client=client, model=model, output_mode='txt', fixtures=fixtures, decision_log=decision_log,
                     )
                 with sync_playwright() as playwright:
                     browser = playwright.chromium.launch(headless=True)
@@ -298,7 +339,7 @@ def main(argv: list[str] | None = None) -> int:
                         return compose_indexes(
                             indexes, browser, args.output_dir or Path('output'), args.limit,
                             client=client, model=model, output_mode='txt' if args.text else 'db',
-                            connection=connection,
+                            connection=connection, decision_log=decision_log,
                         )
                     finally:
                         browser.close()

@@ -5,12 +5,13 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
-from urllib.parse import parse_qsl, unquote, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, unquote, urlsplit
 
 from anthropic import Anthropic
 from pydantic import Field, ValidationError
 
 from scraper.models import NonemptyText, Opportunity, OpportunityFields, Source
+from scraper.identity import canonical_source_url
 
 
 CLAUDE_RETRY_COUNT = 1
@@ -69,23 +70,6 @@ class InvalidListingError(RuntimeError):
         super().__init__(reason)
         self.attempts = attempts
         self.operational_failure = operational_failure
-
-
-def canonical_source_url(url: str) -> str:
-    """Keep meaningful queries; use the inquiry page for treaty helper URLs."""
-    parts = urlsplit(url)
-    if (parts.scheme != 'https' or not parts.hostname or parts.username is not None
-            or parts.password is not None or any(character.isspace() for character in url)):
-        raise ValueError('Article URL must be an absolute HTTPS URL without credentials or whitespace')
-    path = parts.path or '/'
-    if ((parts.hostname or '').removeprefix('www.').casefold() == 'aph.gov.au'
-            and '/joint/treaties/' in path.casefold()
-            and path.rstrip('/').rsplit('/', 1)[-1].casefold() == 'treaty_being_considered'):
-        path = path.rstrip('/').rsplit('/', 1)[0]
-    query = [(key, value) for key, value in parse_qsl(parts.query, keep_blank_values=True)
-             if not key.casefold().startswith('utm_')
-             and key.casefold() not in {'fbclid', 'gclid', 'msclkid'}]
-    return urlunsplit((parts.scheme, parts.netloc.lower(), path, urlencode(query), ''))
 
 
 def article_slug(url: str) -> str:

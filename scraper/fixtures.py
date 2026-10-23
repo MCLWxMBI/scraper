@@ -12,7 +12,7 @@ from urllib.parse import urldefrag, urljoin, urlsplit
 from scraper import extraction
 from scraper.config import PROJECT_DIR
 from scraper.models import Source
-from scraper.structuring import canonical_source_url
+from scraper.identity import canonical_source_url
 
 
 FIXTURE_DIR = PROJECT_DIR / 'tests' / 'fixtures' / 'wayback'

@@ -73,6 +73,69 @@ CREATE TABLE IF NOT EXISTS public.opportunities (
     )
 );
 
+-- Content history survives physical opportunity deletion. URL is the identity;
+-- hash is the last successfully saved normalized extraction, never a title hash.
+-- NULL hashes are reserved for untracked direct inserts/deletion markers.
+CREATE TABLE IF NOT EXISTS public.article_history (
+    source_url TEXT PRIMARY KEY CHECK (source_url ~ '^https://[^[:space:]]+$'),
+    title TEXT NOT NULL CHECK (title ~ '[^[:space:]]'),
+    hash TEXT NULL CHECK (hash IS NULL OR hash ~ '^[0-9a-f]{64}$'),
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- Lock the persistent identity even when a direct insert has no history yet.
+-- Scraper writes already hold this lock when committing their successful hash.
+-- A deleted marker is never cleared by an opportunity insert/update.
+CREATE OR REPLACE FUNCTION public.guard_deleted_opportunity()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+    was_deleted BOOLEAN;
+BEGIN
+    INSERT INTO public.article_history (source_url, title)
+    VALUES (NEW.source_url, NEW.title)
+    ON CONFLICT (source_url) DO NOTHING;
+
+    SELECT deleted INTO was_deleted FROM public.article_history
+    WHERE source_url = NEW.source_url FOR UPDATE;
+    IF was_deleted THEN
+        RAISE EXCEPTION 'A deleted article cannot be recreated'
+            USING ERRCODE = '23514';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.remember_deleted_opportunity()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    INSERT INTO public.article_history (source_url, title, hash, deleted)
+    VALUES (OLD.source_url, OLD.title, NULL, TRUE)
+    ON CONFLICT (source_url) DO UPDATE SET
+        title = EXCLUDED.title,
+        deleted = TRUE;
+    -- Do not overwrite the last successful hash or remove this history row.
+    RETURN OLD;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS opportunities_guard_deleted ON public.opportunities;
+CREATE TRIGGER opportunities_guard_deleted
+BEFORE INSERT OR UPDATE ON public.opportunities
+FOR EACH ROW EXECUTE FUNCTION public.guard_deleted_opportunity();
+
+DROP TRIGGER IF EXISTS opportunities_remember_deleted ON public.opportunities;
+CREATE TRIGGER opportunities_remember_deleted
+AFTER DELETE ON public.opportunities
+FOR EACH ROW EXECUTE FUNCTION public.remember_deleted_opportunity();
+
+-- Delete a post using DELETE FROM public.opportunities WHERE id = ... .
+-- The row is physically removed; the trigger atomically retains deleted=TRUE.
+-- Discovery skips that canonical source URL before extraction, even if it changes.
+-- To deliberately reimport, first ensure the opportunity is gone, then explicitly
+-- DELETE its article_history row. Never cascade opportunity deletion into history.
+-- All opportunity writers must store canonical source_url values, as the scraper
+-- does. TRUNCATE bypasses row deletion triggers: reserve it for disposable resets.
+
 -- Snake-case columns map to the contract's camelCase fields at the API boundary.
 -- Serialize timestamps as ISO 8601 UTC ending in Z. SQL NULL tags/start_date
 -- remain JSON null; omit summary/location when NULL. Do not persist status:
