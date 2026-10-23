@@ -20,8 +20,11 @@ from playwright.sync_api import Browser, Page, sync_playwright
 
 from scraper import extraction
 from scraper.config import ConfigurationError, load_environment
+from scraper.decision_log import DecisionLogError
 from scraper.db.connection import DatabaseError, connect_database
 from scraper.db.indexes import load_active_indexes
+from scraper.db.history import ArticleHistory, HistoryError, load_history
+from scraper.identity import canonical_source_url, content_hash, normalize_article_text
 
 MAX_TRANSITIONS = 100
 NAVIGATION_TIMEOUT = 45_000
@@ -31,6 +34,109 @@ PAST_PROJECTS_PATH = '/building-and-development/projects/past-projects'
 
 class TraversalError(RuntimeError):
     """An index could not be traversed completely."""
+
+
+@dataclass(frozen=True)
+class PreparedArticle:
+    source: extraction.Source
+    text: str = ''
+    hash: str | None = None
+    skipped: str | None = None
+    error: str | None = None
+    invalid: bool = False
+
+
+@dataclass(frozen=True)
+class PreparedDiscovery:
+    articles: list[PreparedArticle]
+    discovered: int
+
+
+HistoryLookup = Callable[[list[str]], dict[str, ArticleHistory]]
+
+
+def prepare_articles(
+    sources: list[extraction.Source],
+    extract: Callable[[extraction.Source], str],
+    history_lookup: HistoryLookup,
+    *, limit: int | None = None, decision=None,
+) -> PreparedDiscovery:
+    """Discovery's content gate: no Claude calls and no history writes.
+
+    Keep skipped/failed candidates for reporting, preserving Source routing.
+    Only history errors propagate: they must stop the caller before paid work.
+    """
+    if limit is not None and limit <= 0:
+        raise ValueError('limit must be positive')
+    candidates, seen = [], set()
+    for source in sources:
+        try:
+            key = canonical_source_url(source.url)
+            error = None
+        except ValueError as exc:
+            key, error = source.url, str(exc)
+        if key not in seen:
+            seen.add(key)
+            candidates.append((source, key, error))
+    selected = candidates if limit is None else candidates[:limit]
+
+    def log(source, outcome, **fields):
+        if decision is not None:
+            decision(source.url, outcome, **fields)
+
+    try:
+        history = history_lookup([key for _, key, error in selected if error is None]) if selected else {}
+    except HistoryError:
+        for source, _, _ in selected:
+            log(source, 'failed', reason='history_lookup')
+        raise
+    prepared = []
+    for source, key, error in selected:
+        if error is not None:
+            log(source, 'failed', reason='invalid_url')
+            prepared.append(PreparedArticle(source, error=error, invalid=True))
+            continue
+        previous = history.get(key)
+        if previous is not None and previous.deleted:
+            log(source, 'deleted', previous_hash=previous.hash)
+            prepared.append(PreparedArticle(source, skipped='deleted'))
+            continue
+        try:
+            text = normalize_article_text(extract(source))
+            if not text:
+                raise ValueError('Extraction returned empty text')
+            digest = content_hash(text)
+        except DecisionLogError:
+            raise
+        except Exception as exc:
+            log(source, 'failed', reason='extraction')
+            prepared.append(PreparedArticle(source, error=f'{type(exc).__name__}: {exc}'[:600]))
+            continue
+        if previous is not None and previous.hash == digest:
+            log(source, 'unchanged', previous_hash=previous.hash, current_hash=digest)
+            prepared.append(PreparedArticle(source, skipped='unchanged', hash=digest))
+        else:
+            log(source, 'changed' if previous is not None and previous.hash else 'new',
+                previous_hash=previous.hash if previous else None, current_hash=digest)
+            prepared.append(PreparedArticle(source, text=text, hash=digest))
+    return PreparedDiscovery(prepared, len(candidates))
+
+
+def discover_articles(name: str, url: str, browser: Browser, connection: psycopg.Connection,
+                      *, limit: int | None = None, decision=None) -> PreparedDiscovery:
+    lookup = lambda urls: load_history(connection, urls)
+    try:
+        sources = traverse_index(name, url, browser, history_lookup=lookup)
+    except HistoryError:
+        if decision is not None:
+            decision(url, 'failed', reason='history_lookup')
+        raise
+
+    def extract(source: extraction.Source) -> str:
+        print(f'{name}: extracting during discovery: {source.url}', flush=True)
+        return extraction.process_single_source(source, browser)
+
+    return prepare_articles(sources, extract, lookup, limit=limit, decision=decision)
 
 
 def normalize_url(base_url: str, href: str) -> str | None:
@@ -303,21 +409,27 @@ def _consultations(page: Page) -> list[str]:
     return list(dict.fromkeys(urls))
 
 
-def _federal(page: Page, treaties: bool) -> list[str]:
+def _federal(page: Page, treaties: bool, history_lookup: HistoryLookup | None = None) -> list[str]:
     prefix = urlsplit(page.url).path.rstrip('/') + '/'
     inquiries = _collect(page, Listing('[id$="ReferencesDiv"] li[id] a[href], [id$="LegislationDiv"] li[id] a[href]',
         _same_site(page, prefix), consultation=True,
         marker='[id$="ReferencesDiv"], [id$="LegislationDiv"]', empty_allowed=True))
     if not treaties:
         return inquiries
+    history = history_lookup([canonical_source_url(url) for url in inquiries]) if history_lookup and inquiries else {}
     urls: list[str] = []
     for inquiry in inquiries:
+        previous = history.get(canonical_source_url(inquiry))
+        if previous is not None and previous.deleted:
+            # Keep the candidate for limit/skip reporting, without visiting it.
+            urls.append(inquiry)
+            continue
         _load(page, inquiry)
         urls.append(_named_link(page, 'Treaty being considered', {'aph.gov.au'}))
     return urls
 
 
-def _dispatch(page: Page, requested_url: str) -> list[str]:
+def _dispatch(page: Page, requested_url: str, history_lookup: HistoryLookup | None = None) -> list[str]:
     host, path = _host(requested_url), urlsplit(requested_url).path.rstrip('/')
     if host == 'parliament.vic.gov.au':
         if path == '/sarc':
@@ -325,7 +437,7 @@ def _dispatch(page: Page, requested_url: str) -> list[str]:
         if path in {'/epc-la', '/epc-lc'}:
             return _collect(page, Listing('', _same_site(page), heading='Current inquiries|Inquiries under way|Inquiries not yet accepting evidence', consultation=True))
     if host == 'aph.gov.au' and re.fullmatch(r'/Parliamentary_Business/Committees/(Senate|House|Joint)/[^/]+', path):
-        return _federal(page, path.endswith('/Treaties'))
+        return _federal(page, path.endswith('/Treaties'), history_lookup)
     if host in {'consult.industry.gov.au', 'consult.climatechangeauthority.gov.au', 'consult.dcceew.gov.au'} and path in {'', '/find-consultations'}:
         return _consultations(page)
     if host in HIVE_HOSTS and path == '/projects':
@@ -381,7 +493,8 @@ def is_skipped(url: str) -> bool:
     return _host(url) == 'gwmwater.org.au' and urlsplit(url).path.rstrip('/') == PAST_PROJECTS_PATH
 
 
-def traverse_index(name: str, url: str, browser: Browser) -> list[extraction.Source]:
+def traverse_index(name: str, url: str, browser: Browser, *,
+                   history_lookup: HistoryLookup | None = None) -> list[extraction.Source]:
     """Discover a complete index; raise TraversalError rather than return partial results.
 
     Historical project indexes are intentionally outside this discovery scope.
@@ -391,14 +504,14 @@ def traverse_index(name: str, url: str, browser: Browser) -> list[extraction.Sou
     page = browser.new_page()
     try:
         _load(page, url)
-        urls = _dispatch(page, url)
+        urls = _dispatch(page, url, history_lookup) if history_lookup else _dispatch(page, url)
         source_name = name
         if _host(url) == 'parliament.vic.gov.au' and urlsplit(url).path.rstrip('/') == '/sarc':
             source_name = extraction.SARC_SOURCE_NAME
         elif _host(url) == 'aph.gov.au' and urlsplit(url).path.rstrip('/').endswith('/Joint/Treaties'):
             source_name = extraction.JOINT_TREATIES_SOURCE_NAME
         return [extraction.Source(source_name, target) for target in dict.fromkeys(urls)]
-    except TraversalError:
+    except (TraversalError, HistoryError):
         raise
     except Exception as exc:
         raise TraversalError(f'{name}: {exc}') from exc

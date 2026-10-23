@@ -65,9 +65,59 @@ def check_schema(conn: psycopg.Connection) -> str:
     return sequence
 
 
+def check_existing_articles(conn: psycopg.Connection) -> None:
+    """Refuse an initial history upgrade over untracked opportunity data."""
+    opportunities, history = conn.execute(
+        "SELECT to_regclass('public.opportunities'), to_regclass('public.article_history')"
+    ).fetchone()
+    if opportunities is None:
+        return
+    if history is None:
+        untracked = conn.execute('SELECT EXISTS (SELECT 1 FROM public.opportunities)').fetchone()[0]
+    else:
+        untracked = conn.execute("""
+            SELECT EXISTS (
+                SELECT 1 FROM public.opportunities o
+                LEFT JOIN public.article_history h ON h.source_url = o.source_url
+                WHERE h.source_url IS NULL OR h.hash IS NULL OR h.deleted
+            )
+        """).fetchone()[0]
+    if untracked:
+        raise SetupError(
+            'Existing opportunities lack successful article history. '
+            'For a disposable database, manually run sql/reset_articles.sql before setup. '
+            'No existing articles were deleted.'
+        )
+
+
+def check_history_schema(conn: psycopg.Connection) -> None:
+    columns = conn.execute("""
+        SELECT a.attname, format_type(a.atttypid, a.atttypmod), a.attnotnull,
+               pg_get_expr(d.adbin, d.adrelid)
+        FROM pg_attribute a
+        LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+        WHERE a.attrelid = 'public.article_history'::regclass
+          AND a.attnum > 0 AND NOT a.attisdropped
+    """).fetchall()
+    expected = [('source_url', 'text', True, None), ('title', 'text', True, None),
+                ('hash', 'text', False, None), ('deleted', 'boolean', True, 'false')]
+    if sorted(columns) != sorted(expected):
+        raise SetupError('Incompatible article_history schema: columns or defaults differ.')
+    primary = conn.execute("""
+        SELECT ARRAY(SELECT a.attname FROM unnest(c.conkey) WITH ORDINALITY k(num, pos)
+            JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = k.num ORDER BY k.pos)
+        FROM pg_constraint c
+        WHERE c.conrelid = 'public.article_history'::regclass AND c.contype = 'p'
+    """).fetchall()
+    if primary != [(['source_url'],)]:
+        raise SetupError('Incompatible article_history schema: source_url must be the primary key.')
+
+
 def seed_database(conn: psycopg.Connection) -> int:
     """Apply setup inside the caller's transaction and return extra row count."""
+    check_existing_articles(conn)
     conn.execute((SQL_DIR / 'schema.sql').read_text(encoding='utf-8'))
+    check_history_schema(conn)
     sequence = check_schema(conn)
     expected = conn.execute(
         (SQL_DIR / 'seed_website_indexes.sql').read_text(encoding='utf-8')
