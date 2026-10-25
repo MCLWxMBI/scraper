@@ -119,10 +119,21 @@ def wait_for_stable_page_content(
 def extract_page_text(html: str) -> str:
     """Extract compact, human-readable content from rendered HTML."""
     soup = BeautifulSoup(html, "html.parser")
+    # Engagement platforms put substantive timelines/FAQs in complementary
+    # sidebars. Remove identified account/legal UI instead of every aside,
+    # dialog, hidden panel or collapsed tab.
+    account_modal_ids = (
+        'privacyPolicyModal', 'termsOfUseModal', 'loginModal', 'resetPasswordModal',
+        'signUpModal', 'signUpConfirmModal', 'userDetailsModal', 'followCTAModal',
+        'signupCTAModal',
+    )
+    selector = ', '.join(f'#{name}' for name in account_modal_ids) + ', [role="navigation"]'
+    for element in soup.select(selector):
+        if element.parent is not None:
+            element.decompose()
     non_content_tags = (
         "head", "script", "style", "noscript", "template", "svg", "nav",
-        "header", "footer", "aside", "input", "button", "select", "textarea",
-        "dialog",
+        "header", "footer", "input", "button", "select", "textarea",
     )
     for element in soup.find_all(non_content_tags):
         element.decompose()

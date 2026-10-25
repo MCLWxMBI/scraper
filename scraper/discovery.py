@@ -21,6 +21,7 @@ from playwright.sync_api import Browser, Page, sync_playwright
 from scraper import extraction
 from scraper.config import ConfigurationError, load_environment
 from scraper.decision_log import DecisionLogError
+from scraper.run_log import RunLogError
 from scraper.db.connection import DatabaseError, connect_database
 from scraper.db.indexes import load_active_indexes
 from scraper.db.history import ArticleHistory, HistoryError, load_history
@@ -105,7 +106,7 @@ def prepare_articles(
             if not text:
                 raise ValueError('Extraction returned empty text')
             digest = content_hash(text)
-        except DecisionLogError:
+        except (DecisionLogError, RunLogError):
             raise
         except Exception as exc:
             log(source, 'failed', reason='extraction')
@@ -113,7 +114,7 @@ def prepare_articles(
             continue
         if previous is not None and previous.hash == digest:
             log(source, 'unchanged', previous_hash=previous.hash, current_hash=digest)
-            prepared.append(PreparedArticle(source, skipped='unchanged', hash=digest))
+            prepared.append(PreparedArticle(source, text=text, skipped='unchanged', hash=digest))
         else:
             log(source, 'changed' if previous is not None and previous.hash else 'new',
                 previous_hash=previous.hash if previous else None, current_hash=digest)

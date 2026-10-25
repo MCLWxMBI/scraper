@@ -1,7 +1,7 @@
 """Collect live or saved articles and validate them with Claude.
 
 Run ``uv run python main.py`` or use ``--index NAME --limit 1`` for a small
-development run. Use --text for JSON-array .txt output instead, or --fixtures for
+development run. Use --text for JSON-array .txt output plus raw article text, or --fixtures for
 saved historical HTML/PDF input and text output. Live discovery skips deleted
 URLs and successful unchanged article content before Claude calls.
 ANTHROPIC_API_KEY and CLAUDE_MODEL can be supplied in the project's .env file.
@@ -24,6 +24,7 @@ from playwright.sync_api import Browser, sync_playwright
 from scraper import extraction, discovery, text_export
 from scraper.config import load_environment
 from scraper.decision_log import DecisionLog, DecisionLogError, DEFAULT_LOG
+from scraper.run_log import RunLogError, RunTranscript
 from scraper.fixtures import FixtureCollection
 from scraper.db.connection import DatabaseError, connect_database
 from scraper.db.indexes import load_active_indexes
@@ -120,7 +121,7 @@ def compose_indexes(
                 else:
                     prepared = discovery.discover_articles(name, url, browser, connection, limit=limit,
                                                           **({'decision': decision} if decision else {}))
-            except DecisionLogError:
+            except (DecisionLogError, RunLogError):
                 raise
             except HistoryError as exc:
                 print(f'{name}: HISTORY FAILED: {_error(exc)} [index={url}]', file=sys.stderr, flush=True)
@@ -142,6 +143,14 @@ def compose_indexes(
 
                 for number, article in enumerate(selected, start=1):
                     source = article.source
+                    if output_mode == 'txt' and article.text and article.error is None:
+                        try:
+                            raw_path = text_export.raw_article_path(name, url, source.url)
+                            text_export.write_raw(raw_path, article.text)
+                        except (OSError, UnicodeError) as exc:
+                            index_failed = True
+                            source_failed(source.url, f'raw save: {_error(exc)}', phase='raw_save')
+                            continue
                     if article.skipped:
                         history_skipped += 1
                         if article.skipped == 'unchanged':
@@ -194,6 +203,8 @@ def compose_indexes(
                         if output_mode == 'db':
                             print(f'{name}: INVALID: {source.url}: {exc}', file=sys.stderr, flush=True)
                         continue
+                    except RunLogError:
+                        raise
                     except Exception as exc:
                         invalid += 1
                         index_invalid += 1
@@ -274,7 +285,7 @@ def main(argv: list[str] | None = None) -> int:
                         help='Read bundled saved articles; call real Claude and write text output without PostgreSQL')
     parser.add_argument('--index', metavar='NAME', help='Exact index name (case-insensitive)')
     parser.add_argument('--text', '--txt', dest='text', action='store_true',
-                        help='Write JSON-array .txt files and print source PASS/FAIL outcomes')
+                        help='Write JSON-array .txt files, extracted article text under output/raw/, and source PASS/FAIL outcomes')
     parser.add_argument('--output-dir', type=Path,
                         help='Directory with --text or --fixtures (defaults: output/ or output/fixtures/)')
     parser.add_argument('--limit', type=_positive_int, metavar='N', help='Process at most N listings per index for development')
@@ -286,10 +297,24 @@ def main(argv: list[str] | None = None) -> int:
     if args.model is not None and not args.model.strip():
         parser.error('--model must not be empty')
 
+    if args.text or args.fixtures:
+        original_stderr = sys.stderr
+        try:
+            with RunTranscript() as transcript:
+                print(f'Run log: {transcript.path}', flush=True)
+                return _run(args, parser, run_id=transcript.run_id)
+        except RunLogError as exc:
+            # The context has restored stderr, even if the transcript failed.
+            print(f'Composer failed: {exc}', file=original_stderr, flush=True)
+            return 1
+    return _run(args, parser)
+
+
+def _run(args, parser, *, run_id=None) -> int:
     try:
         load_environment()
         with ExitStack() as resources:
-            decision_log = resources.enter_context(DecisionLog(args.log_file))
+            decision_log = resources.enter_context(DecisionLog(args.log_file, run_id=run_id))
             fixtures = FixtureCollection() if args.fixtures else None
             connection = None
             if fixtures is not None:
@@ -342,6 +367,8 @@ def main(argv: list[str] | None = None) -> int:
                         )
                     finally:
                         browser.close()
+    except RunLogError:
+        raise
     except psycopg.Error:
         print('Composer failed: database operation failed.', file=sys.stderr, flush=True)
         return 1

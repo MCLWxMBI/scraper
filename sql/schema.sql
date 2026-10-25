@@ -44,6 +44,16 @@ CREATE TABLE IF NOT EXISTS public.opportunities (
     start_date TIMESTAMPTZ NULL,
     submission_deadline TIMESTAMPTZ NOT NULL
         CHECK (isfinite(submission_deadline)),
+    submission_deadline_precision TEXT DEFAULT 'datetime' NOT NULL,
+    CONSTRAINT opportunities_deadline_precision_valid CHECK (
+        submission_deadline_precision IN ('datetime', 'month')
+    ),
+    CONSTRAINT opportunities_deadline_month_normalized CHECK (
+        submission_deadline_precision <> 'month' OR (
+            submission_deadline AT TIME ZONE 'UTC' = date_trunc('month', submission_deadline AT TIME ZONE 'UTC')
+            AND EXTRACT(YEAR FROM submission_deadline AT TIME ZONE 'UTC') BETWEEN 1 AND 9999
+        )
+    ),
     category TEXT[] NOT NULL CHECK (
         public.opportunity_text_array_valid(category, TRUE)
         AND category <@ ARRAY[
@@ -69,7 +79,12 @@ CREATE TABLE IF NOT EXISTS public.opportunities (
         ) IS TRUE
     ),
     CONSTRAINT opportunities_date_order CHECK (
-        start_date IS NULL OR (isfinite(start_date) AND start_date <= submission_deadline)
+        start_date IS NULL OR (isfinite(start_date) AND CASE
+            WHEN submission_deadline_precision = 'month' THEN
+                start_date AT TIME ZONE 'UTC' <
+                    (submission_deadline AT TIME ZONE 'UTC') + INTERVAL '1 month'
+            ELSE start_date <= submission_deadline
+        END)
     )
 );
 

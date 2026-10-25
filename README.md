@@ -74,7 +74,7 @@ uv run python -m scraper discover --index "Melbourne Water"
 uv run python main.py
 uv run python main.py --index "Melbourne Water" --limit 1
 
-# Save JSON-array .txt files and print source PASS/FAIL results
+# Save JSON-array .txt files, extracted article text, and source PASS/FAIL results
 uv run python main.py --text --index "Melbourne Water" --limit 1
 uv run python main.py --text --output-dir /tmp/scraper-output
 ```
@@ -84,11 +84,44 @@ defaults to `output/`. `--model MODEL` overrides `CLAUDE_MODEL`. For a command
 launched elsewhere, use `uv run --directory /path/to/scraper ...`, or invoke the
 absolute path to `main.py` with the project interpreter.
 
+Text mode also writes the exact normalized HTML/PDF extractor text **before
+Claude** under the repository-root `output/raw/`, with one folder per index and
+one UTF-8 `.txt` file per article:
+
+```text
+output/raw/
+└── coliban-water-b1863f0cf3eb/
+    ├── malmsbury-culvert-restoration-<url-hash>.txt
+    └── rural-water-efficiency-<url-hash>.txt
+```
+
+These files contain plain extracted text, without JSON, metadata headers or
+Claude-generated summaries. Safe names include URL hashes, so articles with the
+same name or meaningful query variations remain distinct. Project sidebars, key
+dates, news and collapsed FAQs/tabs are retained; known account/legal modal
+containers are excluded. Timeline milestones are not inferred as feedback
+deadlines. Corrected extraction changes content hashes and can make a previously
+processed page eligible again. `--output-dir` moves
+only the structured JSON-array files; raw files always stay under project
+`output/raw/`, including when invoked from another directory.
+
+Raw text remains available when Claude rejects an article or an API/structured
+save fails. Live unchanged articles refresh their raw files and still skip
+Claude; deleted articles are not extracted or exported. Text mode makes no
+history writes. Extraction failures create no new raw file. Successful exports
+atomically replace that article's file and leave other files untouched, so an
+existing file can come from an earlier run. A failed replacement preserves the
+last successful bytes. A raw-save error reports FAIL, skips Claude for that
+article and makes the run exit nonzero while other sources continue. PASS still
+requires successful structured output. Default PostgreSQL-output mode writes no
+raw files. Raw export adds no extraction-only mode: normal text/fixture runs
+continue their existing Claude processing and require its credentials.
+
 Both discovery and collection first query `website_indexes WHERE active = TRUE`,
 ordered by case-insensitive name and ID. `--index` matches a complete active name,
 ignoring case. Unknown/inactive names are argument errors. Empty active results
 exit successfully before browser/Claude startup. Query failures stop the run;
-there is no hard-coded fallback list. Past-project discovery safeguards remain.
+there is no hard-coded fallback list.
 
 `--limit N` currently selects at most N sources per index **after complete
 source discovery**. It does not yet limit pagination. Limited work is labeled.
@@ -117,7 +150,8 @@ browser installation or website access is needed. The only network client used
 during fixture runs is Claude. Automated tests mock Claude.
 
 Results always use the usual JSON-array text files and PASS/FAIL reporting,
-with `output/fixtures/` as the default destination. `--text` and `--txt` are
+with `output/fixtures/` as the default destination. Raw article files are also
+written automatically under project `output/raw/<index-folder>/`. `--text` and `--txt` are
 accepted but unnecessary. Repeated runs replace each selected index's file and
 call Claude again; fixture mode does not implement processing history.
 
@@ -135,6 +169,7 @@ ordinary test runs.
 ```mermaid
 flowchart TD
     Main["main.py"] --> Pipeline["pipeline.py: collection"]
+    Main --> RunLog["run_log.py: text-mode terminal transcript under output/logs/"]
     Commands["scraper/__main__.py"] --> Discovery["discovery.py: discover source URLs"]
     Commands --> Setup["db/setup.py"]
     Pipeline --> Config["config.py: paths and .env"]
@@ -156,6 +191,7 @@ flowchart TD
     Opportunity --> Database["db/opportunities.py: committed upsert"]
     Opportunity --> Text["text_export.py: atomic JSON file"]
     Database --> Decisions
+    Pipeline --> Raw["text_export.py: output/raw/ extracted article text in text mode"]
     Text --> Decisions
     Setup --> Schema["sql/schema.sql"]
     Setup --> Seed["sql/seed_website_indexes.sql"]
@@ -174,8 +210,9 @@ flowchart TD
 | `scraper/fixtures.py` | Loads the bundled historical manifest, verifies local HTML/PDF resources, and supplies original Sources and saved article text without HTTP or a browser. |
 | `scraper/structuring.py` | Calls Claude, validates the response, derives canonical source identity, and returns a complete Opportunity. |
 | `scraper/pipeline.py` | Owns the collection CLI and resource lifecycle; orchestrates discovery, extraction, validation, persistence, and terminal summaries. |
+| `scraper/run_log.py` | Copies text-mode CLI stdout/stderr into a unique, flushed UTF-8 run transcript; restores streams and reports file errors safely. |
 | `scraper/decision_log.py` | Writes file-only JSONL article decisions, including hash comparisons and committed save outcomes; never installs a console handler. |
-| `scraper/text_export.py` | Generates stable per-index filenames and atomically replaces JSON-array text files. |
+| `scraper/text_export.py` | Generates stable index/article filenames and atomically writes structured JSON-array files and raw UTF-8 article text. |
 | `scraper/db/connection.py` | Connects using DATABASE_URL with a bounded timeout and sanitized diagnostics. |
 | `scraper/db/indexes.py` | Retrieves all active index names/URLs in deterministic order. |
 | `scraper/db/history.py` | Batch-reads last successful content hashes and persistent deletion markers; lookup failures stop processing. |
@@ -315,14 +352,38 @@ fall back to a potentially remote application database.
 
 ## Article decision logs and historical deduplication replay
 
+When `--text`, `--txt` or `--fixtures` is used, each CLI invocation also creates
+`output/logs/<run-id>.txt` relative to the project root and prints its location.
+It preserves the usual terminal output while copying Python stdout/stderr
+messages: extraction progress, Claude starts/retries, validation errors,
+PASS/FAIL, skips and summaries. For example:
+
+```text
+Coliban Water: retrying Claude 1/1: https://connect.coliban.com.au/guildford-clear-water-storage-tank
+```
+
+The transcript is written incrementally and flushed, so interrupted runs keep
+messages already recorded. Each invocation gets a separate file; `--output-dir`
+does not relocate it, and `--log-file` still selects only the JSONL decision log.
+A transcript open/write/close error returns nonzero and restores terminal streams;
+a broken log stops further processing without repeatedly trying to log its error.
+Default database-output mode creates no text transcript.
+
+| Output | Contents |
+| --- | --- |
+| `output/raw/<index-folder>/<article>.txt` | Exact normalized extractor text, saved before Claude. |
+| `<output-dir>/<index>.txt` | Validated opportunity JSON array. |
+| `output/logs/<run-id>.txt` | Terminal progress/errors, including Claude retries; no added prompts, article bodies or raw response dumps. |
+| `output/logs/scraper.jsonl` | Structured article history decisions, separate from the terminal transcript. |
+
 Collection appends article decisions to `output/logs/scraper.jsonl`, resolved
 relative to the project root. Override it with `main.py --log-file PATH`.
 The JSONL events stay out of terminal PASS/FAIL output and JSON-array `.txt`
 files. Each event includes its run, UTC timestamp, index, original/canonical
 source URL and decision: `new`, `changed`, `unchanged`, `deleted`, `failed` or
 `saved`. Hash comparisons include previous/current hashes where available.
-Exception details, extracted bodies and credentials are not logged. A log-file
-failure stops processing rather than silently redirecting events to the console.
+The JSONL log excludes exception details, extracted bodies and credentials. A
+JSONL file failure stops processing rather than redirecting events to the console.
 
 `new` and `changed` mean eligible for Claude, not successfully processed.
 `saved` in database mode means the write committed; a writer used inside an
@@ -370,10 +431,42 @@ Claude returns minimally cleaned, ordered full-text paragraphs and a separate
 20–30-word summary. Wording and detail are preserved in full text. The complete
 extracted text is supplied to Claude with the index name and canonical URL.
 
-Extraction permits a null deadline; accepted opportunities require an
-authoritative UTC timestamp ending in `Z`. Do not infer closing times or
-coordinates. One initial attempt plus one retry is the complete Claude attempt
-budget; SDK retries are disabled. The model is explicitly configured, with no
+Extraction permits a null deadline; accepted opportunities require a UTC timestamp
+ending in `Z` and `submissionDeadlinePrecision` (`datetime` or `month`, default
+`datetime`). A closing month such as September 2027 is stored as
+`2027-09-01T00:00:00Z` with precision `month`: it represents the whole month,
+not an exact closing instant. Opening dates within that month are allowed.
+Models also accept `2027-09` and normalize it with month precision. Consumers
+must use precision when displaying deadlines or deriving closed status.
+
+Date-only deadlines use 23:59:59 in the source's local timezone; date-only openings
+use 00:00:00. Victorian sources default to Australia/Melbourne, accounting for
+daylight saving. Unknown timezone/locality remains unresolved. Opening months
+alone remain null because only deadlines have a precision column. Engagement
+phases, surveys and community panels qualify, including engagement underway and
+successive phases of one program. Claude prefers explicit feedback deadlines,
+but may infer a closing date or month from the whole article, timelines and phase
+descriptions without requiring "submissions close" wording. The ending month of
+a clearly stated engagement range may supply the deadline. Milestones are assessed
+in context; unrelated project dates alone do not establish a feedback deadline.
+Return null only without reasonably supported explicit or contextual timing.
+Approximate wording stays in full text without invented months. Do not infer
+coordinates. Mocked tests verify prompt delivery, validation and persistence
+handling; they do not demonstrate how real Claude will interpret an article.
+
+Run the deadline model, prompt-handoff and mocked persistence checks without
+Claude usage or database access:
+
+```bash
+uv run python -m unittest tests.test_deadline_precision
+```
+
+The devcontainer development database is recreated from `sql/schema.sql` when
+schema changes are applied, then seeded from `sql/seed_website_indexes.sql`.
+The deadline precision column defaults to `datetime`; month-level values must
+be normalized to the beginning of the month in UTC.
+
+One initial attempt plus one retry is the complete Claude attempt budget; SDK retries are disabled. The model is explicitly configured, with no
 hard-coded default.
 
 IDs come from URL slugs, not titles or Claude. Canonicalization removes known
@@ -414,3 +507,18 @@ Integration checks load DATABASE_URL from `.env` or the environment and require
 `CREATEDB` (available to the Compose role). They create uniquely named test
 databases, mock browser/Claude operations, and remove the test databases afterward.
 The configured persistent database is not modified by the tests.
+
+For raw-export/history integration checks, use the existing devcontainer
+`scraper` database with rolled-back fixture changes (no database reset, Claude
+calls or persistent article/history modifications):
+
+```bash
+RAW_EXPORT_POSTGRES_TESTS=1 uv run python -m unittest tests.test_fixtures.RawExportTests
+```
+
+Sidebar and terminal-transcript regressions use the minimized PS28 fixture and
+mocked Claude responses, with no browser, website, database or paid API calls:
+
+```bash
+uv run python -m unittest tests.test_extraction_run_log
+```

@@ -99,12 +99,30 @@ class OpportunityFields(ContractModel):
     startDate: str | None = Field(default=None, description='Opening instant in UTC ending in Z, or null')
     submissionDeadline: str | None = Field(
         default=None,
-        description='Authoritative submission closing instant in UTC ending in Z; null if unavailable',
+        description=('Explicit or contextually inferred participation closing timestamp in UTC ending in Z; '
+                     'a stated engagement range may supply its ending month. For month precision use '
+                     'the first day at 00:00:00Z; null only without reasonably supported timing.'),
+    )
+    submissionDeadlinePrecision: Literal['datetime', 'month'] = Field(
+        default='datetime', description=('month for a stated or contextually inferred closing month/year; '
+                                         'otherwise datetime'),
     )
     category: Annotated[list[Category], Field(min_length=1)]
     tags: list[NonemptyText] | None = None
     summary: NonemptyText | None = None
     location: OpportunityLocation | None = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def normalize_month(cls, value):
+        if isinstance(value, dict) and isinstance(value.get('submissionDeadline'), str):
+            deadline = value['submissionDeadline']
+            if re.fullmatch(r'\d{4}-\d{2}', deadline):
+                if value.get('submissionDeadlinePrecision', 'month') != 'month':
+                    raise ValueError('A year-month deadline requires month precision')
+                value = {**value, 'submissionDeadline': deadline + '-01T00:00:00Z',
+                         'submissionDeadlinePrecision': 'month'}
+        return value
 
     @field_validator('startDate', 'submissionDeadline')
     @classmethod
@@ -134,8 +152,17 @@ class OpportunityFields(ContractModel):
 
     @model_validator(mode='after')
     def check_date_order(self) -> Self:
-        if self.startDate is not None and self.submissionDeadline is not None:
-            if datetime.fromisoformat(self.startDate) > datetime.fromisoformat(self.submissionDeadline):
+        deadline = (datetime.fromisoformat(self.submissionDeadline)
+                    if self.submissionDeadline is not None else None)
+        if self.submissionDeadlinePrecision == 'month':
+            if deadline is None or (deadline.day, deadline.hour, deadline.minute,
+                                    deadline.second, deadline.microsecond) != (1, 0, 0, 0, 0):
+                raise ValueError('Month deadline must be the first day at midnight UTC')
+        if self.startDate is not None and deadline is not None:
+            start = datetime.fromisoformat(self.startDate)
+            reversed_dates = ((start.year, start.month) > (deadline.year, deadline.month)
+                              if self.submissionDeadlinePrecision == 'month' else start > deadline)
+            if reversed_dates:
                 raise ValueError('startDate must not be later than submissionDeadline')
         return self
 

@@ -31,6 +31,7 @@ def opportunity_parameters(opportunity: Opportunity) -> dict:
         'start_date': (datetime.fromisoformat(opportunity.startDate)
                        if opportunity.startDate is not None else None),
         'submission_deadline': datetime.fromisoformat(opportunity.submissionDeadline),
+        'submission_deadline_precision': opportunity.submissionDeadlinePrecision,
         'category': opportunity.category,
         'tags': opportunity.tags,
         'summary': opportunity.summary,
@@ -70,10 +71,11 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
             saved = conn.execute("""
                 INSERT INTO public.opportunities (
                     id, title, full_text, source_url, source_org, jurisdiction,
-                    start_date, submission_deadline, category, tags, summary, location
+                    start_date, submission_deadline, submission_deadline_precision, category, tags, summary, location
                 ) VALUES (
                     %(id)s, %(title)s, %(full_text)s, %(source_url)s, %(source_org)s,
                     %(jurisdiction)s, %(start_date)s, %(submission_deadline)s,
+                    %(submission_deadline_precision)s,
                     %(category)s, %(tags)s, %(summary)s, %(location)s
                 )
                 ON CONFLICT (id) DO UPDATE SET
@@ -83,6 +85,7 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
                     jurisdiction = EXCLUDED.jurisdiction,
                     start_date = EXCLUDED.start_date,
                     submission_deadline = EXCLUDED.submission_deadline,
+                    submission_deadline_precision = EXCLUDED.submission_deadline_precision,
                     category = EXCLUDED.category,
                     tags = EXCLUDED.tags,
                     summary = EXCLUDED.summary,
@@ -103,8 +106,8 @@ def check_opportunity_table(connection: psycopg.Connection) -> None:
     try:
         connection.execute('''
             SELECT id, title, full_text, source_url, source_org, jurisdiction,
-                   start_date, submission_deadline, category, tags, summary, location
+                   start_date, submission_deadline, submission_deadline_precision, category, tags, summary, location
             FROM public.opportunities LIMIT 0
         ''')
     except psycopg.Error:
-        raise DatabaseError('Opportunity table is unavailable; check schema setup and permissions.') from None
+        raise DatabaseError('Opportunity table is unavailable; check the current sql/schema.sql, development database setup and permissions.') from None

@@ -10,6 +10,7 @@ from psycopg import sql
 
 from scraper.config import ConfigurationError, SQL_DIR, load_environment
 from scraper.db.connection import connect_database
+from scraper.db.opportunities import check_opportunity_table
 
 
 class SetupError(Exception):
@@ -118,13 +119,14 @@ def seed_database(conn: psycopg.Connection) -> int:
     check_existing_articles(conn)
     conn.execute((SQL_DIR / 'schema.sql').read_text(encoding='utf-8'))
     check_history_schema(conn)
+    check_opportunity_table(conn)
     sequence = check_schema(conn)
     expected = conn.execute(
         (SQL_DIR / 'seed_website_indexes.sql').read_text(encoding='utf-8')
     ).fetchall()
-    if ([row[0] for row in expected] != list(range(1, 42))
-            or sum(row[3] for row in expected) != 38):
-        raise SetupError('The local seed must contain IDs 1–41, with 38 active rows.')
+    if ([row[0] for row in expected] != list(range(1, 39))
+            or sum(row[3] for row in expected) != 36):
+        raise SetupError('The local seed must contain IDs 1–38, with 36 active rows.')
     actual = conn.execute("""
         SELECT id, name, index_url, active, notes FROM public.website_indexes
         WHERE id = ANY(%s) ORDER BY id
@@ -166,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, UnicodeError):
         print('Database setup failed: could not read local configuration or SQL files.', file=sys.stderr)
         return 1
-    print(f'Seeded 41 website indexes: 38 active, 3 inactive; preserved {extra} additional rows.')
+    print(f'Seeded 38 website indexes: 36 active, 2 inactive; preserved {extra} additional rows.')
     return 0
 
 
