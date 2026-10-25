@@ -26,6 +26,30 @@ single opportunity; do not reject them merely because several phases are listed.
 If the page instead describes genuinely independent opportunities with no single
 coherent participation window, return a null deadline rather than merging them.
 
+Check eligibility before interpreting dates. Include participation that influences
+an identifiable public policy, plan, project, proposal, regulation, environmental
+or resource-management decision. Early engagement before a formal proposal exists
+can qualify.
+Exclude routine customer-satisfaction surveys, service benchmarking and customer-
+experience feedback about recent calls, faults or service interactions. General
+claims that feedback improves future services do not establish a specific proposal.
+Exclude competitions, prize draws, awards and educational or promotional activities
+whose primary purpose is an entry rather than influencing a decision. A survey
+about a specific proposed plan, investment, pricing submission or project can
+qualify; a participation incentive alone does not disqualify genuine consultation.
+Exclude information-only pages: flood maps, risk explanations, preparedness advice,
+FAQs and project updates without an open or upcoming participation opportunity.
+Exclude closed consultations and submission-review pages when no other open or
+upcoming participation phase exists. Assess phases separately: an ongoing project
+or mapping exercise does not mean its consultation remains open. Historical
+feedback deadlines and future publication/finalisation milestones do not reopen it.
+Retain genuine open or upcoming consultation on flood-management plans or proposals.
+An environmental topic, water-sector publisher, feedback invitation or closing
+date alone does not establish eligibility. For excluded articles return
+submissionDeadline=null and submissionDeadlinePrecision=datetime, even when a
+historical or explicit deadline exists. Do not infer a deadline to make an excluded
+article eligible. These eligibility rules take precedence over timing inference.
+
 Return fullText as ordered plain-text paragraphs with minimal cleanup only.
 Preserve the original wording, order, facts, dates, qualifications, and detail.
 Fix obvious whitespace, line wrapping, and extraction artifacts; remove only
@@ -33,8 +57,8 @@ clearly duplicated text or stray navigation unrelated to the article. Do not
 rewrite, shorten, paraphrase, or summarise fullText. Preserve the source wording
 for the title and organisation name, with only obvious formatting cleanup.
 
-Consultations, surveys, community panels and engagement phases are participation
-opportunities, including engagement already underway. Do not reject them merely
+For eligible opportunities, consultations, surveys, community panels and engagement
+phases can qualify, including engagement already underway. Do not reject them merely
 because a later formal proposal has not yet been lodged. Prefer an explicit
 feedback deadline as submissionDeadline. Otherwise, use the whole article's
 context, engagement timeline and phase descriptions to infer a reasonably
@@ -54,9 +78,10 @@ Keep approximate wording such as early 2027 in fullText; do not invent an exact
 month for it. Distinguish participation timing from publication, proposal-lodgement
 and project-completion milestones using the surrounding context. A milestone can
 inform the participation window when that relationship is reasonably supported;
-an unrelated milestone alone is not a feedback deadline. Return a null deadline
-only when neither an explicit deadline nor a reasonably supported contextual
-closing date or month can be found.
+an unrelated milestone alone is not a feedback deadline. For eligible articles,
+return a null deadline when neither an explicit deadline nor a reasonably supported
+contextual closing date or month can be found. Excluded articles must retain a
+null deadline regardless of dates.
 
 Use the actual title and publishing organisation. The index name is only context
 and may name a portal or committee rather than the publisher. jurisdiction must
@@ -145,11 +170,14 @@ def structure_listing(
         prompt = content
         if attempt:
             prompt += ('\nPrevious attempt failed: ' + failure
-                       + '\nRecheck the whole article, engagement timeline and phase descriptions. '
+                       + '\nRecheck eligibility first using the system prompt. Excluded articles must keep '
+                       'submissionDeadline=null and submissionDeadlinePrecision=datetime even with a '
+                       'known deadline. Historical deadlines do not reopen closed participation. '
+                       'For eligible articles, recheck the whole article, engagement timeline and phase descriptions. '
                        'Prefer an explicit deadline; otherwise infer a reasonably supported closing '
                        'date or month, including the ending month of a stated engagement range. '
                        'Successive phases of one program are not automatically independent opportunities. '
-                       'Keep the deadline null only if neither explicit nor contextual timing supports it; '
+                       'For eligible articles keep the deadline null if neither explicit nor contextual timing supports it; '
                        'do not invent months from vague wording.')
             print(f'{index_name}: retrying Claude {attempt}/{CLAUDE_RETRY_COUNT}: {source.url}', flush=True)
         try:

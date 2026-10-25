@@ -101,7 +101,7 @@ class OpportunityFields(ContractModel):
         default=None,
         description=('Explicit or contextually inferred participation closing timestamp in UTC ending in Z; '
                      'a stated engagement range may supply its ending month. For month precision use '
-                     'the first day at 00:00:00Z; null only without reasonably supported timing.'),
+                     'the first day at 00:00:00Z; null for excluded articles or without reasonably supported timing.'),
     )
     submissionDeadlinePrecision: Literal['datetime', 'month'] = Field(
         default='datetime', description=('month for a stated or contextually inferred closing month/year; '

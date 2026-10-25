@@ -442,23 +442,36 @@ must use precision when displaying deadlines or deriving closed status.
 Date-only deadlines use 23:59:59 in the source's local timezone; date-only openings
 use 00:00:00. Victorian sources default to Australia/Melbourne, accounting for
 daylight saving. Unknown timezone/locality remains unresolved. Opening months
-alone remain null because only deadlines have a precision column. Engagement
-phases, surveys and community panels qualify, including engagement underway and
+alone remain null because only deadlines have a precision column. For eligible
+opportunities, engagement phases, surveys and community panels qualify, including engagement underway and
 successive phases of one program. Claude prefers explicit feedback deadlines,
 but may infer a closing date or month from the whole article, timelines and phase
 descriptions without requiring "submissions close" wording. The ending month of
 a clearly stated engagement range may supply the deadline. Milestones are assessed
 in context; unrelated project dates alone do not establish a feedback deadline.
-Return null only without reasonably supported explicit or contextual timing.
+Return null for excluded articles or without reasonably supported explicit or contextual timing.
 Approximate wording stays in full text without invented months. Do not infer
 coordinates. Mocked tests verify prompt delivery, validation and persistence
 handling; they do not demonstrate how real Claude will interpret an article.
 
-Run the deadline model, prompt-handoff and mocked persistence checks without
+Eligibility is evaluated inside the same Claude prompt and structured-response
+call, before timing inference. Routine satisfaction/service-interaction surveys,
+benchmarking, competitions, awards and promotional entries are excluded.
+Information-only flood maps, advice, FAQs and updates are excluded without an
+open or upcoming participation opportunity. Closed/reviewing consultations are
+excluded unless another phase is open or upcoming; an ongoing project or future
+map publication does not reopen feedback. Genuine consultation on specific plans,
+pricing submissions and flood-management proposals remains eligible, including
+surveys with incentives. Environmental keywords or a water-sector publisher alone
+are insufficient. Excluded responses use a null deadline and datetime precision,
+so existing validation prevents persistence. Retry guidance preserves the exclusions.
+Existing saved outputs and database rows are not automatically removed.
+
+Run the deadline model, eligibility/prompt-handoff and mocked persistence checks without
 Claude usage or database access:
 
 ```bash
-uv run python -m unittest tests.test_deadline_precision
+uv run python -m unittest tests.test_deadline_precision tests.test_eligibility
 ```
 
 The devcontainer development database is recreated from `sql/schema.sql` when
