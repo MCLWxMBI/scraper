@@ -14,7 +14,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import main as entrypoint
-from scraper import extraction, pipeline
+from scraper import discovery, extraction, pipeline
 from scraper.config import PROJECT_DIR
 from scraper.fixtures import FIXTURE_DIR, FixtureCollection, FixtureError
 from scraper.models import Opportunity
@@ -301,6 +301,81 @@ class BundledCollectionTests(unittest.TestCase):
                     self.assertTrue('20251021' <= resource['timestamp'][:8] <= '20261021')
                     self.assertTrue(collection.read(resource))
 
+    def test_catalogue_names_urls_ids_and_resource_directories_match_seed(self):
+        collection = FixtureCollection()
+        seed = [(int(number), name, url, active == 'TRUE') for number, name, url, active in re.findall(
+            r"^\s*\((\d+), '([^']+)', '([^']+)', (TRUE|FALSE),",
+            (PROJECT_DIR / 'sql/seed_website_indexes.sql').read_text(), re.M)]
+        self.assertEqual([(i['id'],i['name'],i['url'],i['active']) for i in collection.indexes], seed)
+        self.assertEqual([row[0] for row in seed], list(range(1,42)))
+        self.assertEqual(sum(row[3] for row in seed), 38)
+        used = set()
+        for index in collection.indexes:
+            resources = [l['resource'] for l in index['listings'] if l.get('resource')]
+            for article in index['articles']:
+                resources += ([article['html']] if article.get('html') else []) + article['resources']
+            for resource in resources:
+                self.assertEqual(resource['path'].split('/')[0], f"{index['id']:02}")
+                used.add(resource['path'])
+        actual = {path.relative_to(collection.root).as_posix() for path in collection.root.rglob('*')
+                  if path.suffix in {'.html','.pdf'}}
+        self.assertEqual(actual, used)
+        self.assertFalse(any('Past Projects' in i['name'] for i in collection.indexes))
+
+    def test_changed_listing_scopes_match_production_parser_and_article_samples(self):
+        from scraper.identity import canonical_source_url
+        collection = FixtureCollection()
+        for index_id in (12,17,18):
+            index = next(i for i in collection.indexes if i['id'] == index_id)
+            spec = discovery.project_listing(index['url'])
+            listed = set()
+            for listing in index['listings']:
+                if not listing.get('resource'):
+                    continue
+                urls,_ = discovery._parse_listing(collection.read(listing['resource']), listing['url'], spec)
+                self.assertEqual(urls, [e['url'] for e in listing['entries']])
+                listed.update(canonical_source_url(url) for url in urls)
+                if index_id == 17:
+                    self.assertTrue(listing['selection']['from_unfiltered_archive'])
+                    self.assertNotIn('filter_project_status',listing['resource']['url'])
+            self.assertTrue(listed)
+            for source in collection.sources(index['url']):
+                self.assertIn(canonical_source_url(source.url),listed)
+            if index_id == 12:
+                self.assertTrue(all('/future-major-projects/' in url for url in listed))
+            if index_id == 18:
+                self.assertTrue(all('/current-projects/' in url for url in listed))
+
+    def test_wannon_pagination_preserves_filter_and_excludes_other_statuses(self):
+        from bs4 import BeautifulSoup
+        from urllib.parse import parse_qs, urlsplit
+        from scraper.fixtures import original_url
+        collection = FixtureCollection()
+        index = next(i for i in collection.indexes if i['id'] == 17)
+        spec = discovery.project_listing(index['url'])
+        first,second = index['listings'][:2]
+        raw = collection.read(first['resource'])
+        soup = BeautifulSoup(raw,'html.parser')
+        next_href = next(a['href'] for a in soup.select('a[href]') if '/page/2' in a['href'])
+        page = Mock(url=index['url'])
+        control = Mock()
+        control.evaluate.return_value = 'A'
+        control.get_attribute.return_value = original_url(next_href)
+        def load(page,url):
+            page.url = url
+        snapshots = [discovery._parse_listing(raw,first['url'],spec),
+                     discovery._parse_listing(collection.read(second['resource']),second['url'],spec)]
+        with patch('scraper.discovery._wait_listing',side_effect=snapshots), \
+             patch('scraper.discovery._next_control',side_effect=[control,None]), \
+             patch('scraper.discovery._load',side_effect=load) as navigation:
+            urls=discovery._collect(page,spec)
+        self.assertEqual(len(urls),1)
+        self.assertIn('quality-water-for-wannon',urls[0])
+        query=parse_qs(urlsplit(navigation.call_args.args[1]).query)
+        self.assertEqual(query['filter_project_status[]'],['223'])
+        with self.assertRaises(discovery.TraversalError):
+            discovery._collect(Mock(url=index['url'].split('?')[0]),spec)
+
     def test_ready_article_bodies_extract_without_external_access(self):
         collection = FixtureCollection()
         with patch('socket.create_connection', side_effect=AssertionError('Network forbidden')):
@@ -325,7 +400,7 @@ class BundledCollectionTests(unittest.TestCase):
 
     def test_archived_counterexamples_retain_additions_below_shared_items(self):
         collection = FixtureCollection()
-        for index_id in (9, 16, 18, 21, 34):
+        for index_id in (9, 15, 20, 33):
             index = next(i for i in collection.indexes if i['id'] == index_id)
             lists = sorted([s for s in index['listings'] if s['role'] != 'pagination'],
                            key=lambda s: s['requested_timestamp'])

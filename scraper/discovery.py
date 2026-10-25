@@ -12,7 +12,7 @@ import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
 from bs4 import BeautifulSoup, Tag
 import psycopg
@@ -29,7 +29,6 @@ from scraper.identity import canonical_source_url, content_hash, normalize_artic
 MAX_TRANSITIONS = 100
 NAVIGATION_TIMEOUT = 45_000
 LISTING_TIMEOUT = 15_000
-PAST_PROJECTS_PATH = '/building-and-development/projects/past-projects'
 
 
 class TraversalError(RuntimeError):
@@ -200,6 +199,8 @@ class Listing:
     marker: str = ''
     heading_container: bool = False
     empty_allowed: bool = False
+    required_status: str | None = None
+    required_query: tuple[tuple[str, str], ...] = ()
 
 
 def _card(anchor: Tag) -> Tag:
@@ -228,6 +229,20 @@ def _excluded(anchor: Tag, consultation: bool) -> bool:
     return any(status in forbidden or (consultation and re.match(r'^closed\b', status)) for status in statuses)
 
 
+def project_card_status(anchor: Tag) -> str | None:
+    """Read a project's explicit label without borrowing a neighbouring card's."""
+    known = {'in planning', 'in progress', 'completed'}
+    for parent in [anchor, *anchor.parents]:
+        if not isinstance(parent, Tag) or parent.name in {'main', 'nav', 'header', 'footer', 'body', 'html'}:
+            break
+        labels = {node.get_text(' ', strip=True).casefold()
+                  for node in parent.find_all(['div', 'span', 'p'])
+                  if not node.find(['div', 'span', 'p'])} & known
+        if labels:
+            return next(iter(labels)) if len(labels) == 1 else None
+    return None
+
+
 def _parse_listing(html: str, page_url: str, spec: Listing) -> tuple[list[str], str]:
     soup = BeautifulSoup(html, 'html.parser')
     if spec.heading and spec.heading_container:
@@ -247,6 +262,7 @@ def _parse_listing(html: str, page_url: str, spec: Listing) -> tuple[list[str], 
         raise TraversalError(f'Expected listing section not found: {spec.heading or spec.selector}')
     raw: list[tuple[str, str]] = []
     accepted: list[str] = []
+    status_seen = False
     for anchor in anchors:
         if not _visible(anchor):
             continue
@@ -255,7 +271,14 @@ def _parse_listing(html: str, page_url: str, spec: Listing) -> tuple[list[str], 
             continue
         raw.append((target, _card(anchor).get_text(' ', strip=True)))
         if not _excluded(anchor, spec.consultation):
+            if spec.required_status is not None:
+                status = project_card_status(anchor)
+                status_seen |= status is not None
+                if status != spec.required_status.casefold():
+                    continue
             accepted.append(target)
+    if raw and spec.required_status and not status_seen:
+        raise TraversalError('Expected project-status labels not found')
     if not raw and not EMPTY_PATTERN.search(section_text) and not spec.empty_allowed:
         raise TraversalError('Listing exists but has no recognizable items or explicit empty state')
     current_page = [e.get_text(' ', strip=True) for e in soup.select(
@@ -333,7 +356,12 @@ def _collect(page: Page, spec: Listing) -> list[str]:
     urls: list[str] = []
     seen: set[str] = set()
     previous = None
+    listing_path = urlsplit(page.url).path.rstrip('/')
     for transition in range(MAX_TRANSITIONS + 1):
+        if spec.required_query:
+            query = parse_qs(urlsplit(page.url).query)
+            if any(query.get(key) != [value] for key, value in spec.required_query):
+                raise TraversalError('Project-status filter was lost during pagination')
         batch, signature = _wait_listing(page, spec, previous)
         if signature in seen:
             raise TraversalError(f'Repeated listing page: {page.url}')
@@ -349,8 +377,19 @@ def _collect(page: Page, spec: Listing) -> list[str]:
             # Engage's server-rendered pager uses /?page=N for the /project listing.
             if target and _host(page.url) == 'engage.vic.gov.au' and urlsplit(target).path == '/' and _host(target) == _host(page.url):
                 target = urlunsplit(('https', urlsplit(page.url).netloc, '/project', urlsplit(target).query, ''))
-            if not target or _host(target) != _host(page.url) or urlsplit(target).path.rstrip('/') != urlsplit(page.url).path.rstrip('/'):
+            target_path = urlsplit(target).path.rstrip('/') if target else ''
+            allowed_path = (bool(re.fullmatch(re.escape(listing_path) + r'(?:/page/\d+)?', target_path))
+                            if spec.required_query else target_path == urlsplit(page.url).path.rstrip('/'))
+            if not target or _host(target) != _host(page.url) or not allowed_path:
                 raise TraversalError('Pagination link left its listing route')
+            if spec.required_query:
+                parts = urlsplit(target)
+                query = parse_qs(parts.query)
+                if any(key in query and query[key] != [value] for key, value in spec.required_query):
+                    raise TraversalError('Pagination changed the project-status filter')
+                pairs = [(key, value) for key, value in parse_qsl(parts.query)
+                         if key not in dict(spec.required_query)]
+                target = urlunsplit(parts._replace(query=urlencode(pairs + list(spec.required_query))))
             _load(page, target)
         else:
             control.click(timeout=LISTING_TIMEOUT)
@@ -429,6 +468,38 @@ def _federal(page: Page, treaties: bool, history_lookup: HistoryLookup | None = 
     return urls
 
 
+def project_listing(index_url: str) -> Listing | None:
+    """Scoped project specs shared by browser discovery and saved-listing tests."""
+    host, path = _host(index_url), urlsplit(index_url).path.rstrip('/')
+    status = None
+    required_query = ()
+    if host == 'gippswater.com.au' and path == '/outages-works-and-projects/major-projects/future-major-projects':
+        selector, prefix = '.card a[href]', path + '/'
+    elif host == 'westernportwater.com.au' and path in {
+        '/our-community/current-projects', '/our-community/projects/current-projects'
+    }:
+        selector = '#main .avia_textblock a[href], #content .avia_textblock a[href], .entry-content a[href]'
+        prefix = '/our-community/projects/current-projects/'
+    elif host == 'wannonwater.com.au' and path == '/community-and-environment/projects-and-initiatives':
+        if parse_qs(urlsplit(index_url).query).get('filter_project_status[]') != ['223']:
+            raise TraversalError('Wannon listing requires the In planning project-status filter (223)')
+        selector, prefix = 'main a[href]', path + '/'
+        status = 'In planning'
+        required_query = (('filter_project_status[]', '223'),)
+    else:
+        return None
+
+    def accepts(target: str) -> bool:
+        target_path = urlsplit(target).path
+        return (_host(target) == host and target_path.startswith(prefix)
+                and target_path.rstrip('/') != prefix.rstrip('/')
+                and not re.fullmatch(re.escape(prefix) + r'page/\d+/?', target_path)
+                and not target_path.lower().endswith('.pdf'))
+
+    return Listing(selector, accepts, paging=PAGER, required_status=status,
+                   marker='main' if status else '', required_query=required_query)
+
+
 def _dispatch(page: Page, requested_url: str, history_lookup: HistoryLookup | None = None) -> list[str]:
     host, path = _host(requested_url), urlsplit(requested_url).path.rstrip('/')
     if host == 'parliament.vic.gov.au':
@@ -451,21 +522,9 @@ def _dispatch(page: Page, requested_url: str, history_lookup: HistoryLookup | No
         accepts = _same_site(page, '/projects/')
         return _collect(page, Listing('.cp-detail a[href], .current-projects a[href], a:has(.cp-detail)',
             lambda target: accepts(target) and 'archiv' not in urlsplit(target).path.lower()))
-    if host == 'gippswater.com.au' and path.endswith('/major-projects'):
-        _load(page, _named_link(page, 'Current major projects', {host}))
-        current = _collect(page, Listing('.card a[href]', _same_site(page, '/outages-works-and-projects/major-projects/')))
-        _load(page, requested_url)
-        _load(page, _named_link(page, 'Future major projects', {host}))
-        return list(dict.fromkeys(current + _collect(page, Listing('.card a[href]', _same_site(page, '/outages-works-and-projects/major-projects/')))))
-    if host == 'westernportwater.com.au' and path == '/our-community/projects':
-        _load(page, _named_link(page, 'Current projects', {host}))
-        current = _collect(page, Listing('#content a[href], .entry-content a[href], #main a[href]', _same_site(page, '/our-community/projects/current-projects/'), paging=PAGER))
-        _load(page, requested_url)
-        _load(page, _named_link(page, 'Future projects', {host}))
-        # Planned projects are described inline rather than on individual pages.
-        if not page.get_by_role('heading', name='Future projects', exact=True).count():
-            raise TraversalError('Future projects content not found')
-        return list(dict.fromkeys(current + [normalize_url(page.url, page.url)]))
+    scoped = project_listing(requested_url)
+    if scoped is not None:
+        return _collect(page, scoped)
     if host == 'pc.gov.au' and path == '/inquiries-and-research':
         return _collect(page, Listing('', _same_site(page, '/inquiries-and-research/'), heading='Open for consultation|Upcoming consultations', consultation=True, heading_container=True))
     specs = {
@@ -474,7 +533,6 @@ def _dispatch(page: Page, requested_url: str, history_lookup: HistoryLookup | No
         ('egwater.vic.gov.au', '/community/news'): Listing('.article-header h2 a', _same_site(page, '/community/news/'), paging=PAGER),
         ('gwmwater.org.au', '/building-and-development/projects/current-projects'): Listing('main a[href]', _same_site(page, '/building-and-development/projects/current-projects/')),
         ('sgwater.com.au', '/projects'): Listing('a.total-page, .project-news a[href]', _same_site(page, '/news/')),
-        ('wannonwater.com.au', '/community-and-environment/projects-and-initiatives'): Listing('main a[href]', _same_site(page, '/community-and-environment/projects-and-initiatives/'), paging=PAGER),
         ('srw.com.au', '/initiatives/projects'): Listing('a.card__simple', _same_site(page, '/initiatives/projects/')),
         ('g-mwater.com.au', '/customer-services-resources/projects'): Listing('.item .title a[href]', lambda url: _host(url) == 'yoursay.gmwater.com.au'),
         ('esc.vic.gov.au', '/current-consultations'): Listing('.views-field-title a[href]', _same_site(page), consultation=True, paging=PAGER),
@@ -489,18 +547,9 @@ def _dispatch(page: Page, requested_url: str, history_lookup: HistoryLookup | No
     return _collect(page, spec)
 
 
-def is_skipped(url: str) -> bool:
-    return _host(url) == 'gwmwater.org.au' and urlsplit(url).path.rstrip('/') == PAST_PROJECTS_PATH
-
-
 def traverse_index(name: str, url: str, browser: Browser, *,
                    history_lookup: HistoryLookup | None = None) -> list[extraction.Source]:
-    """Discover a complete index; raise TraversalError rather than return partial results.
-
-    Historical project indexes are intentionally outside this discovery scope.
-    """
-    if is_skipped(url):
-        return []
+    """Discover a complete index; raise rather than return partial results."""
     page = browser.new_page()
     try:
         _load(page, url)
@@ -547,9 +596,6 @@ def main(argv: list[str] | None = None) -> int:
         browser = playwright.chromium.launch(headless=True)
         try:
             for name, url in selected:
-                if is_skipped(url):
-                    print(f'{name}: SKIPPED (past projects)', flush=True)
-                    continue
                 try:
                     sources = traverse_index(name, url, browser)
                     results[name] = sources

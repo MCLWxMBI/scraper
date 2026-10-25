@@ -17,8 +17,6 @@ from uuid import uuid4
 
 import psycopg
 from bs4 import BeautifulSoup
-from psycopg import sql
-from psycopg.conninfo import make_conninfo
 
 from scraper import discovery
 from scraper.config import PROJECT_DIR
@@ -33,39 +31,45 @@ from scraper.identity import canonical_source_url, content_hash
 SCHEDULE = {
     1: ('20251119213559', '20260211115141'),
     2: ('20251128084544', '20260210195336'),
-    3: (None, '20260901032833'), 4: (None, '20260117154239'),
-    5: (None, None), 6: ('20260211125204', '20260618080745'),
+    3: (None, '20260901032833'),
+    4: (None, '20260117154239'),
+    5: (None, None),
+    6: ('20260211125204', '20260618080745'),
     7: ('20251106211959', '20251124151143'),
     8: ('20251123135332', '20251127203310'),
-    9: ('20260505033327', '20260508113946'), 10: (None, None),
+    9: ('20260505033327', '20260508113946'),
+    10: (None, None),
     11: (None, '20260410144026'),
-    12: ('20260206200037', '20260512161933'),
+    12: ('20251206125753', '20260411024308'),
     13: (None, '20260712064057'),
-    14: ('20260710194154', '20260711204826'), 15: (None, None),
-    16: ('20260216175709', '20260608150334'),
-    17: (None, '20260611064417'),
-    18: ('20260313135317', '20260615043943'),
-    19: ('20260325212128', '20260421012845'),
-    20: ('20260414113428', '20260614032742'),
-    21: ('20251107140958', '20260412124944'),
-    22: ('20260207015404', '20260617072451'),
-    23: ('20251125091251', '20251205032038'),
-    24: ('20260119135259', '20260419013113'),
-    25: ('20251124193527', '20251220105836'),
-    26: ('20260630062035', '20261001022315'),
-    27: ('20260507025227', '20260804060123'),
-    28: ('20260122164753', '20260423024735'),
-    29: ('20260331023521', '20260510084900'),
-    30: ('20260215211800', '20260322215629'),
-    31: ('20260505052100', '20260518101405'),
-    32: ('20260305231908', '20260618005400'),
-    33: ('20260226162001', '20260507010819'),
-    34: ('20251115214232', '20251126065001'),
-    35: ('20260114233433', '20260308040406'),
-    36: (None, '20260615111550'), 37: (None, None), 38: (None, None),
-    39: ('20251101033227', '20260101033231'), 40: (None, None),
-    41: ('20260710164505', '20260924143419'),
-    42: ('20251112004508', '20251115093747'),
+    14: (None, None),
+    15: ('20260216175709', '20260608150334'),
+    16: (None, '20260611064417'),
+    17: ('20260313135317', '20260615043943'),
+    18: ('20251205112732', '20251211032411'),
+    19: ('20260414113428', '20260614032742'),
+    20: ('20251107140958', '20260412124944'),
+    21: ('20260207015404', '20260617072451'),
+    22: ('20251125091251', '20251205032038'),
+    23: ('20260119135259', '20260419013113'),
+    24: ('20251124193527', '20251220105836'),
+    25: ('20260630062035', '20261001022315'),
+    26: ('20260507025227', '20260804060123'),
+    27: ('20260122164753', '20260423024735'),
+    28: ('20260331023521', '20260510084900'),
+    29: ('20260215211800', '20260322215629'),
+    30: ('20260505052100', '20260518101405'),
+    31: ('20260305231908', '20260618005400'),
+    32: ('20260226162001', '20260507010819'),
+    33: ('20251115214232', '20251126065001'),
+    34: ('20260114233433', '20260308040406'),
+    35: (None, '20260615111550'),
+    36: (None, None),
+    37: (None, None),
+    38: ('20251101033227', '20260101033231'),
+    39: (None, None),
+    40: ('20260710164505', '20260924143419'),
+    41: ('20251112004508', '20251115093747'),
 }
 
 
@@ -94,7 +98,7 @@ def validate_resources(fixtures):
 
     visit(fixtures.indexes)
     ids = [i['id'] for i in fixtures.indexes]
-    require(len(ids) == 42 and set(ids) == set(SCHEDULE), 'Expected seed IDs 1–42 exactly once')
+    require(len(ids) == 41 and set(ids) == set(SCHEDULE), 'Expected seed IDs 1–41 exactly once')
     return len(paths)
 
 
@@ -141,7 +145,7 @@ def make_case(fixtures, index, pair=None, section='main'):
     ready = {canonical_source_url(s.url): s for s in fixtures.sources(index['url'])}
     old_keys = list(dict.fromkeys(canonical_source_url(e['url']) for e in old['entries']))
     new_keys = list(dict.fromkeys(canonical_source_url(e['url']) for e in new['entries']))
-    if index['id'] in {24, 25}:
+    if index['id'] in {23, 24}:
         # Inline/document routes have one stable source, not per-card identities.
         old_keys = new_keys = list(ready)
         case['note'] = 'Same saved inline/document body reused; historical equality is not asserted'
@@ -157,11 +161,9 @@ def make_case(fixtures, index, pair=None, section='main'):
                 unavailable_additions=[key for key in new_keys if key not in old_keys and key not in ready])
     if index['id'] == 1:
         case['note'] = 'Saved entries replace regionalhousing with apartmentrenewables; report wording differs'
-    if index['id'] == 18:
-        case['note'] = 'Shared-body history test only; mocked acceptance does not establish current opportunity eligibility'
     if not chosen:
         case['reason'] = 'No ready article bodies for these listings'
-        if index['id'] == 41:
+        if index['id'] == 40:
             for value in (old, new):
                 raw = fixtures.read(value['resource']).decode('utf-8', errors='replace')
                 text = BeautifulSoup(raw, 'html.parser').get_text(' ', strip=True).lower()
@@ -198,7 +200,7 @@ def run_case(fixtures, connection, index, log, case, older, newer):
                 f'{index["id"]} {stage}: unexpected processing candidates')
         # Discovery never advances history itself. These rows explicitly simulate
         # earlier successful processing, without inventing Claude responses or
-        # running collection. Actual writer/trigger checks live in integration tests.
+        # running collection. Writer/trigger checks run separately below on the same database.
         require(dict(connection.execute('SELECT source_url, hash FROM public.article_history').fetchall()) == before,
                 'Discovery changed history')
         with connection.transaction():
@@ -228,6 +230,69 @@ def run_case(fixtures, connection, index, log, case, older, newer):
                                    unchanged=len(keys) - len(candidates), history_rows_primed=len(expected)))
 
 
+def check_database(connection, fixtures):
+    """Exercise real writes, deletion protection and rollback without Claude."""
+    from scraper.db.opportunities import save_opportunity, ArticleDeletedError, OpportunityStorageError
+    from scraper.models import Opportunity
+    from scraper.structuring import article_slug
+    index = next(i for i in fixtures.indexes if i['name'] == 'Coliban Water')
+    source = fixtures.sources(index['url'])[0]
+    text = fixtures.extract(source, index['url'])
+    digest = content_hash(text)
+    opportunity = Opportunity(id=article_slug(source.url), title='Fixture database check',
+        sourceUrl=source.url, sourceOrg=index['name'], fullText=[text], jurisdiction='Victoria',
+        startDate=None, submissionDeadline='2027-01-01T00:00:00Z',
+        category=['Water & resources'], tags=None)
+    checks = []
+    connection.execute('TRUNCATE public.opportunities, public.article_history')
+    try:
+        rows = connection.execute('SELECT id,active FROM public.website_indexes ORDER BY id').fetchall()
+        require([row[0] for row in rows] == list(range(1,42)), 'Expected seed IDs 1–41')
+        require([row[0] for row in rows if not row[1]] == [8,24,38], 'Unexpected inactive IDs')
+        with connection.transaction():
+            require(seed_database(connection) == 0, 'Setup created extra indexes')
+        checks.append('41 indexes; 38 active; repeatable setup')
+        save_opportunity(connection, opportunity, content_hash=digest)
+        history = load_history(connection, [source.url])
+        require(history[source.url].hash == digest, 'Successful save lost its hash')
+        checks.append('opportunity and hash committed')
+        bad = opportunity.model_copy(update={'category':['invalid SQL category']})
+        try:
+            save_opportunity(connection, bad, content_hash='0'*64)
+        except OpportunityStorageError:
+            pass
+        else:
+            raise AssertionError('SQL constraint failure was accepted')
+        require(load_history(connection, [source.url])[source.url].hash == digest,
+                'Failed write advanced history')
+        checks.append('SQL failure rolls back history')
+        connection.execute('UPDATE public.article_history SET hash=%s WHERE source_url=%s', ('0'*64,source.url))
+        prepared = discovery.prepare_articles([source], lambda _: text,
+            lambda urls: load_history(connection, urls))
+        require(prepared.articles[0].hash == digest and not prepared.articles[0].skipped,
+                'Changed content was skipped')
+        save_opportunity(connection, opportunity, content_hash=digest)
+        checks.append('changed hash proceeds and successful save updates it')
+        connection.execute('DELETE FROM public.opportunities WHERE id=%s', (opportunity.id,))
+        marker = load_history(connection, [source.url])[source.url]
+        require(marker.deleted and marker.hash == digest, 'Deletion did not preserve the tombstone/hash')
+        def forbidden_extract(_):
+            raise AssertionError('Deleted article was extracted')
+        prepared = discovery.prepare_articles([source], forbidden_extract,
+                                              lambda urls: load_history(connection, urls))
+        require(prepared.articles[0].skipped == 'deleted', 'Deletion was not skipped')
+        try:
+            save_opportunity(connection, opportunity, content_hash=digest)
+        except ArticleDeletedError:
+            pass
+        else:
+            raise AssertionError('A deleted opportunity was recreated')
+        checks.append('physical deletion excludes extraction and guarded save')
+        return checks
+    finally:
+        connection.execute('TRUNCATE public.opportunities, public.article_history')
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--index', help='Exact fixture index name, case-insensitive')
@@ -239,31 +304,31 @@ def main(argv=None):
     run_id = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ-') + uuid4().hex[:8]
     directory = PROJECT_DIR / 'output' / 'history-replay' / run_id
     directory.mkdir(parents=True)
-    summary = dict(run_id=run_id, resources=0, cases=[], error=None, database_removed=False,
-                   body_policy='Reuse saved bodies; no historical body-equality claim', claude='not invoked; discovery only')
-    admin = None
-    database = 'scraper_history_replay_' + uuid4().hex
-    summary['database'] = database
-    created = False
+    summary = dict(run_id=run_id, resources=0, cases=[], error=None,
+                   database='scraper', test_rows_cleared=False,
+                   body_policy='Reuse saved bodies; no historical body-equality claim',
+                   claude='not invoked; discovery only')
+    connection = None
     interrupted = lambda signum, frame: (_ for _ in ()).throw(KeyboardInterrupt())
     previous = signal.signal(signal.SIGTERM, interrupted)
     try:
         summary['resources'] = validate_resources(fixtures)
         dsn = os.environ.get('ARTICLE_HISTORY_TEST_DATABASE_URL',
                              'postgresql://scraper:scraper@postgres:5432/scraper')
-        admin = psycopg.connect(dsn, autocommit=True, connect_timeout=10)
-        summary['postgres_version'] = admin.info.server_version
-        admin.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(database)))
-        created = True
-        with psycopg.connect(make_conninfo(dsn, dbname=database), autocommit=True,
-                             options='-c lock_timeout=5000 -c statement_timeout=15000') as connection, \
-             DecisionLog(directory / 'decisions.jsonl', run_id=run_id) as log:
+        # This manually invoked test intentionally clears article/history rows
+        # in the local development database. Never create another database.
+        parameters = psycopg.conninfo.conninfo_to_dict(dsn)
+        require(parameters.get('dbname') == 'scraper' and parameters.get('host') in
+                {'postgres', 'localhost', '127.0.0.1'}, 'Replay requires the local scraper database')
+        connection = psycopg.connect(dsn, autocommit=True, connect_timeout=10,
+                                     options='-c lock_timeout=5000 -c statement_timeout=15000')
+        summary['postgres_version'] = connection.info.server_version
+        with DecisionLog(directory / 'decisions.jsonl', run_id=run_id) as log:
             with connection.transaction():
                 seed_database(connection)
+            summary['database_checks'] = check_database(connection, fixtures)
             for index in indexes:
                 comparisons = [(None, 'main')]
-                if index['id'] == 12:
-                    comparisons.append((('20251206125753', '20260411024308'), 'future'))
                 for pair, section in comparisons:
                     case = None
                     try:
@@ -280,15 +345,14 @@ def main(argv=None):
         # Never serialize a database exception's detail/DSN into reports.
         summary['error'] = 'Database operation failed' if isinstance(exc, psycopg.Error) else type(exc).__name__
     finally:
-        if admin is not None:
+        if connection is not None:
             try:
-                if created:
-                    admin.execute(sql.SQL('DROP DATABASE {} WITH (FORCE)').format(sql.Identifier(database)))
-                summary['database_removed'] = True
+                connection.execute('TRUNCATE public.opportunities, public.article_history')
+                summary['test_rows_cleared'] = True
             except psycopg.Error:
-                summary['error'] = 'Temporary database cleanup failed'
+                summary['error'] = 'Test article/history cleanup failed'
             finally:
-                admin.close()
+                connection.close()
         signal.signal(signal.SIGTERM, previous)
         (directory / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
     if summary['error']:

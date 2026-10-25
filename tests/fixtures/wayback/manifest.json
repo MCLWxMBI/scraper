@@ -2015,172 +2015,10 @@
     {
       "id": 12,
       "name": "Gippsland Water",
-      "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects",
+      "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects",
       "active": true,
-      "coverage_reason": "2 ready historical article sample(s); other attempted samples may be unavailable.",
+      "coverage_reason": "3 ready scoped historical article sample(s); unavailable captures retain their coverage reason.",
       "listings": [
-        {
-          "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects",
-          "requested_timestamp": "20260206200037",
-          "role": "listing",
-          "entries": [
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/moe-water-treatment-plant-upgrade",
-              "title": "Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/scada-replacement",
-              "title": "SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/warragul-wastewater-treatment-plant-upgrade",
-              "title": "Warragul wastewater treatment plant upgrade We need to expand the capacity of the existing wastewater treatment plant to meet the town's needs into the future. Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/traralgon-morwell-water",
-              "title": "Connecting Traralgon, Morwell and surrounding towns water We’re planning for the future and expected growth in Traralgon, Morwell and Tyers with a series of major infrastructure projects that strengthen the water supply to the towns. Learn more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/water-leak-program",
-              "title": "Water leak program We’re checking for water leaks around Warragul, Drouin, Buln Buln, Nilma, Darnum, Jindivick, Longwarry North and Rokeby using an innovative new technology. Learn more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/water-and-sewer-main-upgrade-program",
-              "title": "Water and sewer main upgrade program Our planned renewal program replaces ageing water mains and upgrade sewer mains across our service area. Learn more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/swop",
-              "title": "Upgrading the Saline Wastewater Outfall Pipeline This work will be the next step in a program to upgrade the full length of the Saline Waste Outfall Pipeline (SWOP). Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/drouin-west-water-main-extension",
-              "title": "Drouin west water main extension We're building a new water main to increase the capacity and reliability of Drouin’s water supply. Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            }
-          ],
-          "status": "saved",
-          "resource": {
-            "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects",
-            "requested_timestamp": "20260206200037",
-            "timestamp": "20260206200037",
-            "replay_url": "https://web.archive.org/web/20260206200037id_/https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects",
-            "path": "12/listing-20260206200037-fee9906410a4.html",
-            "sha256": "c7ef450dfc337a3fa422b26d9578deec0ab064351f57179991c8e3e228d8d30b",
-            "content_type": "text/html"
-          }
-        },
-        {
-          "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects",
-          "requested_timestamp": "20260512161933",
-          "role": "listing",
-          "entries": [
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/moe-water-treatment-plant-upgrade",
-              "title": "Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/scada-replacement",
-              "title": "SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/warragul-wastewater-treatment-plant-upgrade",
-              "title": "Warragul wastewater treatment plant upgrade We need to expand the capacity of the existing wastewater treatment plant to meet the town's needs into the future. Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/traralgon-morwell-water",
-              "title": "Connecting Traralgon, Morwell and surrounding towns water We’re planning for the future and expected growth in Traralgon, Morwell and Tyers with a series of major infrastructure projects that strengthen the water supply to the towns. Learn more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/water-and-sewer-main-upgrade-program",
-              "title": "Water and sewer main upgrade program Our planned renewal program replaces ageing water mains and upgrade sewer mains across our service area. Learn more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/swop",
-              "title": "Upgrading the Saline Wastewater Outfall Pipeline This work will be the next step in a program to upgrade the full length of the Saline Waste Outfall Pipeline (SWOP). Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/drouin-west-water-main-extension",
-              "title": "Drouin west water main extension We're building a new water main to increase the capacity and reliability of Drouin’s water supply. Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            },
-            {
-              "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/yarragon-sewerage-upgrade",
-              "title": "Yarragon wastewater upgrade Replacing an old asset to allow for growth and protect the environment. Read more",
-              "section": "Current major projects",
-              "dates": [],
-              "context": "Current major projects Major projects we're currently working on to improve infrastructure in our region Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more ",
-              "featured": false
-            }
-          ],
-          "status": "saved",
-          "resource": {
-            "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects",
-            "requested_timestamp": "20260512161933",
-            "timestamp": "20260512161933",
-            "replay_url": "https://web.archive.org/web/20260512161933id_/https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects",
-            "path": "12/listing-20260512161933-7dfe962cb887.html",
-            "sha256": "46ce8ee9dd8d98d43bc3e77c8db72ec42c90164c16391c5be33a9ddc89033f8b",
-            "content_type": "text/html"
-          }
-        },
         {
           "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects",
           "requested_timestamp": "20251206125753",
@@ -2250,53 +2088,61 @@
       ],
       "articles": [
         {
-          "source_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/moe-water-treatment-plant-upgrade",
-          "source_name": "Gippsland Water",
-          "title": "Moe Water Treatment Plant upgrade This upgrade will modernise the plant, increase overall capacity and allow future upgrade and maintenance works to be completed without restricting water supply to customers. Read more",
-          "route": "html",
-          "listing_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects",
-          "listing_timestamp": "20260512161933",
+          "source_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/investigating-new-renewable-energy-technology-gippsland-regional-organics",
+          "title": "Investigating renewable energy technology at Gippsland Regional Organics Investigating potential opportunities to establish a wet anaerobic digester waste to energy facility at Gippsland Regional Organics. Read more",
+          "listing_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects",
+          "listing_timestamp": "20260411024308",
+          "status": "ready",
           "resources": [],
+          "route": "html",
           "html": {
-            "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/moe-water-treatment-plant-upgrade",
-            "requested_timestamp": "20260411022648",
-            "timestamp": "20260411022648",
-            "replay_url": "https://web.archive.org/web/20260411022648id_/https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/moe-water-treatment-plant-upgrade",
-            "path": "12/article-20260411022648-910f58f15990.html",
-            "sha256": "e2b5b89237a85364d31d7c9b21414f8f9777120959a0651d8f3d2a7ddfd7bcd3",
-            "content_type": "text/html"
+            "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/investigating-new-renewable-energy-technology-gippsland-regional-organics",
+            "requested_timestamp": "20260120130304",
+            "timestamp": "20260120130304",
+            "replay_url": "https://web.archive.org/web/20260120130304id_/https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/investigating-new-renewable-energy-technology-gippsland-regional-organics",
+            "sha256": "adead04167b35b71d941dbe4d73e7f36d7e23b4b044156826fdb94693b363700",
+            "content_type": "text/html",
+            "path": "12/article-20260120130304-adead04167b3.html"
           },
-          "status": "ready"
+          "source_name": "Gippsland Water"
         },
         {
-          "source_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/scada-replacement",
-          "source_name": "Gippsland Water",
-          "title": "SCADA upgrade We’re replacing our SCADA system to ensure that our water infrastructure remains reliable and secure. Read more",
-          "route": "html",
-          "listing_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects",
-          "listing_timestamp": "20260512161933",
+          "source_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/factory-road-pump-station-yarragon",
+          "title": "Factory Road pump station, Yarragon Replacing an old asset to allow for growth and protect the environment Read more",
+          "listing_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects",
+          "listing_timestamp": "20251206125753",
+          "status": "ready",
           "resources": [],
+          "route": "html",
           "html": {
-            "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/scada-replacement",
-            "requested_timestamp": "20260512151212",
-            "timestamp": "20260512151212",
-            "replay_url": "https://web.archive.org/web/20260512151212id_/https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/scada-replacement",
-            "path": "12/article-20260512151212-08aeead23b02.html",
-            "sha256": "6e89bff98981687d529b6267abc660d5aaf513b188c634d4d62d632bcd4e7ea3",
-            "content_type": "text/html"
+            "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/factory-road-pump-station-yarragon",
+            "requested_timestamp": "20260206201600",
+            "timestamp": "20260206201600",
+            "replay_url": "https://web.archive.org/web/20260206201600id_/https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/factory-road-pump-station-yarragon",
+            "sha256": "f487885ee9f1638bdc33dad1840dd1c758ad81ef1ae15dcb71b8142410cc3e6b",
+            "content_type": "text/html",
+            "path": "12/article-20260206201600-f487885ee9f1.html"
           },
-          "status": "ready"
+          "source_name": "Gippsland Water"
         },
         {
-          "source_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects/warragul-wastewater-treatment-plant-upgrade",
-          "source_name": "Gippsland Water",
-          "title": "Warragul wastewater treatment plant upgrade We need to expand the capacity of the existing wastewater treatment plant to meet the town's needs into the future. Read more",
-          "route": "html",
-          "listing_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/current-major-projects",
-          "listing_timestamp": "20260512161933",
+          "source_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/drouin-west-water-main-extension",
+          "title": "Drouin west water main extension Increasing the capacity and reliability of Drouin’s water supply Read more",
+          "listing_url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects",
+          "listing_timestamp": "20251206125753",
+          "status": "ready",
           "resources": [],
-          "status": "unavailable",
-          "reason": "URLError: <urlopen error [Errno 111] Connection refused> | URLError: <urlopen error [Errno 111] Connection refused>"
+          "route": "html",
+          "html": {
+            "url": "https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/drouin-west-water-main-extension",
+            "requested_timestamp": "20251108001623",
+            "timestamp": "20251108001623",
+            "replay_url": "https://web.archive.org/web/20251108001623id_/https://www.gippswater.com.au/outages-works-and-projects/major-projects/future-major-projects/drouin-west-water-main-extension",
+            "sha256": "c476a595b1765dae9e1b0de826ca7fecfa66dd11a90464bf2c545ffe9db83afa",
+            "content_type": "text/html",
+            "path": "12/article-20251108001623-c476a595b176.html"
+          },
+          "source_name": "Gippsland Water"
         }
       ],
       "audit_finding": "Both downstream sections are archived. Current list keeps seven shared items and includes a Yarragon entry eighth, below known items. Its URL remains under future projects, so transfer/renaming is possible. Future list also changes independently."
@@ -2450,165 +2296,6 @@
     },
     {
       "id": 14,
-      "name": "Grampians Wimmera Mallee Water - Past Projects",
-      "url": "https://gwmwater.org.au/building-and-development/projects/past-projects/",
-      "active": false,
-      "coverage_reason": "3 ready historical article sample(s); other attempted samples may be unavailable.",
-      "listings": [
-        {
-          "url": "https://www.gwmwater.org.au/building-and-development/projects/past-projects/",
-          "requested_timestamp": "20260710194154",
-          "role": "listing",
-          "entries": [
-            {
-              "url": "https://www.gwmwater.org.au/building-and-development/projects/past-projects/lake-fyans-embankment-upgrade-project",
-              "title": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina.",
-              "section": "Past projects",
-              "dates": [],
-              "context": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina. Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke. Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area. Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "featured": false
-            },
-            {
-              "url": "https://www.gwmwater.org.au/building-and-development/projects/past-projects/goroke-sewerage-scheme",
-              "title": "Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke.",
-              "section": "Past projects",
-              "dates": [],
-              "context": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina. Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke. Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area. Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "featured": false
-            },
-            {
-              "url": "https://www.gwmwater.org.au/building-and-development/projects/past-projects/urban-remote-metering",
-              "title": "Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area.",
-              "section": "Past projects",
-              "dates": [],
-              "context": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina. Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke. Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area. Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "featured": false
-            },
-            {
-              "url": "https://www.gwmwater.org.au/building-and-development/projects/past-projects/horsham-smartwater-integrated-water-management-project",
-              "title": "Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "section": "Past projects",
-              "dates": [],
-              "context": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina. Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke. Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area. Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "featured": false
-            }
-          ],
-          "status": "saved",
-          "resource": {
-            "url": "https://www.gwmwater.org.au/building-and-development/projects/past-projects/",
-            "requested_timestamp": "20260710194154",
-            "timestamp": "20260710194154",
-            "replay_url": "https://web.archive.org/web/20260710194154id_/https://www.gwmwater.org.au/building-and-development/projects/past-projects/",
-            "path": "14/listing-20260710194154-0c1931d1aac8.html",
-            "sha256": "7eec7ae96b1725394c955033eafbf19722acf2368fbf045e220ba297b21f30bb",
-            "content_type": "text/html"
-          }
-        },
-        {
-          "url": "https://gwmwater.org.au/building-and-development/projects/past-projects/",
-          "requested_timestamp": "20260711204826",
-          "role": "listing",
-          "entries": [
-            {
-              "url": "https://gwmwater.org.au/building-and-development/projects/past-projects/lake-fyans-embankment-upgrade-project",
-              "title": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina.",
-              "section": "Past projects",
-              "dates": [],
-              "context": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina. Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke. Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area. Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "featured": false
-            },
-            {
-              "url": "https://gwmwater.org.au/building-and-development/projects/past-projects/goroke-sewerage-scheme",
-              "title": "Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke.",
-              "section": "Past projects",
-              "dates": [],
-              "context": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina. Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke. Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area. Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "featured": false
-            },
-            {
-              "url": "https://gwmwater.org.au/building-and-development/projects/past-projects/urban-remote-metering",
-              "title": "Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area.",
-              "section": "Past projects",
-              "dates": [],
-              "context": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina. Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke. Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area. Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "featured": false
-            },
-            {
-              "url": "https://gwmwater.org.au/building-and-development/projects/past-projects/horsham-smartwater-integrated-water-management-project",
-              "title": "Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "section": "Past projects",
-              "dates": [],
-              "context": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina. Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke. Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area. Horsham SmartWater & Integrated Water Management Project Horsham is going smarter with water — recycling it for agriculture and green spaces.",
-              "featured": false
-            }
-          ],
-          "status": "unavailable",
-          "reason": "URLError: <urlopen error [Errno 111] Connection refused> | URLError: <urlopen error [Errno 111] Connection refused>"
-        }
-      ],
-      "articles": [
-        {
-          "source_url": "https://gwmwater.org.au/building-and-development/projects/past-projects/lake-fyans-embankment-upgrade-project",
-          "source_name": "Grampians Wimmera Mallee Water - Past Projects",
-          "title": "Lake Fyans Embankment Upgrade Project Lake Fyans is being upgraded with works on the embankment and marina.",
-          "route": "html",
-          "listing_url": "https://gwmwater.org.au/building-and-development/projects/past-projects/",
-          "listing_timestamp": "20260711204826",
-          "resources": [],
-          "html": {
-            "url": "https://gwmwater.org.au/building-and-development/projects/past-projects/lake-fyans-embankment-upgrade-project/",
-            "requested_timestamp": "20260712055908",
-            "timestamp": "20260712055908",
-            "replay_url": "https://web.archive.org/web/20260712055908id_/https://gwmwater.org.au/building-and-development/projects/past-projects/lake-fyans-embankment-upgrade-project/",
-            "path": "14/article-20260712055908-b5d3414a80a7.html",
-            "sha256": "e887cc4a6f8ca1b996dd42962887fdbdcf0acb4cbb250aeb4309bbd2ad121a4d",
-            "content_type": "text/html"
-          },
-          "status": "ready"
-        },
-        {
-          "source_url": "https://gwmwater.org.au/building-and-development/projects/past-projects/goroke-sewerage-scheme",
-          "source_name": "Grampians Wimmera Mallee Water - Past Projects",
-          "title": "Goroke Sewerage Scheme The new sewerage scheme serving the town of Goroke.",
-          "route": "html",
-          "listing_url": "https://gwmwater.org.au/building-and-development/projects/past-projects/",
-          "listing_timestamp": "20260711204826",
-          "resources": [],
-          "html": {
-            "url": "https://www.gwmwater.org.au/building-and-development/projects/past-projects/goroke-sewerage-scheme/",
-            "requested_timestamp": "20260710202958",
-            "timestamp": "20260710202958",
-            "replay_url": "https://web.archive.org/web/20260710202958id_/https://www.gwmwater.org.au/building-and-development/projects/past-projects/goroke-sewerage-scheme/",
-            "path": "14/article-20260710202958-7c05d6d4d81b.html",
-            "sha256": "38ca79b767001ce3181ae334567885e84949972c485c184c4b70137903b30462",
-            "content_type": "text/html"
-          },
-          "status": "ready"
-        },
-        {
-          "source_url": "https://gwmwater.org.au/building-and-development/projects/past-projects/urban-remote-metering",
-          "source_name": "Grampians Wimmera Mallee Water - Past Projects",
-          "title": "Urban Remote Metering GYour water use, in real time. GWMWater is upgrading urban meters across our service area.",
-          "route": "html",
-          "listing_url": "https://gwmwater.org.au/building-and-development/projects/past-projects/",
-          "listing_timestamp": "20260711204826",
-          "resources": [],
-          "html": {
-            "url": "https://www.gwmwater.org.au/building-and-development/projects/past-projects/urban-remote-metering/",
-            "requested_timestamp": "20260713024712",
-            "timestamp": "20260713024712",
-            "replay_url": "https://web.archive.org/web/20260713024712id_/https://www.gwmwater.org.au/building-and-development/projects/past-projects/urban-remote-metering/",
-            "path": "14/article-20260713024712-5240f935f3f4.html",
-            "sha256": "d69b50f0be5d951efdea6fbee9fbbb8a28d9029c7de8d6f4763b859f7688db90",
-            "content_type": "text/html"
-          },
-          "status": "ready"
-        }
-      ],
-      "audit_finding": "Two captures show the same four past-project links in the same order after normalizing www aliases."
-    },
-    {
-      "id": 15,
       "name": "Lower Murray Water",
       "url": "https://yoursay.lmw.vic.gov.au/projects",
       "active": true,
@@ -2618,7 +2305,7 @@
       "audit_finding": "No successful HTML capture found in the bounded CDX query; Availability returned 429."
     },
     {
-      "id": 16,
+      "id": 15,
       "name": "North East Water",
       "url": "https://haveyoursay.newater.com.au/projects",
       "active": true,
@@ -2804,7 +2491,7 @@
             "requested_timestamp": "20260216175709",
             "timestamp": "20260216175709",
             "replay_url": "https://web.archive.org/web/20260216175709id_/https://haveyoursay.newater.com.au/projects",
-            "path": "16/listing-20260216175709-2ec2aa9c690b.html",
+            "path": "15/listing-20260216175709-2ec2aa9c690b.html",
             "sha256": "ee8c13a8412bed8d6a080b5e68bd41f7c73466590a5142bfc89b99c5df76cbfd",
             "content_type": "text/html"
           }
@@ -3021,7 +2708,7 @@
             "requested_timestamp": "20260608150334",
             "timestamp": "20260608150334",
             "replay_url": "https://web.archive.org/web/20260608150334id_/https://haveyoursay.newater.com.au/projects",
-            "path": "16/listing-20260608150334-aa283407c31a.html",
+            "path": "15/listing-20260608150334-aa283407c31a.html",
             "sha256": "656a40776214da076f9cd3cdbd4b890d20c1c107bd3f2fbba2109504cff48c06",
             "content_type": "text/html"
           }
@@ -3052,7 +2739,7 @@
             "requested_timestamp": "20260317100051",
             "timestamp": "20260317100051",
             "replay_url": "https://web.archive.org/web/20260317100051id_/https://haveyoursay.newater.com.au/mount-beauty-raw-water-offtake",
-            "path": "16/article-20260317100051-e6c6e3319a65.html",
+            "path": "15/article-20260317100051-e6c6e3319a65.html",
             "sha256": "b3d71dfd46fe829d1015490e6258ea9607ccea2ecd4fa60d4715fe12fee4c2a9",
             "content_type": "text/html"
           },
@@ -3073,7 +2760,7 @@
       "audit_finding": "21 shared project URLs retain their order; four newly appearing URLs occupy positions 22–25. Their publication dates are not established."
     },
     {
-      "id": 17,
+      "id": 16,
       "name": "South Gippsland Water",
       "url": "https://www.sgwater.com.au/projects",
       "active": true,
@@ -3099,7 +2786,7 @@
             "requested_timestamp": "20260611064417",
             "timestamp": "20260611064417",
             "replay_url": "https://web.archive.org/web/20260611064417id_/https://www.sgwater.com.au/projects/",
-            "path": "17/listing-20260611064417-cdc8aa4359ca.html",
+            "path": "16/listing-20260611064417-cdc8aa4359ca.html",
             "sha256": "bb37ed3556c84e0ff2fac3b57c2d5788e32fef353afb97606bc9abde51655a16",
             "content_type": "text/html"
           }
@@ -3119,7 +2806,7 @@
             "requested_timestamp": "20260413025747",
             "timestamp": "20260413025747",
             "replay_url": "https://web.archive.org/web/20260413025747id_/https://www.sgwater.com.au/news/wosup-wonthaggi/",
-            "path": "17/article-20260413025747-e8e487e4ed2a.html",
+            "path": "16/article-20260413025747-e8e487e4ed2a.html",
             "sha256": "d511bc5bd20d37f0bdc2a2781972b1528834fd04c8702ae0fa57bc074bc2e99b",
             "content_type": "text/html"
           },
@@ -3129,11 +2816,11 @@
       "audit_finding": "Only one successful capture and one extracted project-news item."
     },
     {
-      "id": 18,
+      "id": 17,
       "name": "Wannon Water",
-      "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives",
+      "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives?filter_project_status%5B%5D=223",
       "active": true,
-      "coverage_reason": "1 ready historical article sample(s); other attempted samples may be unavailable.",
+      "coverage_reason": "Archived base listings are filtered locally to explicit In planning cards; actual unfiltered replay URLs are preserved.",
       "listings": [
         {
           "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/",
@@ -3141,59 +2828,11 @@
           "role": "listing",
           "entries": [
             {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/portland-chlorination-project",
-              "title": "Portland chlorination project",
-              "section": "Listing",
-              "dates": [],
-              "context": "Portland chlorination project We’re temporarily changing the way Portland’s water is disinfected.",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/brierly-basin-floating-solar-array",
-              "title": "Brierly Basin floating solar array",
-              "section": "Listing",
-              "dates": [],
-              "context": "Brierly Basin floating solar array The project will generate more than 600,000 kWh/year of renewable electricity and reduce our greenhouse gas emissions by more than 600 tonnes per year.",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/quality-water-for-wannon",
+              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/quality-water-for-wannon/",
               "title": "Quality Water for Wannon",
-              "section": "Listing",
+              "section": "In planning",
               "dates": [],
-              "context": "Quality Water for Wannon We're embarking on a project to improve the water quality in Portland, Heywood and Port Fairy.",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/warrnambool-sewage-treatment-plant-upgrade",
-              "title": "Warrnambool Sewage Treatment Plant upgrade",
-              "section": "Listing",
-              "dates": [],
-              "context": "Warrnambool Sewage Treatment Plant upgrade We’re upgrading our Warrnambool Sewage Treatment Plant to meet the needs of housing and economic growth in the region.",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/big-brown-bins-campaign",
-              "title": "Big Brown Bins campaign",
-              "section": "Listing",
-              "dates": [],
-              "context": "Big Brown Bins campaign Our Big Brown Bin campaign aims to make the invisible visible by highlighting the importance of our sewerage services.",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/port-fairy-ocean-water-monitoring-trial",
-              "title": "Port Fairy ocean water monitoring trial",
-              "section": "Listing",
-              "dates": [],
-              "context": "Port Fairy ocean water monitoring trial Results show that Port Fairy is a safe place to swim.",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/page/2",
-              "title": "2",
-              "section": "Listing",
-              "dates": [],
-              "context": "2",
+              "context": "Quality Water for Wannon",
               "featured": false
             }
           ],
@@ -3203,9 +2842,13 @@
             "requested_timestamp": "20260313135317",
             "timestamp": "20260313135317",
             "replay_url": "https://web.archive.org/web/20260313135317id_/https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/",
-            "path": "18/listing-20260313135317-603be3074ff6.html",
+            "path": "17/listing-20260313135317-603be3074ff6.html",
             "sha256": "291ea15f95d318393e7e0b9ef05994c8d4b28b2a73110e0728675866a96ac521",
             "content_type": "text/html"
+          },
+          "selection": {
+            "project_status": "In planning",
+            "from_unfiltered_archive": true
           }
         },
         {
@@ -3214,97 +2857,11 @@
           "role": "listing",
           "entries": [
             {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/portland-chlorination-project",
-              "title": "Portland chlorination project",
-              "section": "Listing",
-              "dates": [
-                "28 Jul 2025",
-                "30 Sep 2025"
-              ],
-              "context": "Portland chlorination project We’re temporarily changing the way Portland’s water is disinfected. 28 Jul 2025\n                     - 30 Sep 2025 Completed",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/warrnambool-sewage-treatment-plant-revegetation-project",
-              "title": "Warrnambool Sewage Treatment Plant – Revegetation Project",
-              "section": "Listing",
-              "dates": [
-                "09 Jun 2025",
-                "31 Oct 2027"
-              ],
-              "context": "Warrnambool Sewage Treatment Plant – Revegetation Project We’re revegetating n the area surrounding the Warrnambool Sewage Treatment Plant. 09 Jun 2025\n                     - 31 Oct 2027 In progress",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/gellibrand-summer-flows",
-              "title": "Gellibrand Summer Flows",
-              "section": "Listing",
-              "dates": [
-                "03 Jun 2025",
-                "30 Jun 2027"
-              ],
-              "context": "Gellibrand Summer Flows We’re upgrading our Otway system to increase water security and reduce environmental impacts on the Gellibrand River. 03 Jun 2025\n                     - 30 Jun 2027 In progress",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/brierly-basin-floating-solar-array",
-              "title": "Brierly Basin floating solar array",
-              "section": "Listing",
-              "dates": [
-                "03 Feb 2025",
-                "31 May 2026"
-              ],
-              "context": "Brierly Basin floating solar array The project will generate more than 600,000 kWh/year of renewable electricity and reduce our greenhouse gas emissions by more than 600 tonnes per year. 03 Feb 2025\n                     - 31 May 2026 Completed",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/quality-water-for-wannon",
+              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/quality-water-for-wannon/",
               "title": "Quality Water for Wannon",
-              "section": "Listing",
-              "dates": [
-                "12 May 2023"
-              ],
-              "context": "Quality Water for Wannon We're embarking on a project to improve the water quality in Portland, Heywood and Port Fairy. 12 May 2023 In planning",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/warrnambool-sewage-treatment-plant-upgrade",
-              "title": "Warrnambool Sewage Treatment Plant upgrade",
-              "section": "Listing",
-              "dates": [
-                "01 Jun 2022"
-              ],
-              "context": "Warrnambool Sewage Treatment Plant upgrade We’re upgrading our Warrnambool Sewage Treatment Plant to meet the needs of housing and economic growth in the region. 01 Jun 2022 Completed",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/big-brown-bins-campaign",
-              "title": "Big Brown Bins campaign",
-              "section": "Listing",
-              "dates": [
-                "01 Mar 2022"
-              ],
-              "context": "Big Brown Bins campaign Our Big Brown Bin campaign aims to make the invisible visible by highlighting the importance of our sewerage services. 01 Mar 2022 Completed",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/port-fairy-ocean-water-monitoring-trial",
-              "title": "Port Fairy ocean water monitoring trial",
-              "section": "Listing",
-              "dates": [
-                "01 Dec 2021"
-              ],
-              "context": "Port Fairy ocean water monitoring trial Results show that Port Fairy is a safe place to swim. 01 Dec 2021 Completed",
-              "featured": false
-            },
-            {
-              "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/portland-wind-turbine",
-              "title": "Portland wind turbine",
-              "section": "Listing",
-              "dates": [
-                "01 Aug 2018"
-              ],
-              "context": "Portland wind turbine Portland was the first Australian city to achieve net zero-plus emissions from locally generated renewable power at its water and sewage treatment facilities when we commissioned a wind turbine in 2020. 01 Aug 2018 Completed",
+              "section": "In planning",
+              "dates": [],
+              "context": "Quality Water for Wannon",
               "featured": false
             }
           ],
@@ -3314,289 +2871,217 @@
             "requested_timestamp": "20260615043943",
             "timestamp": "20260615043943",
             "replay_url": "https://web.archive.org/web/20260615043943id_/https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/",
-            "path": "18/listing-20260615043943-1104013cb62f.html",
+            "path": "17/listing-20260615043943-1104013cb62f.html",
             "sha256": "09821292c640a04a33d214aa7e152544734de48fd36171c779fa4bb78aaf182e",
             "content_type": "text/html"
+          },
+          "selection": {
+            "project_status": "In planning",
+            "from_unfiltered_archive": true
           }
         }
       ],
       "articles": [
         {
-          "source_url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/warrnambool-sewage-treatment-plant-revegetation-project",
-          "source_name": "Wannon Water",
-          "title": "Warrnambool Sewage Treatment Plant – Revegetation Project",
-          "route": "html",
+          "source_url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/quality-water-for-wannon/",
+          "title": "Quality Water for Wannon",
           "listing_url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/",
           "listing_timestamp": "20260615043943",
+          "status": "ready",
           "resources": [],
-          "status": "unavailable",
-          "reason": "No successful archived capture in audit window"
-        },
-        {
-          "source_url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/portland-chlorination-project",
-          "source_name": "Wannon Water",
-          "title": "Portland chlorination project",
           "route": "html",
-          "listing_url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/",
-          "listing_timestamp": "20260615043943",
-          "resources": [],
           "html": {
-            "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/portland-chlorination-project/",
-            "requested_timestamp": "20260515144051",
-            "timestamp": "20260515144051",
-            "replay_url": "https://web.archive.org/web/20260515144051id_/https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/portland-chlorination-project/",
-            "path": "18/article-20260515144051-83eb403cd10f.html",
-            "sha256": "06413b572aaf93b36a4a575eccea1638d4dacc2a984dc2d3c0a7be3f9e7132a1",
-            "content_type": "text/html"
+            "url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/quality-water-for-wannon/",
+            "requested_timestamp": "20260515142836",
+            "timestamp": "20260515142836",
+            "replay_url": "https://web.archive.org/web/20260515142836id_/https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/quality-water-for-wannon/",
+            "sha256": "237acb5ee56914d137c2f225f7b74b63182c481f5bb27ebbc1966cef9be265de",
+            "content_type": "text/html",
+            "path": "17/article-20260515142836-237acb5ee569.html"
           },
-          "status": "ready"
-        },
-        {
-          "source_url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/gellibrand-summer-flows",
-          "source_name": "Wannon Water",
-          "title": "Gellibrand Summer Flows",
-          "route": "html",
-          "listing_url": "https://www.wannonwater.com.au/community-and-environment/projects-and-initiatives/",
-          "listing_timestamp": "20260615043943",
-          "resources": [],
-          "status": "unavailable",
-          "reason": "URLError: <urlopen error [Errno 111] Connection refused> | URLError: <urlopen error [Errno 111] Connection refused>"
+          "source_name": "Wannon Water"
         }
       ],
       "audit_finding": "Six shared links remain; two newly appearing in-progress initiatives sit at positions two and three after a known first item. A separate completed-project addition is excluded from the eligible counterexample."
     },
     {
-      "id": 19,
+      "id": 18,
       "name": "Western Port Water",
-      "url": "https://www.westernportwater.com.au/our-community/projects",
+      "url": "https://www.westernportwater.com.au/our-community/current-projects",
       "active": true,
-      "coverage_reason": "3 ready historical article sample(s); other attempted samples may be unavailable.",
+      "coverage_reason": "2 ready scoped historical article sample(s); unavailable captures retain their coverage reason.",
       "listings": [
         {
-          "url": "https://www.westernportwater.com.au/our-community/projects/",
-          "requested_timestamp": "20260325212128",
+          "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/",
+          "requested_timestamp": "20251205112732",
+          "status": "saved",
+          "resource": {
+            "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/",
+            "requested_timestamp": "20251205112732",
+            "timestamp": "20251205112732",
+            "replay_url": "https://web.archive.org/web/20251205112732id_/https://www.westernportwater.com.au/our-community/projects/current-projects/",
+            "sha256": "0b5f0334830c69830bdcc56066797f82c1ea846c68934b9912c75ccc12d5d0e7",
+            "content_type": "text/html",
+            "path": "18/listing-20251205112732-0b5f0334830c.html"
+          },
           "role": "listing",
           "entries": [
             {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program",
+              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program/",
               "title": "Water Main Renewal Program",
-              "section": "Future projects",
+              "section": "Current projects",
               "dates": [],
               "context": "Water Main Renewal Program",
               "featured": false
             },
             {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program-2",
-              "title": "Sewer Pump Station Upgrades",
-              "section": "Future projects",
+              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/renewable-energy-generation/",
+              "title": "Renewable Energy Generation",
+              "section": "Current projects",
               "dates": [],
-              "context": "Sewer Pump Station Upgrades",
+              "context": "Renewable Energy Generation",
               "featured": false
             },
             {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/emissions-reduction-pledge",
-              "title": "Emissions Reduction Pledge",
-              "section": "Future projects",
-              "dates": [],
-              "context": "Emissions Reduction Pledge",
-              "featured": false
-            },
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-quality-improvement",
+              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-quality-improvement/",
               "title": "Water Quality Improvement Program",
-              "section": "Future projects",
+              "section": "Current projects",
               "dates": [],
               "context": "Water Quality Improvement Program",
               "featured": false
             },
             {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/san-remo-bridge-bracket-renewal",
-              "title": "San Remo Bridge Pipeline Bracket Renewal",
-              "section": "Future projects",
+              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/nextgenerationupgrade/",
+              "title": "Next Generation Upgrade",
+              "section": "Current projects",
               "dates": [],
-              "context": "San Remo Bridge Pipeline Bracket Renewal",
+              "context": "Next Generation Upgrade",
               "featured": false
             }
-          ],
+          ]
+        },
+        {
+          "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/",
+          "requested_timestamp": "20251211032411",
           "status": "saved",
           "resource": {
-            "url": "https://www.westernportwater.com.au/our-community/projects/",
-            "requested_timestamp": "20260325212128",
-            "timestamp": "20260325212128",
-            "replay_url": "https://web.archive.org/web/20260325212128id_/https://www.westernportwater.com.au/our-community/projects/",
-            "path": "19/listing-20260325212128-a5e6923122c2.html",
-            "sha256": "20c4ad50c86477bf0ef5bad98184d6ffdac1f561a73cf866d797e5910c91d6e5",
-            "content_type": "text/html"
-          }
+            "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/",
+            "requested_timestamp": "20251211032411",
+            "timestamp": "20251211032411",
+            "replay_url": "https://web.archive.org/web/20251211032411id_/https://www.westernportwater.com.au/our-community/projects/current-projects/",
+            "sha256": "30d9634ae5bb05d435f1631d2c5e04c78e4c3a5a51654ad291f7d659934e3fdf",
+            "content_type": "text/html",
+            "path": "18/listing-20251211032411-30d9634ae5bb.html"
+          },
+          "role": "listing",
+          "entries": [
+            {
+              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program/",
+              "title": "Water Main Renewal Program",
+              "section": "Current projects",
+              "dates": [],
+              "context": "Water Main Renewal Program",
+              "featured": false
+            },
+            {
+              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/renewable-energy-generation/",
+              "title": "Renewable Energy Generation",
+              "section": "Current projects",
+              "dates": [],
+              "context": "Renewable Energy Generation",
+              "featured": false
+            },
+            {
+              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-quality-improvement/",
+              "title": "Water Quality Improvement Program",
+              "section": "Current projects",
+              "dates": [],
+              "context": "Water Quality Improvement Program",
+              "featured": false
+            },
+            {
+              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/nextgenerationupgrade/",
+              "title": "Next Generation Upgrade",
+              "section": "Current projects",
+              "dates": [],
+              "context": "Next Generation Upgrade",
+              "featured": false
+            }
+          ]
+        },
+        {
+          "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/",
+          "requested_timestamp": "20260325212128",
+          "status": "unavailable",
+          "reason": "HTTPError: HTTP Error 429: Too Many Requests",
+          "role": "listing",
+          "entries": []
         },
         {
           "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/",
           "requested_timestamp": "20260421012845",
-          "role": "listing",
-          "entries": [
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program",
-              "title": "AC Water Main Renewal Program",
-              "section": "Current projects",
-              "dates": [],
-              "context": "AC Water Main Renewal Program A renewals program valued at $797,891 will maintain reliable water supply for the community with sites at Ventnor, Sunderland Bay, Surf Beach and Newhaven. The program is being progressively delivered over a three-year period starting with Ventnor in May 2025. Read more.",
-              "featured": false
-            },
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/renewable-energy-generation",
-              "title": "Renewable Energy Generation",
-              "section": "Current projects",
-              "dates": [],
-              "context": "Renewable Energy Generation To meet the Victorian Government’s Emissions Reduction Pledge and regulatory obligations, Westernport Water are installing a 510kWdc array / 400kWac inverter capacity ground mount solar PV system at the Cowes Wastewater Treatment Plant. Constuction is scheduled to commence in late 2025 with no impacts to wastewater services anticipated. Read more.",
-              "featured": false
-            },
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-quality-improvement",
-              "title": "Water Quality Improvement Program",
-              "section": "Current projects",
-              "dates": [],
-              "context": "Water Quality Improvement Program Every year we make improvements to our treatment process and undertake maintenance activities to deliver better tasting water.",
-              "featured": false
-            },
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/nextgenerationupgrade",
-              "title": "Next Generation Upgrade",
-              "section": "Current projects",
-              "dates": [],
-              "context": "Next Generation Upgrade We’re upgrading the Cowes Wastewater Treatment Plant. Optimising for growth, cost savings and climate-smart solutions. Read more.",
-              "featured": false
-            }
-          ],
           "status": "unavailable",
-          "reason": "URLError: <urlopen error [Errno 111] Connection refused> | URLError: <urlopen error [Errno 111] Connection refused>"
-        },
-        {
-          "url": "https://www.westernportwater.com.au/our-community/projects/future-projects/",
-          "requested_timestamp": "20260617012330",
+          "reason": "HTTPError: HTTP Error 429: Too Many Requests",
           "role": "listing",
-          "entries": [
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program",
-              "title": "Water Main Renewal Program",
-              "section": "Future projects",
-              "dates": [],
-              "context": "Water Main Renewal Program",
-              "featured": false
-            },
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program-2",
-              "title": "Sewer Pump Station Upgrades",
-              "section": "Future projects",
-              "dates": [],
-              "context": "Sewer Pump Station Upgrades",
-              "featured": false
-            },
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/emissions-reduction-pledge",
-              "title": "Emissions Reduction Pledge",
-              "section": "Future projects",
-              "dates": [],
-              "context": "Emissions Reduction Pledge",
-              "featured": false
-            },
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-quality-improvement",
-              "title": "Water Quality Improvement Program",
-              "section": "Future projects",
-              "dates": [],
-              "context": "Water Quality Improvement Program",
-              "featured": false
-            },
-            {
-              "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/san-remo-bridge-bracket-renewal",
-              "title": "San Remo Bridge Pipeline Bracket Renewal",
-              "section": "Future projects",
-              "dates": [],
-              "context": "San Remo Bridge Pipeline Bracket Renewal",
-              "featured": false
-            }
-          ],
-          "status": "saved",
-          "resource": {
-            "url": "https://www.westernportwater.com.au/our-community/projects/future-projects/",
-            "requested_timestamp": "20260617012330",
-            "timestamp": "20260617012330",
-            "replay_url": "https://web.archive.org/web/20260617012330id_/https://www.westernportwater.com.au/our-community/projects/future-projects/",
-            "path": "19/listing-20260617012330-fbced2984083.html",
-            "sha256": "dd9f9be60899bdfe5e923b1554f6c337990afd62ed3f6e263ef7b9142f83e2e7",
-            "content_type": "text/html"
-          }
+          "entries": []
         }
       ],
       "articles": [
         {
-          "source_url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program",
-          "source_name": "Western Port Water",
-          "title": "Water Main Renewal Program",
-          "route": "html",
-          "listing_url": "https://www.westernportwater.com.au/our-community/projects/future-projects/",
-          "listing_timestamp": "20260617012330",
+          "source_url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program/",
+          "title": "water main renewal program",
+          "listing_url": "https://www.westernportwater.com.au/our-community/projects/current-projects/",
+          "listing_timestamp": "20251211032411",
+          "status": "ready",
           "resources": [],
+          "route": "html",
+          "source_name": "Western Port Water",
           "html": {
             "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program/",
             "requested_timestamp": "20260608140336",
             "timestamp": "20260608140336",
             "replay_url": "https://web.archive.org/web/20260608140336id_/https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program/",
-            "path": "19/article-20260608140336-2492a42c1349.html",
+            "path": "18/article-20260608140336-2492a42c1349.html",
             "sha256": "0c7b55806069c86760ebc009260e28a3f6206a34853cc13de42aa13e7bdb4888",
             "content_type": "text/html"
           },
-          "status": "ready"
+          "sample_note": "Reused saved article body; its canonical URL matches both archived December listings. Separate capture times are not an atomic historical view."
         },
         {
-          "source_url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program-2",
-          "source_name": "Western Port Water",
-          "title": "Sewer Pump Station Upgrades",
-          "route": "html",
-          "listing_url": "https://www.westernportwater.com.au/our-community/projects/future-projects/",
-          "listing_timestamp": "20260617012330",
+          "source_url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-quality-improvement/",
+          "title": "water quality improvement",
+          "listing_url": "https://www.westernportwater.com.au/our-community/projects/current-projects/",
+          "listing_timestamp": "20251211032411",
+          "status": "unavailable",
           "resources": [],
-          "html": {
-            "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program-2/",
-            "requested_timestamp": "20260419211604",
-            "timestamp": "20260419211604",
-            "replay_url": "https://web.archive.org/web/20260419211604id_/https://www.westernportwater.com.au/our-community/projects/current-projects/water-main-renewal-program-2/",
-            "path": "19/article-20260419211604-ff05010311ed.html",
-            "sha256": "0102851de8146b2c186dd7fa20c1534e8e70f1469f3ce9581226d8e8768f2fd5",
-            "content_type": "text/html"
-          },
-          "status": "ready"
+          "route": "html",
+          "reason": "HTTP Error 429: Too Many Requests",
+          "source_name": "Western Port Water"
         },
         {
-          "source_url": "https://www.westernportwater.com.au/our-community/projects/future-projects/",
-          "source_name": "Western Port Water",
-          "title": "Western Port Water",
-          "route": "html",
+          "source_url": "https://www.westernportwater.com.au/our-community/projects/current-projects/nextgenerationupgrade/",
+          "title": "nextgenerationupgrade",
+          "listing_url": "https://www.westernportwater.com.au/our-community/projects/current-projects/",
+          "listing_timestamp": "20251211032411",
           "status": "ready",
-          "html": {
-            "url": "https://www.westernportwater.com.au/our-community/projects/future-projects/",
-            "requested_timestamp": "20260617012330",
-            "timestamp": "20260617012330",
-            "replay_url": "https://web.archive.org/web/20260617012330id_/https://www.westernportwater.com.au/our-community/projects/future-projects/",
-            "path": "19/listing-20260617012330-fbced2984083.html",
-            "sha256": "dd9f9be60899bdfe5e923b1554f6c337990afd62ed3f6e263ef7b9142f83e2e7",
-            "content_type": "text/html"
-          },
           "resources": [],
-          "listing_url": "https://www.westernportwater.com.au/our-community/projects/future-projects/",
-          "listing_timestamp": "20260617012330",
-          "selection_note": "Saved inline content on the listing URL; reuse the inspected listing bytes.",
-          "expected_text_contains": [
-            "Future projects",
-            "Projects for the current pricing period (2023-28)"
-          ],
-          "expectation_note": "Short heading/body fragments reviewed against the saved source or extracted PDF; not a complete Claude response or a full golden text export."
+          "route": "html",
+          "html": {
+            "url": "https://www.westernportwater.com.au/our-community/projects/current-projects/nextgenerationupgrade/",
+            "requested_timestamp": "20260314164006",
+            "timestamp": "20260314164006",
+            "replay_url": "https://web.archive.org/web/20260314164006id_/https://www.westernportwater.com.au/our-community/projects/current-projects/nextgenerationupgrade/",
+            "sha256": "15d8e5da537e0290b640ebcd2d6a44f306e2eccfed0977d004ee4872837c0d23",
+            "content_type": "text/html",
+            "path": "18/article-20260314164006-15d8e5da537e.html"
+          },
+          "source_name": "Western Port Water"
         }
       ],
       "audit_finding": "Current-projects captures retain four links in the same order. A future-projects page has inline descriptions; only one usable future capture. Root navigation must not be mistaken for that page's article order."
     },
     {
-      "id": 20,
+      "id": 19,
       "name": "Southern Rural Water",
       "url": "https://www.srw.com.au/initiatives/projects",
       "active": true,
@@ -3751,7 +3236,7 @@
             "requested_timestamp": "20260414113428",
             "timestamp": "20260414113428",
             "replay_url": "https://web.archive.org/web/20260414113428id_/https://www.srw.com.au/initiatives/projects",
-            "path": "20/listing-20260414113428-9749e3777f22.html",
+            "path": "19/listing-20260414113428-9749e3777f22.html",
             "sha256": "c99b646685c94df8831f2e1ac7f861d91667246c111a8c0e0d2afaa239450ef2",
             "content_type": "text/html"
           }
@@ -3832,7 +3317,7 @@
             "requested_timestamp": "20260614032742",
             "timestamp": "20260614032742",
             "replay_url": "https://web.archive.org/web/20260614032742id_/https://www.srw.com.au/initiatives/projects",
-            "path": "20/listing-20260614032742-3f3c26a0c6cc.html",
+            "path": "19/listing-20260614032742-3f3c26a0c6cc.html",
             "sha256": "fa0633372177ac9e3c37150b8fdfe105089d31121891cd686986cdcd7bd608ef",
             "content_type": "text/html"
           }
@@ -3863,7 +3348,7 @@
             "requested_timestamp": "20260521050815",
             "timestamp": "20260521050815",
             "replay_url": "https://web.archive.org/web/20260521050815id_/https://www.srw.com.au/initiatives/projects/farmer-helping-farmer",
-            "path": "20/article-20260521050815-846dc2585664.html",
+            "path": "19/article-20260521050815-846dc2585664.html",
             "sha256": "06a609857f42badbc7118ea049e9970f161fb90ddd77983d5ed54b0c49a514db",
             "content_type": "text/html"
           },
@@ -3882,7 +3367,7 @@
             "requested_timestamp": "20260521052341",
             "timestamp": "20260521052341",
             "replay_url": "https://web.archive.org/web/20260521052341id_/https://www.srw.com.au/initiatives/projects/latrobe-3-4-bench",
-            "path": "20/article-20260521052341-8ea0aba45379.html",
+            "path": "19/article-20260521052341-8ea0aba45379.html",
             "sha256": "fcdcfe3735467a15b2e43ffb0e5541a267729340dd5f3391257826cb52cf9088",
             "content_type": "text/html"
           },
@@ -3892,7 +3377,7 @@
       "audit_finding": "Eight curated project links retain their order in the recovered February, April and June captures; no addition event."
     },
     {
-      "id": 21,
+      "id": 20,
       "name": "Goulburn-Murray Water",
       "url": "https://g-mwater.com.au/customer-services-resources/projects",
       "active": true,
@@ -3942,7 +3427,7 @@
             "requested_timestamp": "20251107140958",
             "timestamp": "20251107140958",
             "replay_url": "https://web.archive.org/web/20251107140958id_/https://www.g-mwater.com.au/customer-services-resources/projects",
-            "path": "21/listing-20251107140958-f6dfcdc0e11a.html",
+            "path": "20/listing-20251107140958-f6dfcdc0e11a.html",
             "sha256": "f6dfcdc0e11a1313672ac77a78341f1b3039e46ed3815395ed6842067bed75a2",
             "content_type": "text/html"
           }
@@ -4039,7 +3524,7 @@
             "requested_timestamp": "20260412124944",
             "timestamp": "20260412124944",
             "replay_url": "https://web.archive.org/web/20260412124944id_/https://www.g-mwater.com.au/customer-services-resources/projects",
-            "path": "21/listing-20260412124944-33057d962284.html",
+            "path": "20/listing-20260412124944-33057d962284.html",
             "sha256": "33057d962284fc685ed0b70672fa5f731fd551881ab3ca7f51e68d278ca3ee58",
             "content_type": "text/html"
           }
@@ -4055,7 +3540,7 @@
             "requested_timestamp": "20260614124843",
             "timestamp": "20260614124843",
             "replay_url": "https://web.archive.org/web/20260614124843id_/https://www.g-mwater.com.au/customer-services-resources/projects",
-            "path": "21/listing-20260614124843-affd18e25d02.html",
+            "path": "20/listing-20260614124843-affd18e25d02.html",
             "sha256": "affd18e25d02d454cc32d4002e63c66bda295bdd23049e2bddd16cbc043425a6",
             "content_type": "text/html"
           }
@@ -4075,7 +3560,7 @@
             "requested_timestamp": "20260414020409",
             "timestamp": "20260414020409",
             "replay_url": "https://web.archive.org/web/20260414020409id_/https://yoursay.gmwater.com.au/brfs",
-            "path": "21/article-20260414020409-3a50793984ba.html",
+            "path": "20/article-20260414020409-3a50793984ba.html",
             "sha256": "3a50793984ba21eb9c9207f9a243387401b41d3c49840fb6940f4606fb64d07b",
             "content_type": "text/html"
           },
@@ -4094,7 +3579,7 @@
             "requested_timestamp": "20260308212353",
             "timestamp": "20260308212353",
             "replay_url": "https://web.archive.org/web/20260308212353id_/https://yoursay.gmwater.com.au/diversions-cost-review",
-            "path": "21/article-20260308212353-02e89338a08c.html",
+            "path": "20/article-20260308212353-02e89338a08c.html",
             "sha256": "02e89338a08c3d6c4110858f8678d250b2e95b07b32f59415116984217039ed2",
             "content_type": "text/html"
           },
@@ -4115,7 +3600,7 @@
       "audit_finding": "November-to-April list grows from four to ten links, with additions both before and after shared links. June adds two prefix entries while retaining the older ten."
     },
     {
-      "id": 22,
+      "id": 21,
       "name": "Essential Services Commission",
       "url": "https://www.esc.vic.gov.au/current-consultations",
       "active": true,
@@ -4165,7 +3650,7 @@
             "requested_timestamp": "20260207015404",
             "timestamp": "20260207015404",
             "replay_url": "https://web.archive.org/web/20260207015404id_/https://www.esc.vic.gov.au/current-consultations",
-            "path": "22/listing-20260207015404-1c780ffdd35e.html",
+            "path": "21/listing-20260207015404-1c780ffdd35e.html",
             "sha256": "1c780ffdd35e16c789c6d66d6c3b4a15f0cc869daea5d55359828433c5a8eba4",
             "content_type": "text/html"
           }
@@ -4215,7 +3700,7 @@
             "requested_timestamp": "20260617072451",
             "timestamp": "20260617072451",
             "replay_url": "https://web.archive.org/web/20260617072451id_/https://www.esc.vic.gov.au/current-consultations",
-            "path": "22/listing-20260617072451-45ebe761ba49.html",
+            "path": "21/listing-20260617072451-45ebe761ba49.html",
             "sha256": "45ebe761ba49a1ac3544a075628c754c65b8e5dc0f085bf87476e229c2ad1408",
             "content_type": "text/html"
           }
@@ -4263,7 +3748,7 @@
             "requested_timestamp": "20260617070715",
             "timestamp": "20260617070715",
             "replay_url": "https://web.archive.org/web/20260617070715id_/https://www.esc.vic.gov.au/electricity-and-gas/electricity-and-gas-licences-and-exemptions/electricity-and-gas-licences/zen-energy-retail-holdings-pty-ltd-application-electricity-retail-licence-transfer",
-            "path": "22/article-20260617070715-ddf5f8ccf72d.html",
+            "path": "21/article-20260617070715-ddf5f8ccf72d.html",
             "sha256": "ddf5f8ccf72d0fc970dc59727dbe4773d90dc882e27559bda643ad0795650293",
             "content_type": "text/html"
           },
@@ -4282,7 +3767,7 @@
             "requested_timestamp": "20260617074319",
             "timestamp": "20260617074319",
             "replay_url": "https://web.archive.org/web/20260617074319id_/https://www.esc.vic.gov.au/electricity-and-gas/electricity-and-gas-licences-and-exemptions/electricity-and-gas-licences/hazelwood-bess-line-co-pty-ltd-application-electricity-transmission-licence",
-            "path": "22/article-20260617074319-1327587d5d1a.html",
+            "path": "21/article-20260617074319-1327587d5d1a.html",
             "sha256": "1327587d5d1a14741d092ea2292e0c6d19f7fe718b1965c0bd8bbfae4592efb1",
             "content_type": "text/html"
           },
@@ -4292,7 +3777,7 @@
       "audit_finding": "Usable snapshots contain changing cohorts of one to three consultations. No comparison establishes both a new arrival and a sufficient shared-item sequence."
     },
     {
-      "id": 23,
+      "id": 22,
       "name": "Commissioner for Environmental Sustainability Victoria",
       "url": "https://www.ces.vic.gov.au/news",
       "active": true,
@@ -4430,7 +3915,7 @@
             "requested_timestamp": "20251125091251",
             "timestamp": "20251125091251",
             "replay_url": "https://web.archive.org/web/20251125091251id_/https://www.ces.vic.gov.au/news",
-            "path": "23/listing-20251125091251-12acae44d95f.html",
+            "path": "22/listing-20251125091251-12acae44d95f.html",
             "sha256": "2c21597308e26a6c17a68ecd01a4e462821e11cd02e0a7b1cfb495f40219fbf3",
             "content_type": "text/html"
           }
@@ -4567,7 +4052,7 @@
             "requested_timestamp": "20251205032038",
             "timestamp": "20251205032038",
             "replay_url": "https://web.archive.org/web/20251205032038id_/https://www.ces.vic.gov.au/news",
-            "path": "23/listing-20251205032038-28a282e75047.html",
+            "path": "22/listing-20251205032038-28a282e75047.html",
             "sha256": "7eb15a69d4230bddc62902ce94368b63d42b463313a75d6f32ca67890c5f0c81",
             "content_type": "text/html"
           }
@@ -4704,7 +4189,7 @@
             "requested_timestamp": "20260420191852",
             "timestamp": "20260420191852",
             "replay_url": "https://web.archive.org/web/20260420191852id_/https://www.ces.vic.gov.au/news",
-            "path": "23/listing-20260420191852-64c089178d12.html",
+            "path": "22/listing-20260420191852-64c089178d12.html",
             "sha256": "b7b4d5663cde3fc3d898655328ee13739c1edd96147a2a0c2ace0392895a4597",
             "content_type": "text/html"
           }
@@ -4841,7 +4326,7 @@
             "requested_timestamp": "20260509110418",
             "timestamp": "20260509110418",
             "replay_url": "https://web.archive.org/web/20260509110418id_/https://www.ces.vic.gov.au/news",
-            "path": "23/listing-20260509110418-e6c4251be0ca.html",
+            "path": "22/listing-20260509110418-e6c4251be0ca.html",
             "sha256": "d961966d4727d36b4e58118c1b3e4069a19d9ca7c43e0e4f7884a3ef149ca7c3",
             "content_type": "text/html"
           }
@@ -4981,7 +4466,7 @@
             "requested_timestamp": "20251125005820",
             "timestamp": "20251125005820",
             "replay_url": "https://web.archive.org/web/20251125005820id_/https://www.ces.vic.gov.au/news?page=1",
-            "path": "23/listing-20251125005820-391cddad05f9.html",
+            "path": "22/listing-20251125005820-391cddad05f9.html",
             "sha256": "ef4d627f9a8deb2b317950e320cfd23091feff2b1542afae66f72234905c4b54",
             "content_type": "text/html"
           }
@@ -5012,7 +4497,7 @@
             "requested_timestamp": "20260509110356",
             "timestamp": "20260509110356",
             "replay_url": "https://web.archive.org/web/20260509110356id_/https://www.ces.vic.gov.au/news/leading-through-complexity-dynamic-environment",
-            "path": "23/article-20260509110356-65c6404cca5e.html",
+            "path": "22/article-20260509110356-65c6404cca5e.html",
             "sha256": "5a52716072660bcb1a940b6b7fe0d65d81399c508f2294950cf54a8fe37a0e73",
             "content_type": "text/html"
           },
@@ -5031,7 +4516,7 @@
             "requested_timestamp": "20260509110432",
             "timestamp": "20260509110432",
             "replay_url": "https://web.archive.org/web/20260509110432id_/https://www.ces.vic.gov.au/news/vicstudentssolarchallenge",
-            "path": "23/article-20260509110432-97f9fa881a7a.html",
+            "path": "22/article-20260509110432-97f9fa881a7a.html",
             "sha256": "9ebae72a1dc893546049c48046d1148d0f0641519bc9fd49da4dbac20c9d2188",
             "content_type": "text/html"
           },
@@ -5041,7 +4526,7 @@
       "audit_finding": "A newly published 27 November story enters first by 5 December; 11 shared first-page stories retain their order. A later first-page tail addition is an older story backfilling a removal, not a new publication. One older second page is accessible."
     },
     {
-      "id": 24,
+      "id": 23,
       "name": "Vic Catchments",
       "url": "https://viccatchments.com.au/priority-projects",
       "active": true,
@@ -5058,7 +4543,7 @@
             "requested_timestamp": "20260119135259",
             "timestamp": "20260119135259",
             "replay_url": "https://web.archive.org/web/20260119135259id_/https://viccatchments.com.au/priority-projects/",
-            "path": "24/listing-20260119135259-217dc9852d07.html",
+            "path": "23/listing-20260119135259-217dc9852d07.html",
             "sha256": "217dc9852d07d01acb4cb6c3b8c4f632d2d645e80ae20a4f38ee3b1b4ccd5682",
             "content_type": "text/html"
           }
@@ -5074,7 +4559,7 @@
             "requested_timestamp": "20260419013113",
             "timestamp": "20260419013113",
             "replay_url": "https://web.archive.org/web/20260419013113id_/https://viccatchments.com.au/priority-projects/",
-            "path": "24/listing-20260419013113-7d9d254386f7.html",
+            "path": "23/listing-20260419013113-7d9d254386f7.html",
             "sha256": "7d9d254386f77e954a0d0b1ed485fdf6b0c809e342c65861e62dcfcada3bfde9",
             "content_type": "text/html"
           }
@@ -5092,7 +4577,7 @@
             "requested_timestamp": "20260419013113",
             "timestamp": "20260419013113",
             "replay_url": "https://web.archive.org/web/20260419013113id_/https://viccatchments.com.au/priority-projects/",
-            "path": "24/listing-20260419013113-7d9d254386f7.html",
+            "path": "23/listing-20260419013113-7d9d254386f7.html",
             "sha256": "7d9d254386f77e954a0d0b1ed485fdf6b0c809e342c65861e62dcfcada3bfde9",
             "content_type": "text/html"
           },
@@ -5105,7 +4590,7 @@
       "audit_finding": "Seven inline project headings retain their order. This is an index containing descriptions, not seven independently tracked article URLs."
     },
     {
-      "id": 25,
+      "id": 24,
       "name": "Victorian Environmental Water Holder",
       "url": "https://www.vewh.vic.gov.au/planning-and-reporting/seasonal-watering-plan",
       "active": false,
@@ -5147,7 +4632,7 @@
             "requested_timestamp": "20251124193527",
             "timestamp": "20251124193527",
             "replay_url": "https://web.archive.org/web/20251124193527id_/https://www.vewh.vic.gov.au/planning-and-reporting/seasonal-watering-plan",
-            "path": "25/listing-20251124193527-ceb5287953a7.html",
+            "path": "24/listing-20251124193527-ceb5287953a7.html",
             "sha256": "f616182b443331032c4e4ea4fe5bdbe852656be03ae4a4d070fefba3536ed12c",
             "content_type": "text/html"
           }
@@ -5188,7 +4673,7 @@
             "requested_timestamp": "20251220105836",
             "timestamp": "20251220105836",
             "replay_url": "https://web.archive.org/web/20251220105836id_/https://www.vewh.vic.gov.au/planning-and-reporting/seasonal-watering-plan",
-            "path": "25/listing-20251220105836-89bf4aea867a.html",
+            "path": "24/listing-20251220105836-89bf4aea867a.html",
             "sha256": "61741eaa394894f7b399a02d344ee90dafc5b7b8937755f493d0c99e5cf02641",
             "content_type": "text/html"
           }
@@ -5206,7 +4691,7 @@
             "requested_timestamp": "20251220105836",
             "timestamp": "20251220105836",
             "replay_url": "https://web.archive.org/web/20251220105836id_/https://www.vewh.vic.gov.au/planning-and-reporting/seasonal-watering-plan",
-            "path": "25/listing-20251220105836-89bf4aea867a.html",
+            "path": "24/listing-20251220105836-89bf4aea867a.html",
             "sha256": "61741eaa394894f7b399a02d344ee90dafc5b7b8937755f493d0c99e5cf02641",
             "content_type": "text/html"
           },
@@ -5216,7 +4701,7 @@
               "requested_timestamp": "20251119163954",
               "timestamp": "20251119163954",
               "replay_url": "https://web.archive.org/web/20251119163954id_/https://www.vewh.vic.gov.au/__data/assets/pdf_file/0024/756015/VEWH_SWP_2025_26_Introduction.pdf",
-              "path": "25/pdf-20251119163954-2508cf07706b.pdf",
+              "path": "24/pdf-20251119163954-2508cf07706b.pdf",
               "sha256": "2508cf07706b62693b062f1689c7c78b1433991d27242928c8ea9c721e326cb2",
               "content_type": "application/pdf"
             }
@@ -5235,7 +4720,7 @@
       "audit_finding": "Archived page presents the 2025–26 seasonal plan and related annual-report material, rather than an ordered stream of new articles."
     },
     {
-      "id": 26,
+      "id": 25,
       "name": "Engage Victoria",
       "url": "https://engage.vic.gov.au/project",
       "active": true,
@@ -5598,7 +5083,7 @@
             "requested_timestamp": "20260630062035",
             "timestamp": "20260630062035",
             "replay_url": "https://web.archive.org/web/20260630062035id_/https://engage.vic.gov.au/project",
-            "path": "26/listing-20260630062035-73804f586675.html",
+            "path": "25/listing-20260630062035-73804f586675.html",
             "sha256": "73804f586675f7ba9f0988ed00504bae9082137afd918e0ee32cafe09f0b6248",
             "content_type": "text/html"
           }
@@ -5783,7 +5268,7 @@
             "requested_timestamp": "20261001022315",
             "timestamp": "20261001022315",
             "replay_url": "https://web.archive.org/web/20261001022315id_/https://engage.vic.gov.au/project",
-            "path": "26/listing-20261001022315-b75e3fa752b3.html",
+            "path": "25/listing-20261001022315-b75e3fa752b3.html",
             "sha256": "b75e3fa752b3abf13edf4bc15324e6eae944391c9a026c910885583ad95a0943",
             "content_type": "text/html"
           }
@@ -5803,7 +5288,7 @@
             "requested_timestamp": "20261001022259",
             "timestamp": "20261001022259",
             "replay_url": "https://web.archive.org/web/20261001022259id_/https://engage.vic.gov.au/draft-preston-market-precinct-development-plan",
-            "path": "26/article-20261001022259-149b4400ea46.html",
+            "path": "25/article-20261001022259-149b4400ea46.html",
             "sha256": "149b4400ea46677542ba1baf023e70b15a0ef6a905a1617ad7cbf0ea8a87b089",
             "content_type": "text/html"
           },
@@ -5836,7 +5321,7 @@
       "audit_finding": "Archived Inertia data has an all-status filter and 24 projects per page. June 17→30 adds six prefix entries and preserves 18 shared IDs in order. June and October interleave open and reviewing-feedback entries, with open entries below reviewing ones. No matching page-two evidence was inspected."
     },
     {
-      "id": 27,
+      "id": 26,
       "name": "Senate Environment and Communications",
       "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Environment_and_Communications",
       "active": true,
@@ -5898,7 +5383,7 @@
             "requested_timestamp": "20260507025227",
             "timestamp": "20260507025227",
             "replay_url": "https://web.archive.org/web/20260507025227id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Environment_and_Communications",
-            "path": "27/listing-20260507025227-a9d8f6a214ac.html",
+            "path": "26/listing-20260507025227-a9d8f6a214ac.html",
             "sha256": "e622a128b4fb79bb87b6319bf041876f8a46cfcfead77074ba78c04e995ca260",
             "content_type": "text/html"
           }
@@ -6007,7 +5492,7 @@
             "requested_timestamp": "20260804060123",
             "timestamp": "20260804060123",
             "replay_url": "https://web.archive.org/web/20260804060123id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Environment_and_Communications",
-            "path": "27/listing-20260804060123-853c0b2a9c96.html",
+            "path": "26/listing-20260804060123-853c0b2a9c96.html",
             "sha256": "5c410c4947b86d4a206d301a914b707e52e90ec85c588abc5e7b598ecc4a3623",
             "content_type": "text/html"
           }
@@ -6038,7 +5523,7 @@
             "requested_timestamp": "20260509182950",
             "timestamp": "20260509182950",
             "replay_url": "https://web.archive.org/web/20260509182950id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Environment_and_Communications/Greenwashing48P",
-            "path": "27/article-20260509182950-f0b38de66b93.html",
+            "path": "26/article-20260509182950-f0b38de66b93.html",
             "sha256": "6951c722b934fcc45c3ff3402e53b2a42315a8e5171fffb890e395d9bd8dce85",
             "content_type": "text/html"
           },
@@ -6059,7 +5544,7 @@
       "audit_finding": "References and legislation form independent lists. References include an earlier-referred new inquiry before a later-referred one; additions also occur in legislation."
     },
     {
-      "id": 28,
+      "id": 27,
       "name": "Senate Rural and Regional Affairs and Transport",
       "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Rural_and_Regional_Affairs_and_Transport",
       "active": true,
@@ -6112,7 +5597,7 @@
             "requested_timestamp": "20260122164753",
             "timestamp": "20260122164753",
             "replay_url": "https://web.archive.org/web/20260122164753id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Rural_and_Regional_Affairs_and_Transport",
-            "path": "28/listing-20260122164753-3551b3518e6f.html",
+            "path": "27/listing-20260122164753-3551b3518e6f.html",
             "sha256": "b05099644b83747d0b8fef6097200b06f5e5ebf63e0eb84579ad98e93009a8b5",
             "content_type": "text/html"
           }
@@ -6176,7 +5661,7 @@
             "requested_timestamp": "20260423024735",
             "timestamp": "20260423024735",
             "replay_url": "https://web.archive.org/web/20260423024735id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Rural_and_Regional_Affairs_and_Transport/",
-            "path": "28/listing-20260423024735-7b2c91a276d3.html",
+            "path": "27/listing-20260423024735-7b2c91a276d3.html",
             "sha256": "83db094420714933e1aa7f62ddd27b98b950762e796be83279c63f86a61e744f",
             "content_type": "text/html"
           }
@@ -6218,7 +5703,7 @@
             "requested_timestamp": "20260309091614",
             "timestamp": "20260309091614",
             "replay_url": "https://web.archive.org/web/20260309091614id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Senate/Rural_and_Regional_Affairs_and_Transport/Medicareaccess",
-            "path": "28/article-20260309091614-2e605420c9c6.html",
+            "path": "27/article-20260309091614-2e605420c9c6.html",
             "sha256": "bf12be30c0e2c782cf4e7ab3e3c6e08d0e598163da90071233897052d9679237",
             "content_type": "text/html"
           },
@@ -6228,7 +5713,7 @@
       "audit_finding": "Three shared reference inquiries persist while a new legislation inquiry appears in a separate section."
     },
     {
-      "id": 29,
+      "id": 28,
       "name": "House Climate Change, Energy, Environment and Water",
       "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/House/Climate_Change_Energy_Environment_and_Water",
       "active": true,
@@ -6257,7 +5742,7 @@
             "requested_timestamp": "20260331023521",
             "timestamp": "20260331023521",
             "replay_url": "https://web.archive.org/web/20260331023521id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Climate_Change_Energy_Environment_and_Water",
-            "path": "29/listing-20260331023521-fda21e5737e5.html",
+            "path": "28/listing-20260331023521-fda21e5737e5.html",
             "sha256": "e09a44400bb205d0652ef3b988d4bf878c418fb9dd9548cb497ecb8fd246f7d7",
             "content_type": "text/html"
           }
@@ -6296,7 +5781,7 @@
             "requested_timestamp": "20260414063857",
             "timestamp": "20260414063857",
             "replay_url": "https://web.archive.org/web/20260414063857id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Climate_Change_Energy_Environment_and_Water/Solarpanelrecycling",
-            "path": "29/article-20260414063857-786a7a44f5ab.html",
+            "path": "28/article-20260414063857-786a7a44f5ab.html",
             "sha256": "1b1586e628b5cbaccc0edfe96227fa7571f7ffd008207d8ffd9ff31275852974",
             "content_type": "text/html"
           },
@@ -6306,7 +5791,7 @@
       "audit_finding": "Same single solar-panel recycling inquiry in both usable verification captures."
     },
     {
-      "id": 30,
+      "id": 29,
       "name": "House Industry, Innovation and Science",
       "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/House/Industry_Innovation_and_Science",
       "active": true,
@@ -6353,7 +5838,7 @@
             "requested_timestamp": "20260322215629",
             "timestamp": "20260322215629",
             "replay_url": "https://web.archive.org/web/20260322215629id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Industry_Innovation_and_Science",
-            "path": "30/listing-20260322215629-18ac0d2a91ea.html",
+            "path": "29/listing-20260322215629-18ac0d2a91ea.html",
             "sha256": "7f9cc13a97205bcffc0c5c1e215567766b7601ac17028f49e3bec7386558a55b",
             "content_type": "text/html"
           }
@@ -6373,7 +5858,7 @@
             "requested_timestamp": "20260302223537",
             "timestamp": "20260302223537",
             "replay_url": "https://web.archive.org/web/20260302223537id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Industry_Innovation_and_Science/AustralianTyreIndustry",
-            "path": "30/article-20260302223537-51138ef10a03.html",
+            "path": "29/article-20260302223537-51138ef10a03.html",
             "sha256": "744a28fdfb80a76f951d66d6c2ae2ec21604b83e909bdf7701423a7006c6e614",
             "content_type": "text/html"
           },
@@ -6383,7 +5868,7 @@
       "audit_finding": "Same single tyre-industry inquiry across the comparison."
     },
     {
-      "id": 31,
+      "id": 30,
       "name": "House Regional Development, Infrastructure and Transport",
       "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/House/Regional_Development_Infrastructure_and_Transport",
       "active": true,
@@ -6412,7 +5897,7 @@
             "requested_timestamp": "20260505052100",
             "timestamp": "20260505052100",
             "replay_url": "https://web.archive.org/web/20260505052100id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Regional_Development_Infrastructure_and_Transport",
-            "path": "31/listing-20260505052100-4b5290e0baa7.html",
+            "path": "30/listing-20260505052100-4b5290e0baa7.html",
             "sha256": "a66bafb8d816aec1c7ea764a5d2ed3f0cc40a1971a537aba0bc22eaad408fcb1",
             "content_type": "text/html"
           }
@@ -6439,7 +5924,7 @@
             "requested_timestamp": "20260518101405",
             "timestamp": "20260518101405",
             "replay_url": "https://web.archive.org/web/20260518101405id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Regional_Development_Infrastructure_and_Transport",
-            "path": "31/listing-20260518101405-cd89f60d7451.html",
+            "path": "30/listing-20260518101405-cd89f60d7451.html",
             "sha256": "25ee47a47966ecfe92f5b5939b01e76468cf491b2dcca30418d5ef8e7495b8fe",
             "content_type": "text/html"
           }
@@ -6459,7 +5944,7 @@
             "requested_timestamp": "20260518083815",
             "timestamp": "20260518083815",
             "replay_url": "https://web.archive.org/web/20260518083815id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Regional_Development_Infrastructure_and_Transport/LocalGovernmentFunding",
-            "path": "31/article-20260518083815-92486d62d258.html",
+            "path": "30/article-20260518083815-92486d62d258.html",
             "sha256": "742239869a9aa319cbc21c39dbb805310f1b2c4e276fc7f4dbd26b2a637c381f",
             "content_type": "text/html"
           },
@@ -6469,7 +5954,7 @@
       "audit_finding": "Same single local-government funding inquiry across the comparison."
     },
     {
-      "id": 32,
+      "id": 31,
       "name": "House Primary Industries",
       "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/House/Primary_Industries",
       "active": true,
@@ -6498,7 +5983,7 @@
             "requested_timestamp": "20260305231908",
             "timestamp": "20260305231908",
             "replay_url": "https://web.archive.org/web/20260305231908id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Primary_Industries",
-            "path": "32/listing-20260305231908-d2e363b53c11.html",
+            "path": "31/listing-20260305231908-d2e363b53c11.html",
             "sha256": "f2bd4846191b357fe99e51a49cd776fda396a2461ee2a1bcae7aa158994fb7fd",
             "content_type": "text/html"
           }
@@ -6526,7 +6011,7 @@
             "requested_timestamp": "20260618005400",
             "timestamp": "20260618005400",
             "replay_url": "https://web.archive.org/web/20260618005400id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Primary_Industries",
-            "path": "32/listing-20260618005400-f90ee80be1a1.html",
+            "path": "31/listing-20260618005400-f90ee80be1a1.html",
             "sha256": "4049c9ddef7f1492d07dcb5f48f6598b40fbbc0c230361b1d716abf6142c5d23",
             "content_type": "text/html"
           }
@@ -6546,7 +6031,7 @@
             "requested_timestamp": "20260513131500",
             "timestamp": "20260513131500",
             "replay_url": "https://web.archive.org/web/20260513131500id_/https://www.aph.gov.au/Parliamentary_Business/Committees/House/Primary_Industries/CriticalMinerals",
-            "path": "32/article-20260513131500-60207971b574.html",
+            "path": "31/article-20260513131500-60207971b574.html",
             "sha256": "e2b339a396c4019c1c4be2daaa4add26a5d38ae305f48ced42a5923d9280d79e",
             "content_type": "text/html"
           },
@@ -6556,7 +6041,7 @@
       "audit_finding": "Same single critical-minerals inquiry in March and the successfully retried June capture."
     },
     {
-      "id": 33,
+      "id": 32,
       "name": "Joint Aboriginal and Torres Strait Islander Affairs",
       "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Aboriginal_and_Torres_Strait_Islander_Affairs",
       "active": true,
@@ -6573,7 +6058,7 @@
             "requested_timestamp": "20260226162001",
             "timestamp": "20260226162001",
             "replay_url": "https://web.archive.org/web/20260226162001id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Aboriginal_and_Torres_Strait_Islander_Affairs",
-            "path": "33/listing-20260226162001-7d49b283ad8c.html",
+            "path": "32/listing-20260226162001-7d49b283ad8c.html",
             "sha256": "9e3bcf2afea971b745558f850d73c1370e52d96ee8c6ccf5a3863b803ef7ec46",
             "content_type": "text/html"
           }
@@ -6601,7 +6086,7 @@
             "requested_timestamp": "20260507010819",
             "timestamp": "20260507010819",
             "replay_url": "https://web.archive.org/web/20260507010819id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Aboriginal_and_Torres_Strait_Islander_Affairs",
-            "path": "33/listing-20260507010819-fcbfd357fee0.html",
+            "path": "32/listing-20260507010819-fcbfd357fee0.html",
             "sha256": "aa75dd14edb5d487a340a27d4604a818722b91acabbba00c922bb2804446a4b4",
             "content_type": "text/html"
           }
@@ -6623,7 +6108,7 @@
       "audit_finding": "An empty earlier current-inquiries section becomes one racism-response inquiry. Later selected replays failed."
     },
     {
-      "id": 34,
+      "id": 33,
       "name": "Joint Treaties",
       "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Treaties",
       "active": true,
@@ -6673,7 +6158,7 @@
             "requested_timestamp": "20251115214232",
             "timestamp": "20251115214232",
             "replay_url": "https://web.archive.org/web/20251115214232id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Treaties",
-            "path": "34/listing-20251115214232-ac42f69a2291.html",
+            "path": "33/listing-20251115214232-ac42f69a2291.html",
             "sha256": "d11c68fc0c158ed234e03c12e16e2c3a60138d6b0e1afba3d927803b09eb5c68",
             "content_type": "text/html"
           }
@@ -6732,7 +6217,7 @@
             "requested_timestamp": "20251126065001",
             "timestamp": "20251126065001",
             "replay_url": "https://web.archive.org/web/20251126065001id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Treaties",
-            "path": "34/listing-20251126065001-e58126fe0da8.html",
+            "path": "33/listing-20251126065001-e58126fe0da8.html",
             "sha256": "9852b30312fd00bb84f94299cd5bc63651bea7e439c3e514be0ef27d7f9991d3",
             "content_type": "text/html"
           }
@@ -6763,7 +6248,7 @@
               "requested_timestamp": "20261009025946",
               "timestamp": "20261009025946",
               "replay_url": "https://web.archive.org/web/20261009025946id_/https://static.aph.gov.au/-/media/02_Parliamentary_Business/24_Committees/244_Joint_Committees/JSCT/2025_-_2026/Pacific_Resilience/PRF_-_National_Interest_Analysis_-_final.pdf?rev=9e382c1e90134fbcb8e165afc6df6480&hash=4D3BC1B3EEB3B8C697DC6579DE897F5E",
-              "path": "34/pdf-20261009025946-b6214755cb70.pdf",
+              "path": "33/pdf-20261009025946-b6214755cb70.pdf",
               "sha256": "b6214755cb70f798b3162dbfd493a52bc2c1512637977ce706b0af303318ba9b",
               "content_type": "application/pdf"
             }
@@ -6773,7 +6258,7 @@
             "requested_timestamp": "20261005124129",
             "timestamp": "20261005124129",
             "replay_url": "https://web.archive.org/web/20261005124129id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Treaties/PacificResilience/Treaty_being_considered",
-            "path": "34/article-20261005124129-205319d9ad4b.html",
+            "path": "33/article-20261005124129-205319d9ad4b.html",
             "sha256": "f4184656bf9b2d943d949408c54285beee5a312f9a5c1309fe91d20e4e759bc9",
             "content_type": "text/html"
           },
@@ -6799,7 +6284,7 @@
       "audit_finding": "Three A/A/C entries become four A/A/C/P entries. The newly referred Pukpuk inquiry is fourth, below known inquiries. Alphabetical placement survives the sampled addition."
     },
     {
-      "id": 35,
+      "id": 34,
       "name": "Joint Northern Australia",
       "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Northern_Australia",
       "active": true,
@@ -6829,7 +6314,7 @@
             "requested_timestamp": "20260114233433",
             "timestamp": "20260114233433",
             "replay_url": "https://web.archive.org/web/20260114233433id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Northern_Australia",
-            "path": "35/listing-20260114233433-6ab2f9385bcc.html",
+            "path": "34/listing-20260114233433-6ab2f9385bcc.html",
             "sha256": "db4dcd26046c7c62edeb336d2077e1be62287105f9155f8c7492a5ce8ba70a64",
             "content_type": "text/html"
           }
@@ -6869,7 +6354,7 @@
             "requested_timestamp": "20260415171223",
             "timestamp": "20260415171223",
             "replay_url": "https://web.archive.org/web/20260415171223id_/https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/Northern_Australia/Industries",
-            "path": "35/article-20260415171223-393a5e9fdabb.html",
+            "path": "34/article-20260415171223-393a5e9fdabb.html",
             "sha256": "4475ccdc3ecd05a1e3fe3790b54f7cc8e206fbd251e84dfee2533aa99e0e5f72",
             "content_type": "text/html"
           },
@@ -6879,7 +6364,7 @@
       "audit_finding": "Same single industry-development inquiry in the two successful captures; one later verification retry failed."
     },
     {
-      "id": 36,
+      "id": 35,
       "name": "Department of Industry, Science and Resources",
       "url": "https://consult.industry.gov.au/",
       "active": true,
@@ -6898,7 +6383,7 @@
       "audit_finding": "A June hub exposes open/closed sections and an open-list link; October has an incomplete dynamic shell. The selected archived open-filter replay failed and pending-filter metadata was empty."
     },
     {
-      "id": 37,
+      "id": 36,
       "name": "Productivity Commission",
       "url": "https://www.pc.gov.au/inquiries-and-research/",
       "active": true,
@@ -6908,7 +6393,7 @@
       "audit_finding": "CDX access failed after bounded retries; Availability returned 429. Archive coverage was not established."
     },
     {
-      "id": 38,
+      "id": 37,
       "name": "Climate Change Authority",
       "url": "https://consult.climatechangeauthority.gov.au/find-consultations",
       "active": true,
@@ -6918,7 +6403,7 @@
       "audit_finding": "Base query returned no successful HTML captures. Open-filter capture metadata exists, but both selected replays failed; pending-filter metadata was empty."
     },
     {
-      "id": 39,
+      "id": 38,
       "name": "Australian Energy Market Commission",
       "url": "https://www.aemc.gov.au/news-centre/submissions-to-inquiries",
       "active": false,
@@ -6944,7 +6429,7 @@
             "requested_timestamp": "20251101033227",
             "timestamp": "20251101033227",
             "replay_url": "https://web.archive.org/web/20251101033227id_/https://www.aemc.gov.au/news-centre/submissions-to-inquiries",
-            "path": "39/listing-20251101033227-5fbd92069172.html",
+            "path": "38/listing-20251101033227-5fbd92069172.html",
             "sha256": "fded21abd2dae4a7779e5210a2ad57e031643af01720eb3b8c149b75d01cfd07",
             "content_type": "text/html"
           }
@@ -6969,7 +6454,7 @@
             "requested_timestamp": "20260101033231",
             "timestamp": "20260101033231",
             "replay_url": "https://web.archive.org/web/20260101033231id_/https://www.aemc.gov.au/news-centre/submissions-to-inquiries",
-            "path": "39/listing-20260101033231-e28bacb2bf62.html",
+            "path": "38/listing-20260101033231-e28bacb2bf62.html",
             "sha256": "520dfdae62d940e3e0b6f9741ca742a1ba8810da679ad665af243fac05be7a0a",
             "content_type": "text/html"
           }
@@ -6989,7 +6474,7 @@
             "requested_timestamp": "20251217030730",
             "timestamp": "20251217030730",
             "replay_url": "https://web.archive.org/web/20251217030730id_/https://www.aemc.gov.au/market-reviews-advice/future-wholesale-market",
-            "path": "39/article-20251217030730-ea1f5e6022d0.html",
+            "path": "38/article-20251217030730-ea1f5e6022d0.html",
             "sha256": "943bf7cdc7749c41c4bc05e2c95c9617972d5fd4bf747322e461102f50e2f6ec",
             "content_type": "text/html"
           },
@@ -6999,7 +6484,7 @@
       "audit_finding": "Two usable captures expose the same one inquiry-submission link; other candidate replays failed."
     },
     {
-      "id": 40,
+      "id": 39,
       "name": "Department of Climate Change, Energy, the Environment and Water",
       "url": "https://consult.dcceew.gov.au/find-consultations",
       "active": true,
@@ -7009,7 +6494,7 @@
       "audit_finding": "Open-filter metadata exists but selected replays failed; pending-filter metadata was empty. Availability's closest capture is in April 2024, outside the audit window and excluded."
     },
     {
-      "id": 41,
+      "id": 40,
       "name": "Clean Energy Regulator",
       "url": "https://cer.gov.au/news-and-media/public-consultations",
       "active": true,
@@ -7026,7 +6511,7 @@
             "requested_timestamp": "20260401092338",
             "timestamp": "20260401092338",
             "replay_url": "https://web.archive.org/web/20260401092338id_/https://cer.gov.au/news-and-media/public-consultations",
-            "path": "41/listing-20260401092338-60993e7872e2.html",
+            "path": "40/listing-20260401092338-60993e7872e2.html",
             "sha256": "60993e7872e2c0a08df0834ff8e33952ad7964892fd25d3fbff44ebd0d2ef842",
             "content_type": "text/html"
           }
@@ -7042,7 +6527,7 @@
             "requested_timestamp": "20260710164505",
             "timestamp": "20260710164505",
             "replay_url": "https://web.archive.org/web/20260710164505id_/https://cer.gov.au/news-and-media/public-consultations",
-            "path": "41/listing-20260710164505-2e787cb45bfc.html",
+            "path": "40/listing-20260710164505-2e787cb45bfc.html",
             "sha256": "2e787cb45bfc8307a69a05037d875443c0ac353ee65792e42d662d4249138a2c",
             "content_type": "text/html"
           }
@@ -7058,7 +6543,7 @@
             "requested_timestamp": "20260924143419",
             "timestamp": "20260924143419",
             "replay_url": "https://web.archive.org/web/20260924143419id_/https://cer.gov.au/news-and-media/public-consultations",
-            "path": "41/listing-20260924143419-475524c51048.html",
+            "path": "40/listing-20260924143419-475524c51048.html",
             "sha256": "475524c510484d478f85414024cd2878b1fcb1be5967df0be67c5ba33ad495e6",
             "content_type": "text/html"
           }
@@ -7068,7 +6553,7 @@
       "audit_finding": "Several captures explicitly state that no consultations are open. Closed-consultation links elsewhere on the page are not eligible open articles."
     },
     {
-      "id": 42,
+      "id": 41,
       "name": "Department of Infrastructure, Transport, Regional Development, Communications, Sport and the Arts",
       "url": "https://www.infrastructure.gov.au/have-your-say",
       "active": true,
@@ -7142,7 +6627,7 @@
             "requested_timestamp": "20251112004508",
             "timestamp": "20251112004508",
             "replay_url": "https://web.archive.org/web/20251112004508id_/https://www.infrastructure.gov.au/have-your-say",
-            "path": "42/listing-20251112004508-0347927832f8.html",
+            "path": "41/listing-20251112004508-0347927832f8.html",
             "sha256": "0347927832f8847861ed2766366532aaf0e0a0cda155952a75b1cf552e77e6a7",
             "content_type": "text/html"
           }
@@ -7215,7 +6700,7 @@
             "requested_timestamp": "20251115093747",
             "timestamp": "20251115093747",
             "replay_url": "https://web.archive.org/web/20251115093747id_/https://www.infrastructure.gov.au/have-your-say",
-            "path": "42/listing-20251115093747-7feafc6ea2e0.html",
+            "path": "41/listing-20251115093747-7feafc6ea2e0.html",
             "sha256": "7feafc6ea2e0cece106231e0c9a7ff25d7b9ee003b94a37b4134269ce170dc4b",
             "content_type": "text/html"
           }
@@ -7235,7 +6720,7 @@
             "requested_timestamp": "20251114090708",
             "timestamp": "20251114090708",
             "replay_url": "https://web.archive.org/web/20251114090708id_/https://www.infrastructure.gov.au/have-your-say/digital-duty-care",
-            "path": "42/article-20251114090708-001529a6b16d.html",
+            "path": "41/article-20251114090708-001529a6b16d.html",
             "sha256": "001529a6b16dca59e6789787d0c6bb214498f127bd1cf964e8dda7db13423152",
             "content_type": "text/html"
           },
@@ -7254,7 +6739,7 @@
             "requested_timestamp": "20251108211731",
             "timestamp": "20251108211731",
             "replay_url": "https://web.archive.org/web/20251108211731id_/https://www.infrastructure.gov.au/have-your-say/advanced-emergency-braking-passenger-vehicles-and-light-goods-vehicles-australian-design-rule-9802",
-            "path": "42/article-20251108211731-bba0e7cfba7f.html",
+            "path": "41/article-20251108211731-bba0e7cfba7f.html",
             "sha256": "bba0e7cfba7f1470dc8e2e24c499014d424b8960bff44675df7228a0df491a02",
             "content_type": "text/html"
           },
@@ -7273,7 +6758,7 @@
             "requested_timestamp": "20251116165024",
             "timestamp": "20251116165024",
             "replay_url": "https://web.archive.org/web/20251116165024id_/https://www.infrastructure.gov.au/have-your-say/cleaner-fuels-program-powering-low-carbon-liquid-fuel-production-australia",
-            "path": "42/article-20251116165024-87d73a3de9bd.html",
+            "path": "41/article-20251116165024-87d73a3de9bd.html",
             "sha256": "87d73a3de9bd0d770c3fc241690337bdb381b34afd8feb953995caf456663d44",
             "content_type": "text/html"
           },
@@ -7284,5 +6769,6 @@
     }
   ],
   "collection_date": "2026-10-21",
-  "description": "Historical articles for local main.py --fixtures runs; no live website fallback."
+  "description": "Historical samples aligned to the 41-index local catalogue; scopes are Gippsland future, Wannon In planning and Western Port current. Wannon keeps genuine unfiltered listing HTML with explicit local card selection.",
+  "catalogue_refresh_date": "2026-10-25"
 }

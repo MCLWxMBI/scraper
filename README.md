@@ -46,11 +46,13 @@ uv run python -m scraper setup-db
 ```
 
 Setup needs no Claude credentials. It applies `sql/schema.sql` and upserts all
-42 index records: **38 active and 4 inactive**. The local seed disables Barwon
-Water, VEWH, AEMC, and GWMWater past projects; IDs 14 and 39 intentionally differ
-from the [upstream seed](https://github.com/MCLWxMBI/website/blob/main/seed.sql).
+41 index records: **38 active and three inactive**. Barwon Water (8), VEWH
+(24) and AEMC (38) remain inactive. GWMWater past projects was removed and later
+IDs were renumbered. Gippsland collects future projects, Wannon collects In
+planning projects, and Western Port collects current projects. These local
+choices differ from the [upstream seed](https://github.com/MCLWxMBI/website/blob/main/seed.sql).
 
-Rerunning setup restores seed-owned values for IDs 1–42, including activation
+Rerunning setup restores seed-owned values for IDs 1–41, including activation
 flags, and preserves additional rows and existing opportunities. Existing index
 schemas are checked before seeding. Table/row changes roll back on error;
 sequence advancement never moves backward but may leave gaps after rollback.
@@ -303,15 +305,13 @@ devcontainer PostgreSQL service. SQL, transactions, deletion triggers and lock
 waits are real; only Claude responses and website/browser navigation are mocked.
 
 ```bash
-ARTICLE_HISTORY_INTEGRATION=1 uv run python -m unittest tests.test_article_history
-uv run python -m unittest tests.test_fixtures.BundledCollectionTests
+uv run python -m unittest tests.test_fixtures
 ```
 
 The history test role needs `CREATEDB`. By default tests target the Compose
 `postgres:5432/scraper` connection; `ARTICLE_HISTORY_TEST_DATABASE_URL` can select
 another explicit development PostgreSQL connection. They do not load `.env` or
-fall back to a potentially remote application database. No history SQL or
-transaction results are simulated.
+fall back to a potentially remote application database.
 
 ## Article decision logs and historical deduplication replay
 
@@ -360,7 +360,7 @@ Shared URLs deliberately reuse the same saved body across stages. This proves
 unchanged-content deduplication, not historical equality between article captures.
 The runner uses listing membership recorded in the manifest and checked against
 saved HTML; it does not replay browser pagination. See the full
-[42-index comparison schedule and limitations](docs/history-replay.md).
+[41-index comparison schedule and limitations](docs/history-replay.md).
 
 ## Opportunity validation and database mapping
 

@@ -80,8 +80,7 @@ def compose_indexes(
 
     for name, url in indexes:
         decision = decision_log.for_index(name, url) if decision_log else None
-        skip_reason = (fixtures.skip_reason(url) if fixtures is not None
-                       else 'past projects' if discovery.is_skipped(url) else None)
+        skip_reason = fixtures.skip_reason(url) if fixtures is not None else None
         if skip_reason is not None:
             skipped += 1
             print(f'{name}: SKIPPED ({skip_reason})', flush=True)

@@ -23,10 +23,10 @@ claim that a newly downloaded page was rendered completely.
 
 Up to three distinct article URLs per seed index are sampled, prioritizing
 newly appearing links and shared links, then another available example. The
-manifest covers all 42 seed IDs, including inactive entries. Only article
-entries marked `ready` are supplied to the CLI. Article sampling does not
-reapply the live discovery eligibility filters; historical closed inquiries
-and projects can intentionally exercise validation behavior.
+manifest covers all 41 seed IDs, including inactive entries. Only article
+entries marked `ready` are supplied to the CLI. For the changed project collections, sampling now follows the configured
+scope: Gippsland future projects, Wannon In planning, and Western Port current
+projects. Other historical closed inquiries can still exercise validation behavior.
 
 Article bodies were collected additionally to the listing audit. For each
 article URL, successful CDX captures were selected nearest its referencing
@@ -86,7 +86,7 @@ Wayback URLs, go to Claude and determine opportunity identities.
    against the source. Keep extractor limitations explicit; do not invent
    deadlines, categories or other model-produced metadata.
 4. Add or update the relevant manifest sample, preserving the three-article
-   maximum and all 42 seed entries. Mark incomplete samples `unavailable`
+   maximum and all 41 seed entries. Mark incomplete samples `unavailable`
    with a concrete reason. Do not silently remove gaps.
 5. Run `uv run python -m unittest tests.test_fixtures`. Existing synthetic
    parser, pipeline and structuring tests remain independent of archive access.
@@ -99,7 +99,7 @@ outside this feature.
 
 ## Collected coverage
 
-All 42 seed indexes are represented; 30 have usable samples, totaling 50 articles. Two saved PDFs cover VEWH and Joint Treaties. SARC has no captured bill rows from which to select an article; its PDF route is covered by synthetic adapter tests.
+All 41 seed indexes are represented; 29 have usable samples, totaling 47 articles and 111 distinct resources. Two PDFs cover VEWH and Joint Treaties. SARC has no captured bill rows from which to select an article.
 
 Engage retains its archived HTML and embedded Inertia data as reference, but it is unavailable for article replay because the current static HTML extractor cannot render that data. Other gaps include missing captures, connection failures and genuinely empty listings. Exact failed-sample reasons are in the manifest.
 
@@ -116,34 +116,57 @@ Engage retains its archived HTML and embedded Inertia data as reference, but it 
 | 9 | Coliban Water | 2 | 2 |
 | 10 | East Gippsland Water | 0 | 0 |
 | 11 | Goulburn Valley Water | 2 | 0 |
-| 12 | Gippsland Water | 2 | 4 |
+| 12 | Gippsland Water | 3 | 2 |
 | 13 | Grampians Wimmera Mallee Water - Current Projects | 2 | 1 |
-| 14 | Grampians Wimmera Mallee Water - Past Projects | 3 | 1 |
-| 15 | Lower Murray Water | 0 | 0 |
-| 16 | North East Water | 1 | 2 |
-| 17 | South Gippsland Water | 1 | 1 |
-| 18 | Wannon Water | 1 | 2 |
-| 19 | Western Port Water | 3 | 2 |
-| 20 | Southern Rural Water | 2 | 2 |
-| 21 | Goulburn-Murray Water | 2 | 3 |
-| 22 | Essential Services Commission | 2 | 2 |
-| 23 | Commissioner for Environmental Sustainability Victoria | 2 | 5 |
-| 24 | Vic Catchments | 1 | 2 |
-| 25 | Victorian Environmental Water Holder | 1 | 2 |
-| 26 | Engage Victoria | 0 | 2 |
-| 27 | Senate Environment and Communications | 1 | 2 |
-| 28 | Senate Rural and Regional Affairs and Transport | 1 | 2 |
-| 29 | House Climate Change, Energy, Environment and Water | 1 | 1 |
-| 30 | House Industry, Innovation and Science | 1 | 1 |
-| 31 | House Regional Development, Infrastructure and Transport | 1 | 2 |
-| 32 | House Primary Industries | 1 | 2 |
-| 33 | Joint Aboriginal and Torres Strait Islander Affairs | 0 | 2 |
-| 34 | Joint Treaties | 1 | 2 |
-| 35 | Joint Northern Australia | 1 | 1 |
-| 36 | Department of Industry, Science and Resources | 0 | 0 |
-| 37 | Productivity Commission | 0 | 0 |
-| 38 | Climate Change Authority | 0 | 0 |
-| 39 | Australian Energy Market Commission | 1 | 2 |
-| 40 | Department of Climate Change, Energy, the Environment and Water | 0 | 0 |
-| 41 | Clean Energy Regulator | 0 | 3 |
-| 42 | Department of Infrastructure, Transport, Regional Development, Communications, Sport and the Arts | 3 | 2 |
+| 14 | Lower Murray Water | 0 | 0 |
+| 15 | North East Water | 1 | 2 |
+| 16 | South Gippsland Water | 1 | 1 |
+| 17 | Wannon Water | 1 | 2 |
+| 18 | Western Port Water | 2 | 2 |
+| 19 | Southern Rural Water | 2 | 2 |
+| 20 | Goulburn-Murray Water | 2 | 3 |
+| 21 | Essential Services Commission | 2 | 2 |
+| 22 | Commissioner for Environmental Sustainability Victoria | 2 | 5 |
+| 23 | Vic Catchments | 1 | 2 |
+| 24 | Victorian Environmental Water Holder | 1 | 2 |
+| 25 | Engage Victoria | 0 | 2 |
+| 26 | Senate Environment and Communications | 1 | 2 |
+| 27 | Senate Rural and Regional Affairs and Transport | 1 | 2 |
+| 28 | House Climate Change, Energy, Environment and Water | 1 | 1 |
+| 29 | House Industry, Innovation and Science | 1 | 1 |
+| 30 | House Regional Development, Infrastructure and Transport | 1 | 2 |
+| 31 | House Primary Industries | 1 | 2 |
+| 32 | Joint Aboriginal and Torres Strait Islander Affairs | 0 | 2 |
+| 33 | Joint Treaties | 1 | 2 |
+| 34 | Joint Northern Australia | 1 | 1 |
+| 35 | Department of Industry, Science and Resources | 0 | 0 |
+| 36 | Productivity Commission | 0 | 0 |
+| 37 | Climate Change Authority | 0 | 0 |
+| 38 | Australian Energy Market Commission | 1 | 2 |
+| 39 | Department of Climate Change, Energy, the Environment and Water | 0 | 0 |
+| 40 | Clean Energy Regulator | 0 | 3 |
+| 41 | Department of Infrastructure, Transport, Regional Development, Communications, Sport and the Arts | 3 | 2 |
+
+## Catalogue refresh
+
+The collection follows the current 41-index seed. GWMWater past-project files
+were removed, and old IDs 15–42 and their resource directories were shifted to
+14–41. Gippsland keeps only future-project listings/articles. Western Port uses
+its current-project listing captures from 5 and 11 December 2025; March/April
+replays were rate-limited. Its saved water-main article is reused with its
+verified canonical URL, alongside the newly recovered Next Generation article;
+the water-quality article remains unavailable after bounded archive attempts.
+
+Wannon reuses the genuine unfiltered March/June listing HTML already collected.
+The manifest records `selection.from_unfiltered_archive=true` and includes only
+cards explicitly labelled In planning. Production card-status selection is tested
+against those bytes. Their replay URLs are not relabelled as filtered captures.
+The matching Quality Water for Wannon article replaces the completed-project
+sample. No archived HTML is edited to manufacture status or ordering.
+
+New downloads used archive-only redirects, at least two seconds between request
+starts and one retry. Actual capture timestamps, original URLs and checksums are
+recorded in the manifest; unavailable captures retain their reason. Ordinary
+fixture CLI replay still incurs Claude usage. The discovery-only shell test does
+not invoke Claude and now runs directly against the local scraper database,
+clearing its test article/history rows afterward.

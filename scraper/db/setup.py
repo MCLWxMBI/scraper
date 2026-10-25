@@ -122,9 +122,9 @@ def seed_database(conn: psycopg.Connection) -> int:
     expected = conn.execute(
         (SQL_DIR / 'seed_website_indexes.sql').read_text(encoding='utf-8')
     ).fetchall()
-    if ([row[0] for row in expected] != list(range(1, 43))
+    if ([row[0] for row in expected] != list(range(1, 42))
             or sum(row[3] for row in expected) != 38):
-        raise SetupError('The local seed must contain IDs 1–42, with 38 active rows.')
+        raise SetupError('The local seed must contain IDs 1–41, with 38 active rows.')
     actual = conn.execute("""
         SELECT id, name, index_url, active, notes FROM public.website_indexes
         WHERE id = ANY(%s) ORDER BY id
@@ -166,7 +166,7 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, UnicodeError):
         print('Database setup failed: could not read local configuration or SQL files.', file=sys.stderr)
         return 1
-    print(f'Seeded 42 website indexes: 38 active, 4 inactive; preserved {extra} additional rows.')
+    print(f'Seeded 41 website indexes: 38 active, 3 inactive; preserved {extra} additional rows.')
     return 0
 
 
