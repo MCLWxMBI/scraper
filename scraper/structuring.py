@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import unicodedata
 from urllib.parse import parse_qsl, unquote, urlsplit
 
@@ -13,6 +14,7 @@ from pydantic import Field, ValidationError
 from scraper.models import NonemptyText, Opportunity, OpportunityMetadata, Source
 from scraper.locations import GeographicScope, LocationError, LocationResolver
 from scraper.identity import canonical_source_url
+from scraper.dates import australian_today
 
 
 CLAUDE_RETRY_COUNT = 0
@@ -180,6 +182,7 @@ def structure_listing(
     location_diagnostic=None,
 ) -> Opportunity:
     """Make at most one Claude call, then resolve verified geography in Python."""
+    upload_date = australian_today()
     try:
         source_url = canonical_source_url(source.url)
         identifier = article_slug(source_url)
@@ -222,8 +225,11 @@ def structure_listing(
     try:
         resolver = location_resolver if location_resolver is not None else LocationResolver()
         location = resolver.resolve(fields.geographicScope, text, diagnostic=location_diagnostic)
-        return Opportunity.model_validate({**opportunity.model_dump(), 'location': location})
+        opportunity = Opportunity.model_validate({**opportunity.model_dump(), 'location': location})
     except LocationError as exc:
         if location_diagnostic:
-            location_diagnostic(outcome='failed', reason=str(exc))
-        raise InvalidListingError(str(exc), attempts=1, operational_failure=True) from None
+            location_diagnostic(outcome='warning', reason=str(exc))
+        opportunity._location_lookup_failed = True
+        print(f'{index_name}: LOCATION WARNING: {source.url} — {exc}', file=sys.stderr, flush=True)
+    opportunity._upload_date = upload_date
+    return opportunity

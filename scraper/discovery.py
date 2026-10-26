@@ -586,8 +586,8 @@ def main(argv: list[str] | None = None) -> int:
         print('Traversal failed: database operation failed.', file=sys.stderr, flush=True)
         return 1
     if args.index:
-        active_names = [name for name, _ in selected]
-        selected = [(name, url) for name, url in selected if name.casefold() == args.index.casefold()]
+        active_names = [index.name for index in selected]
+        selected = [index for index in selected if index.name.casefold() == args.index.casefold()]
         if not selected:
             parser.error('Unknown or inactive index name. Active indexes: ' + ', '.join(active_names))
     if not selected:
@@ -598,7 +598,8 @@ def main(argv: list[str] | None = None) -> int:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         try:
-            for name, url in selected:
+            for index in selected:
+                name, url = index.name, index.url
                 try:
                     sources = traverse_index(name, url, browser)
                     results[name] = sources

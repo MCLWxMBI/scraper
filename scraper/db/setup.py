@@ -100,9 +100,17 @@ def check_history_schema(conn: psycopg.Connection) -> None:
         WHERE a.attrelid = 'public.article_history'::regclass
           AND a.attnum > 0 AND NOT a.attisdropped
     """).fetchall()
+    # Compare the date default semantically across PostgreSQL deparser formatting.
+    normalized = []
+    for name, kind, required, default in columns:
+        if name == 'upload_date' and default is not None:
+            default = default.replace('::text', '').replace('(', '').replace(')', '').replace(' ', '')
+        normalized.append((name, kind, required, default))
     expected = [('source_url', 'text', True, None), ('title', 'text', True, None),
-                ('hash', 'text', False, None), ('deleted', 'boolean', True, 'false')]
-    if sorted(columns) != sorted(expected):
+                ('hash', 'text', False, None), ('deleted', 'boolean', True, 'false'),
+                ('upload_date', 'date', True, "clock_timestampATTIMEZONE'Australia/Sydney'::date"),
+                ('source_index_id', 'bigint', False, None)]
+    if sorted(normalized) != sorted(expected):
         raise SetupError('Incompatible article_history schema: columns or defaults differ.')
     primary = conn.execute("""
         SELECT ARRAY(SELECT a.attname FROM unnest(c.conkey) WITH ORDINALITY k(num, pos)

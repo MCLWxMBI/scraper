@@ -1,6 +1,7 @@
 """Read successful content versions; deleted identities always remain excluded."""
 
 from dataclasses import dataclass
+from datetime import date
 from collections.abc import Iterable
 
 import psycopg
@@ -17,11 +18,13 @@ class HistoryError(DatabaseError):
 class ArticleHistory:
     hash: str | None
     deleted: bool
+    upload_date: date
+    source_index_id: int | None = None
 
 
 def check_history_table(connection: psycopg.Connection) -> None:
     try:
-        connection.execute('SELECT source_url, title, hash, deleted FROM public.article_history LIMIT 0')
+        connection.execute('SELECT source_url, title, hash, deleted, upload_date, source_index_id FROM public.article_history LIMIT 0')
     except psycopg.Error:
         raise HistoryError('Article history is unavailable; run manual schema setup.') from None
 
@@ -32,10 +35,11 @@ def load_history(connection: psycopg.Connection, urls: Iterable[str]) -> dict[st
     try:
         for start in range(0, len(keys), HISTORY_BATCH_SIZE):
             rows = connection.execute('''
-                SELECT source_url, hash, deleted FROM public.article_history
+                SELECT source_url, hash, deleted, upload_date, source_index_id FROM public.article_history
                 WHERE source_url = ANY(%s)
             ''', (keys[start:start + HISTORY_BATCH_SIZE],)).fetchall()
-            history.update((url, ArticleHistory(digest, deleted)) for url, digest, deleted in rows)
+            history.update((url, ArticleHistory(digest, deleted, upload_date, index_id))
+                           for url, digest, deleted, upload_date, index_id in rows)
     except psycopg.Error:
         raise HistoryError('Article history lookup failed; stopping before Claude processing.') from None
     return history
