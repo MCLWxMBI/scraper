@@ -59,7 +59,7 @@ def prepare_articles(
     sources: list[extraction.Source],
     extract: Callable[[extraction.Source], str],
     history_lookup: HistoryLookup,
-    *, limit: int | None = None, decision=None,
+    *, limit: int | None = None, decision=None, refresh_locations: bool = False,
 ) -> PreparedDiscovery:
     """Discovery's content gate: no Claude calls and no history writes.
 
@@ -112,18 +112,19 @@ def prepare_articles(
             log(source, 'failed', reason='extraction')
             prepared.append(PreparedArticle(source, error=f'{type(exc).__name__}: {exc}'[:600]))
             continue
-        if previous is not None and previous.hash == digest:
+        if previous is not None and previous.hash == digest and not refresh_locations:
             log(source, 'unchanged', previous_hash=previous.hash, current_hash=digest)
             prepared.append(PreparedArticle(source, text=text, skipped='unchanged', hash=digest))
         else:
-            log(source, 'changed' if previous is not None and previous.hash else 'new',
+            log(source, 'refresh' if refresh_locations and previous is not None and previous.hash == digest
+                else 'changed' if previous is not None and previous.hash else 'new',
                 previous_hash=previous.hash if previous else None, current_hash=digest)
             prepared.append(PreparedArticle(source, text=text, hash=digest))
     return PreparedDiscovery(prepared, len(candidates))
 
 
 def discover_articles(name: str, url: str, browser: Browser, connection: psycopg.Connection,
-                      *, limit: int | None = None, decision=None) -> PreparedDiscovery:
+                      *, limit: int | None = None, decision=None, refresh_locations: bool = False) -> PreparedDiscovery:
     lookup = lambda urls: load_history(connection, urls)
     try:
         sources = traverse_index(name, url, browser, history_lookup=lookup)
@@ -136,7 +137,8 @@ def discover_articles(name: str, url: str, browser: Browser, connection: psycopg
         print(f'{name}: extracting during discovery: {source.url}', flush=True)
         return extraction.process_single_source(source, browser)
 
-    return prepare_articles(sources, extract, lookup, limit=limit, decision=decision)
+    return prepare_articles(sources, extract, lookup, limit=limit, decision=decision,
+                            refresh_locations=refresh_locations)
 
 
 def normalize_url(base_url: str, href: str) -> str | None:

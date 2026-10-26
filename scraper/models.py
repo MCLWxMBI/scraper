@@ -7,10 +7,13 @@ after a deadline has been found and the complete opportunity validates.
 from __future__ import annotations
 
 import re
+import math
 from datetime import datetime
 from dataclasses import dataclass
 from typing import Annotated, Literal, Self
 from urllib.parse import urlsplit
+
+from shapely.geometry import shape
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -35,6 +38,8 @@ class ContractModel(BaseModel):
 
 def _check_position(position: Position) -> None:
     longitude, latitude = position
+    if not all(math.isfinite(v) for v in position):
+        raise ValueError('Coordinates must be finite numbers')
     if not -180 <= longitude <= 180 or not -90 <= latitude <= 90:
         raise ValueError('Coordinates must be [longitude, latitude] within geographic bounds')
 
@@ -89,8 +94,17 @@ class OpportunityLocation(ContractModel):
     label: NonemptyText
     geometry: Point | Polygon | MultiPolygon
 
+    @model_validator(mode='after')
+    def check_geometry(self) -> Self:
+        geometry = shape(self.geometry.model_dump())
+        if geometry.is_empty or not geometry.is_valid:
+            raise ValueError('Location geometry must be nonempty and topologically valid')
+        if re.search(r'[<>]', self.label):
+            raise ValueError('Location label must be plain text')
+        return self
 
-class OpportunityFields(ContractModel):
+
+class OpportunityMetadata(ContractModel):
     """Fields inferred by Claude; identity, source URL and full text belong to Python."""
 
     title: NonemptyText
@@ -110,7 +124,6 @@ class OpportunityFields(ContractModel):
     category: Annotated[list[Category], Field(min_length=1)]
     tags: list[NonemptyText] | None = None
     summary: NonemptyText | None = None
-    location: OpportunityLocation | None = None
 
     @model_validator(mode='before')
     @classmethod
@@ -165,6 +178,12 @@ class OpportunityFields(ContractModel):
             if reversed_dates:
                 raise ValueError('startDate must not be later than submissionDeadline')
         return self
+
+
+class OpportunityFields(OpportunityMetadata):
+    """Public fields, including geography resolved by code rather than Claude."""
+
+    location: OpportunityLocation | None = None
 
 
 class Opportunity(OpportunityFields):

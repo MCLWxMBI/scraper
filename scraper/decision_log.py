@@ -60,7 +60,8 @@ class DecisionLog:
         except ValueError:
             canonical = None
         # Only explicitly supplied, structured fields are logged. Exceptions and
-        # article text are deliberately excluded to avoid leaking credentials.
+        # full article bodies are excluded. Location events may carry a short,
+        # explicitly supplied supporting excerpt, never model prompts or responses.
         event = dict(timestamp=datetime.now(timezone.utc).isoformat(),
                      run_id=self.run_id, stage=self.stage, index=index,
                      index_url=_safe_url(index_url), source_url=_safe_url(source_url),
