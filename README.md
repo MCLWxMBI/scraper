@@ -203,8 +203,9 @@ flowchart TD
 | `main.py` | Root collection entry point for local runs and Actions; forwards arguments and returns the pipeline exit code. |
 | `scraper/__main__.py` | Routes `discover` to discovery and `setup-db` to explicit database setup. |
 | `scraper/__init__.py`, `scraper/db/__init__.py` | Define the application and database packages without running collection. |
+| `scraper/dates.py` | Computes date-only structuring metadata in Australia/Sydney, independently of host timezone. |
 | `scraper/config.py` | Resolves repository-root `.env` and SQL paths; loads environment defaults without overriding supplied values. |
-| `scraper/models.py` | Defines immutable `Source` objects, opportunity fields, and validated geography/content models. |
+| `scraper/models.py` | Defines immutable Source/WebsiteIndex context, opportunity fields, internal processing metadata, and validated geography/content models. |
 | `scraper/discovery.py` | Traverses listings and pagination; live collection prepares article text, checks history, and returns only new/changed work plus skip/error outcomes. Its standalone CLI remains a raw URL-discovery diagnostic. |
 | `scraper/extraction.py` | Renders each source, waits for stable content, and extracts HTML text or the supported special PDFs. |
 | `scraper/identity.py` | Defines shared canonical source URLs, normalized Claude input text and SHA-256 content hashes. |
@@ -216,7 +217,7 @@ flowchart TD
 | `scraper/decision_log.py` | Writes file-only JSONL article decisions, including hash comparisons and committed save outcomes; never installs a console handler. |
 | `scraper/text_export.py` | Generates stable index/article filenames and atomically writes structured JSON-array files and raw UTF-8 article text. |
 | `scraper/db/connection.py` | Connects using DATABASE_URL with a bounded timeout and sanitized diagnostics. |
-| `scraper/db/indexes.py` | Retrieves all active index names/URLs in deterministic order. |
+| `scraper/db/indexes.py` | Retrieves active website IDs, names and URLs in deterministic order and retains IDs through collection. |
 | `scraper/db/history.py` | Batch-reads last successful content hashes and persistent deletion markers; lookup failures stop processing. |
 | `scraper/db/opportunities.py` | Atomically saves an opportunity and its input hash, rejecting deleted identities and cross-URL slug collisions. |
 | `scraper/db/setup.py` | Applies schema, checks index-table compatibility, seeds and verifies records, and advances the ID sequence. |
@@ -291,15 +292,30 @@ The standalone `python -m scraper discover` command remains raw URL discovery
 without article extraction, history filtering or Claude calls.
 
 History uses the canonical `source_url` as its primary key, a descriptive
-`title`, a last-successful content `hash`, and `deleted BOOLEAN DEFAULT FALSE`.
+`title`, a last-successful content `hash`, `deleted BOOLEAN DEFAULT FALSE`, a required
+`upload_date DATE`, and nullable `source_index_id` referencing `website_indexes.id`.
+The website ID is retained from the initial index query, not inferred from an
+article URL or looked up separately for each article.
+
+`upload_date` is captured immediately before the first successfully saved
+structuring attempt, using the calendar date in `Australia/Sydney` (AEST/AEDT).
+It is a date-only `YYYY-MM-DD`, with no timezone attached; do not convert the
+Sydney date through UTC. Both fields are saved with the real title and successful
+content hash in the same transaction as the opportunity. Discovery stays read-only:
+there are no provisional rows, placeholder titles or null-hash discovery records.
+Failed structuring or persistence creates no new history. Updates retain the first
+upload date and website index ID; an unknown index ID can be filled when later known.
+The date has a Sydney-date database default for direct/trigger insertion paths,
+so `upload_date=NULL` is rejected. Deletion preserves both fields; deleting an index
+sets its history references to NULL without removing history or deletion markers.
 The hash is SHA-256 of exactly the normalized input sent to Claude: CRLF/CR
 become LF and outer whitespace is stripped. Hashes are not unique across URLs.
 This compares extracted text, not raw HTML, listing positions, or titles alone.
 Changes to navigation retained by the existing extractor can also change a hash.
 
 After validation, the opportunity and its hash commit in one transaction.
-Extraction, validation, API and storage failures leave the prior successful
-hash untouched and remain eligible on the next run. `SKIPPED (unchanged)` and
+Article extraction, metadata validation, Claude API and storage failures leave
+the prior successful hash untouched and remain eligible on the next run. `SKIPPED (unchanged)` and
 `SKIPPED (deleted)` are reported separately from source PASS/FAIL outcomes.
 History lookup failures stop collection before further Claude processing.
 
@@ -383,13 +399,18 @@ relative to the project root. Override it with `main.py --log-file PATH`.
 The JSONL events stay out of terminal PASS/FAIL output and JSON-array `.txt`
 files. Each event includes its run, UTC timestamp, index, original/canonical
 source URL and decision: `new`, `changed`, `unchanged`, `deleted`, `failed` or
-`saved`, `refresh` or `location`. Hash comparisons include previous/current hashes where available.
+`saved`, `refresh`, `structured` or `location`. Hash comparisons include previous/current hashes where available.
 Location events include outcomes, provider/dataset identifiers and up to 400 characters
 of supporting source evidence. The JSONL log excludes exception details, full
 article bodies and credentials. A
 JSONL file failure stops processing rather than redirecting events to the console.
 
 `new`, `changed` and `refresh` mean eligible for Claude, not successfully processed.
+`structured` records the attempt's date, source website index ID, geography warning
+status and catalogue (`database` or `fixtures`); it does not claim persistence.
+Text/fixture runs include these diagnostics without writing database history.
+Fixture index IDs belong to their historical manifest, not the current database
+catalogue.
 `saved` in database mode means the write committed; a writer used inside an
 outer transaction does not emit a committed-save event. A text-save event has
 `destination="text"` and `history_advanced=false`; it does not make later database
@@ -459,8 +480,14 @@ prevents exporting a misleading partial map.
 
 A successful no-location determination writes SQL NULL and omits the location
 property in exported JSON, including deliberate removal of an older map. Lookup
-outages, invalid source geometry and invalid model evidence fail the article and
-preserve its prior successful record/hash. Diagnostics use file-only `location`
+outages, invalid source geometry and unsupported model evidence at the resolution
+stage are nonblocking geography warnings: valid metadata is still saved and its
+successful hash advances. New opportunities receive SQL NULL geography; on updates,
+the writer retains the previous map when lookup failed. A successful no-location
+decision remains distinct and can clear an old map. Metadata validation/API errors
+and persistence failures still fail the article and preserve prior history.
+Use `--refresh-locations` to retry geography later; there is no extra Claude call
+or automatic geography-driven structuring retry. Diagnostics use file-only `location`
 events; internal scope, provenance and excerpts do not enter public location JSON.
 
 Refresh selected articles after geographic data or resolution rules change:
@@ -600,3 +627,21 @@ mocked Claude responses, with no browser, website, database or paid API calls:
 ```bash
 uv run python -m unittest tests.test_extraction_run_log
 ```
+
+
+Run the processing-metadata unit checks without API calls:
+
+```bash
+uv run python -m unittest tests.test_history_metadata tests.test_locations
+```
+
+Opt in to real persistence checks on the existing Compose `scraper` database:
+
+```bash
+HISTORY_METADATA_POSTGRES_TESTS=1 uv run python -m unittest tests.test_history_metadata
+```
+
+These checks use saved article text and mocked Claude/geographic services. They
+read the actual seeded website IDs and roll back every test transaction. They do
+not create databases, reset data, load `.env` or use a remote `DATABASE_URL`.
+The database must already have the current `sql/schema.sql` and seed applied.

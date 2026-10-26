@@ -8,14 +8,17 @@ from __future__ import annotations
 
 import re
 import math
-from datetime import datetime
+from datetime import date, datetime
 from dataclasses import dataclass
 from typing import Annotated, Literal, Self
 from urllib.parse import urlsplit
 
 from shapely.geometry import shape
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator, PrivateAttr
+
+
+from scraper.dates import australian_today
 
 
 NonemptyText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -189,6 +192,17 @@ class OpportunityFields(OpportunityMetadata):
 class Opportunity(OpportunityFields):
     """Complete contract record. A deadline is mandatory at this export boundary."""
 
+    _upload_date: date = PrivateAttr(default_factory=australian_today)
+    _location_lookup_failed: bool = PrivateAttr(default=False)
+
+    @property
+    def upload_date(self) -> date:
+        return self._upload_date
+
+    @property
+    def location_lookup_failed(self) -> bool:
+        return self._location_lookup_failed
+
     submissionDeadline: str
     id: Annotated[str, StringConstraints(pattern=r'^[a-z0-9]+(?:-[a-z0-9]+)*$')]
     fullText: Annotated[list[NonemptyText], Field(min_length=1)]
@@ -216,5 +230,14 @@ class Opportunity(OpportunityFields):
 class Source:
     """A discovered URL and its extraction-routing name."""
 
+    name: str
+    url: str
+
+
+@dataclass(frozen=True)
+class WebsiteIndex:
+    """A selected website row; ID stays with its articles throughout processing."""
+
+    id: int | None
     name: str
     url: str

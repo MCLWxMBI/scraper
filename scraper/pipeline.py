@@ -33,6 +33,7 @@ from scraper.db.opportunities import (
     OpportunityStorageError, check_opportunity_table, save_opportunity,
 )
 from scraper.locations import LocationResolver
+from scraper.models import WebsiteIndex
 from scraper.structuring import (
     CLAUDE_TIMEOUT_SECONDS,
     InvalidListingError,
@@ -47,7 +48,7 @@ def _error(exc: Exception) -> str:
 
 
 def compose_indexes(
-    indexes: Iterable[tuple[str, str]],
+    indexes: Iterable[WebsiteIndex | tuple[str, str]],
     browser: Browser | None,
     output_dir: str | Path,
     limit: int | None = None,
@@ -83,7 +84,9 @@ def compose_indexes(
     history_skipped = 0
     identities: dict[str, str] = {}
 
-    for name, url in indexes:
+    for item in indexes:
+        index = item if isinstance(item, WebsiteIndex) else WebsiteIndex(None, *item)
+        name, url = index.name, index.url
         decision = decision_log.for_index(name, url) if decision_log else None
         skip_reason = fixtures.skip_reason(url) if fixtures is not None else None
         if skip_reason is not None:
@@ -222,10 +225,15 @@ def compose_indexes(
                             print(f'{name}: INVALID: {source.url}: {_error(exc)}', file=sys.stderr, flush=True)
                         continue
 
+                    if decision is not None:
+                        decision(source.url, 'structured', upload_date=opportunity.upload_date.isoformat(),
+                                 source_index_id=index.id, index_catalog='fixtures' if fixtures else 'database',
+                                 location_lookup_failed=opportunity.location_lookup_failed)
                     record = opportunity.to_record()
                     if output_mode == 'db':
                         try:
-                            save_opportunity(connection, opportunity, content_hash=article.hash)
+                            save_opportunity(connection, opportunity, content_hash=article.hash,
+                                             upload_date=opportunity.upload_date, source_index_id=index.id)
                         except OpportunityStorageError as exc:
                             index_failed = True
                             source_failed(source.url, str(exc), phase='database_save')
@@ -328,14 +336,13 @@ def _run(args, parser, *, run_id=None) -> int:
             fixtures = FixtureCollection() if args.fixtures else None
             connection = None
             if fixtures is not None:
-                indexes = [(index['name'], index['url']) for index in fixtures.indexes]
+                indexes = [WebsiteIndex(index['id'], index['name'], index['url']) for index in fixtures.indexes]
             else:
                 connection = resources.enter_context(connect_database(autocommit=True))
                 indexes = load_active_indexes(connection)
             if args.index:
-                available_names = [name for name, _ in indexes]
-                indexes = [(name, url) for name, url in indexes
-                           if name.casefold() == args.index.casefold()]
+                available_names = [index.name for index in indexes]
+                indexes = [index for index in indexes if index.name.casefold() == args.index.casefold()]
                 if not indexes:
                     message = ('Unknown fixture index name. Available indexes: ' if fixtures is not None
                                else 'Unknown or inactive index name. Active indexes: ')
@@ -343,9 +350,9 @@ def _run(args, parser, *, run_id=None) -> int:
             if not indexes:
                 print('No active indexes; nothing to collect.', flush=True)
                 return 0
-            if fixtures is not None and all(fixtures.skip_reason(url) is not None for _, url in indexes):
-                for name, url in indexes:
-                    print(f'{name}: SKIPPED ({fixtures.skip_reason(url)})', flush=True)
+            if fixtures is not None and all(fixtures.skip_reason(index.url) is not None for index in indexes):
+                for index in indexes:
+                    print(f'{index.name}: SKIPPED ({fixtures.skip_reason(index.url)})', flush=True)
                 print(f'Summary: {len(indexes)} skipped; 0 PASS, 0 FAIL', flush=True)
                 return 0
             if fixtures is None:

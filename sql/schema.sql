@@ -88,6 +88,9 @@ CREATE TABLE IF NOT EXISTS public.opportunities (
     )
 );
 
+-- upload_date is the Sydney calendar date captured before the first successfully
+-- saved structuring attempt. Direct/trigger inserts use the Sydney date default.
+-- source_index_id is the original website_indexes ID, not a hostname-derived ID.
 -- Content history survives physical opportunity deletion. URL is the identity;
 -- hash is the last successfully saved normalized extraction, never a title hash.
 -- NULL hashes are reserved for untracked direct inserts/deletion markers.
@@ -95,7 +98,9 @@ CREATE TABLE IF NOT EXISTS public.article_history (
     source_url TEXT PRIMARY KEY CHECK (source_url ~ '^https://[^[:space:]]+$'),
     title TEXT NOT NULL CHECK (title ~ '[^[:space:]]'),
     hash TEXT NULL CHECK (hash IS NULL OR hash ~ '^[0-9a-f]{64}$'),
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    upload_date DATE NOT NULL DEFAULT ((clock_timestamp() AT TIME ZONE 'Australia/Sydney')::date),
+    source_index_id BIGINT REFERENCES public.website_indexes(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 -- Lock the persistent identity even when a direct insert has no history yet.
@@ -128,7 +133,7 @@ BEGIN
     ON CONFLICT (source_url) DO UPDATE SET
         title = EXCLUDED.title,
         deleted = TRUE;
-    -- Do not overwrite the last successful hash or remove this history row.
+    -- Preserve the successful hash, upload_date and source_index_id; retain history.
     RETURN OLD;
 END;
 $$;

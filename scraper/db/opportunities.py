@@ -1,6 +1,6 @@
 """Map validated opportunities to PostgreSQL and persist them transactionally."""
 
-from datetime import datetime
+from datetime import date, datetime
 import re
 
 import psycopg
@@ -40,7 +40,8 @@ def opportunity_parameters(opportunity: Opportunity) -> dict:
     }
 
 
-def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, content_hash: str | None = None) -> None:
+def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, content_hash: str | None = None,
+                     upload_date: date | None = None, source_index_id: int | None = None) -> None:
     """Atomically save a record and its input hash; never clear deleted markers.
 
     Reject reuse of a slug for a different source URL.
@@ -52,17 +53,25 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
     if content_hash is not None and not re.fullmatch(r'[0-9a-f]{64}', content_hash):
         raise OpportunityStorageError('Invalid extracted-content hash.')
     parameters = opportunity_parameters(opportunity)
-    parameters['content_hash'] = content_hash
+    stored_date = opportunity.upload_date if upload_date is None else upload_date
+    if type(stored_date) is not date:
+        raise OpportunityStorageError('Upload date must be a date-only value.')
+    if source_index_id is not None and (type(source_index_id) is not int or source_index_id <= 0):
+        raise OpportunityStorageError('Source index ID must be a positive website index ID.')
+    parameters.update(content_hash=content_hash, upload_date=stored_date,
+                      source_index_id=source_index_id,
+                      location_lookup_failed=opportunity.location_lookup_failed)
     try:
         with conn.transaction():
             # This upsert acquires the same identity-row lock as the deletion
             # trigger. Never resurrect a tombstone, including after a Claude call.
             tracked = conn.execute("""
-                INSERT INTO public.article_history (source_url, title, hash)
-                VALUES (%(source_url)s, %(title)s, %(content_hash)s)
+                INSERT INTO public.article_history (source_url, title, hash, upload_date, source_index_id)
+                VALUES (%(source_url)s, %(title)s, %(content_hash)s, %(upload_date)s, %(source_index_id)s)
                 ON CONFLICT (source_url) DO UPDATE SET
                     title = EXCLUDED.title,
-                    hash = COALESCE(EXCLUDED.hash, article_history.hash)
+                    hash = COALESCE(EXCLUDED.hash, article_history.hash),
+                    source_index_id = COALESCE(article_history.source_index_id, EXCLUDED.source_index_id)
                 WHERE NOT article_history.deleted
                 RETURNING source_url
             """, parameters).fetchone()
@@ -89,7 +98,7 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
                     category = EXCLUDED.category,
                     tags = EXCLUDED.tags,
                     summary = EXCLUDED.summary,
-                    location = EXCLUDED.location
+                    location = CASE WHEN %(location_lookup_failed)s THEN opportunities.location ELSE EXCLUDED.location END
                 WHERE opportunities.source_url = EXCLUDED.source_url
                 RETURNING id
             """, parameters).fetchone()
