@@ -10,11 +10,12 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 from anthropic import Anthropic
 from pydantic import Field, ValidationError
 
-from scraper.models import NonemptyText, Opportunity, OpportunityFields, Source
+from scraper.models import NonemptyText, Opportunity, OpportunityMetadata, Source
+from scraper.locations import GeographicScope, LocationError, LocationResolver
 from scraper.identity import canonical_source_url
 
 
-CLAUDE_RETRY_COUNT = 1
+CLAUDE_RETRY_COUNT = 0
 CLAUDE_MAX_TOKENS = 16384
 CLAUDE_TIMEOUT_SECONDS = 60.0
 
@@ -91,14 +92,40 @@ an unrelated article fit. Tags are trimmed nonempty display labels, unique
 ignoring case, or null. Spell the invitation access tag exactly Invite-only.
 Provide a factual plain-text summary of 20-30 words. Keep summarisation confined
 to summary, separate from the minimally cleaned fullText.
-Omit location (return null) unless
-the article supplies authoritative coordinates or geometry AND a location label;
-do not geocode place names or invent boundaries.
+Return geographicScope as a list describing only the place or area affected by
+this consultation, or [] when no affected geography is supported. Do not return
+location, coordinates, geometry, map URLs or boundaries. Python will resolve data
+from official geographic services after this single response.
+For each scope provide its name, entityType, representation, role, label, exact
+evidence excerpt from articleText, state and stateEvidence when explicitly known,
+and approximate. Labels must identify the named place in readable plain text.
+Use role affected for substantive geography, not publisher offices, contact
+addresses, meeting venues, background examples or incidental mentions. Omit those
+mentions or identify their non-affected role. Jurisdiction is independent: never
+infer geography or a state qualifier from the publisher, platform or jurisdiction.
+A Commonwealth opportunity can affect a place in Victoria. Broad national or
+statewide policy may have no location. Only request a boundary for an explicitly
+affected locality, local-government area or state; a site inside a town does not
+affect the whole town. Use representative_point only when a place marker fairly
+communicates the scope, not as a substitute for a required area or exact footprint.
+Use site_point for a specific site; exact site coordinates require supplied
+verified data. Rivers known only as lines and other unsupported scopes use
+representation unsupported. Identify separate affected areas individually and
+include the complete affected scope; do not invent a connecting area or omit an
+unresolvable part to obtain a map. stateEvidence must be an exact article excerpt
+containing the explicit state name or abbreviation. Mark approximate true if the
+source itself describes an approximate location; do not increase its precision.
+The application will copy verified geometry, preserving holes and separate areas.
+
 """
 
 
-class StructuredArticle(OpportunityFields):
+class StructuredArticle(OpportunityMetadata):
     """Claude metadata together with minimally cleaned article paragraphs."""
+
+    geographicScope: list[GeographicScope] = Field(
+        default_factory=list, description='Affected geographic scope with exact article evidence; no coordinates',
+    )
 
     fullText: list[NonemptyText] = Field(
         min_length=1,
@@ -149,12 +176,10 @@ def structure_listing(
     index_name: str,
     client: Anthropic,
     model: str,
+    location_resolver: LocationResolver | None = None,
+    location_diagnostic=None,
 ) -> Opportunity:
-    """Try once plus CLAUDE_RETRY_COUNT retries, then raise InvalidListingError.
-
-    The caller must disable SDK retries so they cannot multiply this budget.
-    Claude receives the original text and returns minimally cleaned paragraphs.
-    """
+    """Make at most one Claude call, then resolve verified geography in Python."""
     try:
         source_url = canonical_source_url(source.url)
         identifier = article_slug(source_url)
@@ -164,49 +189,41 @@ def structure_listing(
         raise InvalidListingError(str(exc), attempts=0) from exc
 
     content = json.dumps({'indexName': index_name, 'sourceUrl': source_url, 'articleText': text}, ensure_ascii=False)
-    failure = ''
-    operational_failure = False
-    for attempt in range(CLAUDE_RETRY_COUNT + 1):
-        prompt = content
-        if attempt:
-            prompt += ('\nPrevious attempt failed: ' + failure
-                       + '\nRecheck eligibility first using the system prompt. Excluded articles must keep '
-                       'submissionDeadline=null and submissionDeadlinePrecision=datetime even with a '
-                       'known deadline. Historical deadlines do not reopen closed participation. '
-                       'For eligible articles, recheck the whole article, engagement timeline and phase descriptions. '
-                       'Prefer an explicit deadline; otherwise infer a reasonably supported closing '
-                       'date or month, including the ending month of a stated engagement range. '
-                       'Successive phases of one program are not automatically independent opportunities. '
-                       'For eligible articles keep the deadline null if neither explicit nor contextual timing supports it; '
-                       'do not invent months from vague wording.')
-            print(f'{index_name}: retrying Claude {attempt}/{CLAUDE_RETRY_COUNT}: {source.url}', flush=True)
-        try:
-            response = client.messages.parse(
-                model=model,
-                max_tokens=CLAUDE_MAX_TOKENS,
-                timeout=CLAUDE_TIMEOUT_SECONDS,
-                system=SYSTEM_PROMPT,
-                messages=[{'role': 'user', 'content': prompt}],
-                output_format=StructuredArticle,
-            )
-            if response.stop_reason != 'end_turn':
-                raise ValueError(f'Claude did not complete the structured response: {response.stop_reason}')
-            fields = response.parsed_output
-            if not isinstance(fields, StructuredArticle):
-                raise ValueError('Claude returned no parsed opportunity')
-            if fields.submissionDeadline is None:
-                raise ValueError('No deadline timestamp returned')
-            return Opportunity.model_validate({
-                **fields.model_dump(),
-                'id': identifier,
-                'sourceUrl': source_url,
-            })
-        except Exception as exc:
-            failure = _reason(exc)
-            operational_failure = operational_failure or not isinstance(exc, ValueError)
-
-    raise InvalidListingError(
-        f'Invalid after {CLAUDE_RETRY_COUNT + 1} Claude attempts: {failure}',
-        attempts=CLAUDE_RETRY_COUNT + 1,
-        operational_failure=operational_failure,
-    )
+    # Enforce the one-call budget even when a direct caller uses SDK defaults.
+    if isinstance(client, Anthropic):
+        client = client.with_options(max_retries=0)
+    try:
+        response = client.messages.parse(
+            model=model,
+            max_tokens=CLAUDE_MAX_TOKENS,
+            timeout=CLAUDE_TIMEOUT_SECONDS,
+            system=SYSTEM_PROMPT,
+            messages=[{'role': 'user', 'content': content}],
+            output_format=StructuredArticle,
+        )
+        if response.stop_reason != 'end_turn':
+            raise RuntimeError(f'Claude did not complete the structured response: {response.stop_reason}')
+        fields = response.parsed_output
+        if not isinstance(fields, StructuredArticle):
+            raise RuntimeError('Claude returned no parsed opportunity')
+        if fields.submissionDeadline is None:
+            raise ValueError('No deadline timestamp returned')
+        opportunity = Opportunity.model_validate({
+            **fields.model_dump(exclude={'geographicScope'}),
+            'id': identifier,
+            'sourceUrl': source_url,
+        })
+    except Exception as exc:
+        raise InvalidListingError(
+            f'Invalid after 1 Claude attempt: {_reason(exc)}', attempts=1,
+            operational_failure=(not isinstance(exc, ValueError) or (isinstance(exc, ValidationError)
+                and any(error['loc'] and error['loc'][0] == 'geographicScope' for error in exc.errors()))),
+        ) from None
+    try:
+        resolver = location_resolver if location_resolver is not None else LocationResolver()
+        location = resolver.resolve(fields.geographicScope, text, diagnostic=location_diagnostic)
+        return Opportunity.model_validate({**opportunity.model_dump(), 'location': location})
+    except LocationError as exc:
+        if location_diagnostic:
+            location_diagnostic(outcome='failed', reason=str(exc))
+        raise InvalidListingError(str(exc), attempts=1, operational_failure=True) from None

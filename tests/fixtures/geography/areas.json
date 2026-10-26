@@ -1,0 +1,6 @@
+{
+  "provenance": "Synthetic geographic fixtures for validation only. These rectangles are not authoritative boundaries and must never be attached to real opportunities.",
+  "polygon_with_hole": {"type":"Polygon","coordinates":[[[144,-38],[146,-38],[146,-36],[144,-36],[144,-38]],[[144.5,-37.5],[144.5,-37],[145,-37],[145,-37.5],[144.5,-37.5]]]},
+  "separate_polygon": {"type":"Polygon","coordinates":[[[147,-38],[148,-38],[148,-37],[147,-37],[147,-38]]]},
+  "point": {"type":"Point","coordinates":[144.28,-36.75]}
+}

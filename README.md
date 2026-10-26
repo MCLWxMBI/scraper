@@ -187,7 +187,8 @@ flowchart TD
     Extraction --> Gate["discovery.py: compare live content; fixtures bypass history"]
     Gate --> Decisions["decision_log.py: file-only JSONL decisions"]
     Gate --> Structuring["structuring.py: Claude and validation"]
-    Structuring --> Opportunity["models.py: Opportunity"]
+    Structuring --> Geography["locations.py: verified geometry; no second Claude call"]
+    Geography --> Opportunity["models.py: Opportunity"]
     Opportunity --> Database["db/opportunities.py: committed upsert"]
     Opportunity --> Text["text_export.py: atomic JSON file"]
     Database --> Decisions
@@ -208,7 +209,8 @@ flowchart TD
 | `scraper/extraction.py` | Renders each source, waits for stable content, and extracts HTML text or the supported special PDFs. |
 | `scraper/identity.py` | Defines shared canonical source URLs, normalized Claude input text and SHA-256 content hashes. |
 | `scraper/fixtures.py` | Loads the bundled historical manifest, verifies local HTML/PDF resources, and supplies original Sources and saved article text without HTTP or a browser. |
-| `scraper/structuring.py` | Calls Claude, validates the response, derives canonical source identity, and returns a complete Opportunity. |
+| `scraper/structuring.py` | Makes one Claude call for metadata and geographic scope, resolves geography, and returns a validated Opportunity. |
+| `scraper/locations.py` | Resolves evidenced places through official geographic APIs or supplied verified candidates, validates scope and topology, and records location decisions without caching. |
 | `scraper/pipeline.py` | Owns the collection CLI and resource lifecycle; orchestrates discovery, extraction, validation, persistence, and terminal summaries. |
 | `scraper/run_log.py` | Copies text-mode CLI stdout/stderr into a unique, flushed UTF-8 run transcript; restores streams and reports file errors safely. |
 | `scraper/decision_log.py` | Writes file-only JSONL article decisions, including hash comparisons and committed save outcomes; never installs a console handler. |
@@ -355,11 +357,11 @@ fall back to a potentially remote application database.
 When `--text`, `--txt` or `--fixtures` is used, each CLI invocation also creates
 `output/logs/<run-id>.txt` relative to the project root and prints its location.
 It preserves the usual terminal output while copying Python stdout/stderr
-messages: extraction progress, Claude starts/retries, validation errors,
+messages: extraction progress, Claude starts, validation errors,
 PASS/FAIL, skips and summaries. For example:
 
 ```text
-Coliban Water: retrying Claude 1/1: https://connect.coliban.com.au/guildford-clear-water-storage-tank
+Coliban Water: structuring with Claude: https://connect.coliban.com.au/guildford-clear-water-storage-tank
 ```
 
 The transcript is written incrementally and flushed, so interrupted runs keep
@@ -373,7 +375,7 @@ Default database-output mode creates no text transcript.
 | --- | --- |
 | `output/raw/<index-folder>/<article>.txt` | Exact normalized extractor text, saved before Claude. |
 | `<output-dir>/<index>.txt` | Validated opportunity JSON array. |
-| `output/logs/<run-id>.txt` | Terminal progress/errors, including Claude retries; no added prompts, article bodies or raw response dumps. |
+| `output/logs/<run-id>.txt` | Terminal progress/errors, including Claude starts and validation failures; no added prompts, article bodies or raw response dumps. |
 | `output/logs/scraper.jsonl` | Structured article history decisions, separate from the terminal transcript. |
 
 Collection appends article decisions to `output/logs/scraper.jsonl`, resolved
@@ -381,11 +383,13 @@ relative to the project root. Override it with `main.py --log-file PATH`.
 The JSONL events stay out of terminal PASS/FAIL output and JSON-array `.txt`
 files. Each event includes its run, UTC timestamp, index, original/canonical
 source URL and decision: `new`, `changed`, `unchanged`, `deleted`, `failed` or
-`saved`. Hash comparisons include previous/current hashes where available.
-The JSONL log excludes exception details, extracted bodies and credentials. A
+`saved`, `refresh` or `location`. Hash comparisons include previous/current hashes where available.
+Location events include outcomes, provider/dataset identifiers and up to 400 characters
+of supporting source evidence. The JSONL log excludes exception details, full
+article bodies and credentials. A
 JSONL file failure stops processing rather than redirecting events to the console.
 
-`new` and `changed` mean eligible for Claude, not successfully processed.
+`new`, `changed` and `refresh` mean eligible for Claude, not successfully processed.
 `saved` in database mode means the write committed; a writer used inside an
 outer transaction does not emit a committed-save event. A text-save event has
 `destination="text"` and `history_advanced=false`; it does not make later database
@@ -422,6 +426,65 @@ unchanged-content deduplication, not historical equality between article capture
 The runner uses listing membership recorded in the manifest and checked against
 saved HTML; it does not replay browser pagination. See the full
 [41-index comparison schedule and limitations](docs/history-replay.md).
+
+## Verified affected locations
+
+The single Claude response includes internal `geographicScope` evidence alongside
+metadata. It never supplies coordinates or final geometry. Python checks exact
+source excerpts, geographic roles and explicit state qualifiers, then resolves
+unambiguous matches through the [Geoscience Australia gazetteer](https://services.ga.gov.au/gis/rest/services/Composite_Gazetteer_of_Australia/MapServer/0)
+for representative place points or [ABS ASGS 2026 geographic services](https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs/edition-4-july-2026-june-2031/access-and-downloads/geospatial-web-services)
+for locality, local-government and state boundaries. Lookups request WGS84 GeoJSON,
+have a 20-second timeout and one HTTP retry, and use no cache. There is no second
+Claude call or model-generated geometry.
+
+Location means the area affected, independently of jurisdiction. Offices, contact
+addresses, venues and incidental mentions do not become locations. Ambiguous
+matches and unsupported representations produce no map. A representative place
+point is labelled accordingly; a specific site is not substituted with its town
+or an area's centroid. Exact sites, national boundaries and other source-specific
+geography need supplied verified candidates. Version one does not fetch arbitrary
+linked GIS files or convert shapefiles, screenshots or projected source data.
+`LocationResolver(supplied=...)` accepts trusted candidates from code before API
+lookup; they are not accepted from Claude. `compose_indexes(location_resolver=...)`
+and `structure_listing(location_resolver=...)` allow injection for controlled use.
+
+Python copies verified geometry and uses Pydantic plus Shapely to reject invalid
+coordinates, nesting, empty geometry, unclosed rings and invalid topology. Polygon
+holes and separate MultiPolygon areas are preserved unchanged, with no repairs,
+centroid substitution or simplification. Multiple points and mixed point/area
+sets cannot be exported as a single location. Separate verified areas can form a
+MultiPolygon only when their combination is valid; an unresolved affected area
+prevents exporting a misleading partial map.
+
+A successful no-location determination writes SQL NULL and omits the location
+property in exported JSON, including deliberate removal of an older map. Lookup
+outages, invalid source geometry and invalid model evidence fail the article and
+preserve its prior successful record/hash. Diagnostics use file-only `location`
+events; internal scope, provenance and excerpts do not enter public location JSON.
+
+Refresh selected articles after geographic data or resolution rules change:
+
+```bash
+uv run python main.py --refresh-locations --index "Coliban Water"
+```
+
+This bypasses unchanged-text skipping and reprocesses the complete opportunity;
+IDs remain stable, deleted URLs stay excluded and limits still apply. It uses the
+same text-history hash and requires no schema change. `--text` still never advances
+history. Ordinary `--fixtures` uses offline resolution with supplied candidates
+only; absent candidates mean no map and never trigger geographic network access.
+It still calls real Claude. Synthetic geographic test fixtures are not geographic
+evidence for real articles and are not automatically attached during replay.
+
+Run offline location and one-call regression checks with:
+
+```bash
+uv run python -m unittest tests.test_locations tests.test_deadline_precision tests.test_eligibility tests.test_extraction_run_log tests.test_fixtures.FixtureTests
+```
+
+The location contract is described in [LOCATIONS.md](docs/LOCATIONS.md). Its broader
+website database-protocol changes remain separate from this location implementation.
 
 ## Opportunity validation and database mapping
 
@@ -479,8 +542,10 @@ schema changes are applied, then seeded from `sql/seed_website_indexes.sql`.
 The deadline precision column defaults to `datetime`; month-level values must
 be normalized to the beginning of the month in UTC.
 
-One initial attempt plus one retry is the complete Claude attempt budget; SDK retries are disabled. The model is explicitly configured, with no
-hard-coded default.
+Each attempted article gets at most one Claude API call. Both application and SDK
+retries are disabled, including for invalid responses and API failures. A later
+invocation may try again because failures do not advance history. The model is
+explicitly configured, with no hard-coded default.
 
 IDs come from URL slugs, not titles or Claude. Canonicalization removes known
 tracking parameters and fragments while preserving meaningful queries. Treaty

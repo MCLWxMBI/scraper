@@ -32,6 +32,7 @@ from scraper.db.history import HistoryError, check_history_table
 from scraper.db.opportunities import (
     OpportunityStorageError, check_opportunity_table, save_opportunity,
 )
+from scraper.locations import LocationResolver
 from scraper.structuring import (
     CLAUDE_TIMEOUT_SECONDS,
     InvalidListingError,
@@ -57,6 +58,8 @@ def compose_indexes(
     connection: psycopg.Connection | None = None,
     fixtures: FixtureCollection | None = None,
     decision_log: DecisionLog | None = None,
+    refresh_locations: bool = False,
+    location_resolver: LocationResolver | None = None,
 ) -> int:
     """Save validated records to the selected destination and continue on errors.
 
@@ -74,6 +77,7 @@ def compose_indexes(
     if fixtures is None and connection is None:
         raise ValueError('Live discovery requires a history database connection')
     output_dir = Path(output_dir)
+    resolver = location_resolver if location_resolver is not None else LocationResolver(offline=fixtures is not None)
     completed = failed = empty = skipped = extracted = valid = invalid = extraction_failed = 0
     source_failures = 0
     history_skipped = 0
@@ -116,11 +120,12 @@ def compose_indexes(
                 if fixtures is not None:
                     prepared = discovery.prepare_articles(
                         fixtures.sources(url), lambda source: fixtures.extract(source, url),
-                        lambda urls: {}, limit=limit, decision=decision,
+                        lambda urls: {}, limit=limit, decision=decision, refresh_locations=refresh_locations,
                     )
                 else:
                     prepared = discovery.discover_articles(name, url, browser, connection, limit=limit,
-                                                          **({'decision': decision} if decision else {}))
+                                                          **({'decision': decision} if decision else {}),
+                                                          **({'refresh_locations': True} if refresh_locations else {}))
             except (DecisionLogError, RunLogError):
                 raise
             except HistoryError as exc:
@@ -194,7 +199,10 @@ def compose_indexes(
 
                     print(f'{name}: structuring with Claude: {source.url}', flush=True)
                     try:
-                        opportunity = structure_listing(text, source, index_name=name, client=client, model=model)
+                        opportunity = structure_listing(text, source, index_name=name, client=client, model=model,
+                            location_resolver=resolver,
+                            location_diagnostic=(lambda **fields: decision(source.url, 'location', **fields))
+                                                if decision else None)
                     except InvalidListingError as exc:
                         invalid += 1
                         index_invalid += 1
@@ -281,6 +289,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--log-file', type=Path, default=DEFAULT_LOG,
                         help='Article decision JSONL log (default: project output/logs/scraper.jsonl)')
+    parser.add_argument('--refresh-locations', action='store_true',
+                        help='Reprocess unchanged articles for geography updates; deleted URLs stay excluded')
     parser.add_argument('--fixtures', action='store_true',
                         help='Read bundled saved articles; call real Claude and write text output without PostgreSQL')
     parser.add_argument('--index', metavar='NAME', help='Exact index name (case-insensitive)')
@@ -349,13 +359,14 @@ def _run(args, parser, *, run_id=None) -> int:
             if not model:
                 raise ValueError('Set CLAUDE_MODEL in .env or the environment, or pass --model')
 
-            # This module's listing-level retry budget is the only API retry layer.
+            # One Claude API call per article; no SDK or application retries.
             with Anthropic(api_key=api_key, max_retries=0, timeout=CLAUDE_TIMEOUT_SECONDS) as client:
                 if fixtures is not None:
                     print('Fixture input: saved pages only; real Claude calls incur API usage.', flush=True)
                     return compose_indexes(
                         indexes, None, args.output_dir or Path('output/fixtures'), args.limit,
                         client=client, model=model, output_mode='txt', fixtures=fixtures, decision_log=decision_log,
+                        refresh_locations=args.refresh_locations,
                     )
                 with sync_playwright() as playwright:
                     browser = playwright.chromium.launch(headless=True)
@@ -364,6 +375,7 @@ def _run(args, parser, *, run_id=None) -> int:
                             indexes, browser, args.output_dir or Path('output'), args.limit,
                             client=client, model=model, output_mode='txt' if args.text else 'db',
                             connection=connection, decision_log=decision_log,
+                            refresh_locations=args.refresh_locations,
                         )
                     finally:
                         browser.close()
