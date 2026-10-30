@@ -14,7 +14,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import main as entrypoint
-from scraper import discovery, extraction, pipeline
+from scraper import discovery, extraction, pipeline, text_export
 from scraper.config import PROJECT_DIR
 from scraper.fixtures import FIXTURE_DIR, FixtureCollection, FixtureError
 from scraper.models import Opportunity
@@ -27,6 +27,13 @@ class FixtureTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.output = self.root / 'output'
+        self.raw_root = self.root / 'raw'
+        log_patch = patch('scraper.run_log.RUN_LOG_DIR', self.root / 'run-logs')
+        log_patch.start()
+        self.addCleanup(log_patch.stop)
+        raw_patch = patch('scraper.text_export.RAW_OUTPUT_DIR', self.raw_root)
+        raw_patch.start()
+        self.addCleanup(raw_patch.stop)
         self.url = 'https://example.com/water-consultation?version=2'
         self.html = b'<main><h1>Saved consultation</h1><p>Archived article text.</p></main>'
         self.asset = self.resource('article.html', self.html, self.url)
@@ -86,7 +93,10 @@ class FixtureTests(unittest.TestCase):
     def test_both_text_flags_are_accepted_with_fixtures(self):
         for flag in ('--text', '--txt'):
             with self.subTest(flag=flag):
-                self.assertEqual(self.run_cli([flag])[0], 0)
+                status, claude, _ = self.run_cli([flag])
+                self.assertEqual(status, 0)
+                raw = text_export.raw_article_path(self.index['name'], self.index['url'], self.url)
+                self.assertEqual(raw.read_text(), claude.call_args.args[0])
 
     def test_default_output_and_collection_paths(self):
         collection = FixtureCollection(self.root)
@@ -143,6 +153,7 @@ class FixtureTests(unittest.TestCase):
                 claude.assert_not_called()
                 self.assertNotIn('PASS https', self.stdout.getvalue())
                 self.assertIn('FAIL https', self.stderr.getvalue())
+                self.assertFalse(self.raw_root.exists())
 
     def test_unavailable_index_is_skip_without_credentials_or_output(self):
         self.index['articles'] = []
@@ -247,6 +258,16 @@ class FixtureTests(unittest.TestCase):
 
 
 class BundledCollectionTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        log_patch = patch('scraper.run_log.RUN_LOG_DIR', Path(temporary.name) / 'run-logs')
+        log_patch.start()
+        self.addCleanup(log_patch.stop)
+        raw_patch = patch('scraper.text_export.RAW_OUTPUT_DIR', Path(temporary.name) / 'raw')
+        raw_patch.start()
+        self.addCleanup(raw_patch.stop)
+
     def test_coliban_samples_replay_through_the_fixture_pipeline(self):
         collection = FixtureCollection()
         index = next(i for i in collection.indexes if i['name'] == 'Coliban Water')
@@ -415,6 +436,183 @@ class BundledCollectionTests(unittest.TestCase):
                         found = True
             with self.subTest(index=index_id):
                 self.assertTrue(found)
+
+
+class RawExportTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from scraper.identity import normalize_article_text
+        cls.collection = FixtureCollection()
+        cls.index = next(i for i in cls.collection.indexes if i['id'] == 9)
+        cls.sources = cls.collection.sources(cls.index['url'])
+        cls.texts = {s.url: normalize_article_text(cls.collection.extract(s, cls.index['url']))
+                     for s in cls.sources}
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.output = self.root / 'custom-structured'
+        self.raw_root = self.root / 'raw'
+        raw_patch = patch('scraper.text_export.RAW_OUTPUT_DIR', self.raw_root)
+        raw_patch.start()
+        self.addCleanup(raw_patch.stop)
+        self.stdout, self.stderr = io.StringIO(), io.StringIO()
+
+    def raw_path(self, source):
+        return text_export.raw_article_path(self.index['name'], self.index['url'], source.url)
+
+    def run_pipeline(self, *, structure=None, fixtures=True, connection=None, mode='txt', sources=None):
+        def model(text, source, **kwargs):
+            if mode == 'txt':
+                self.assertEqual(self.raw_path(source).read_bytes(), text.encode('utf-8'))
+            return Opportunity(id=article_slug(source.url), title='Fixture raw export test',
+                               sourceUrl=canonical_source_url(source.url), sourceOrg=self.index['name'],
+                               fullText=[text], jurisdiction='Victoria', startDate=None,
+                               submissionDeadline='2027-01-01T00:00:00Z', category=['Water & resources'], tags=None)
+        with patch('scraper.pipeline.structure_listing', side_effect=structure or model) as claude, \
+             patch('scraper.pipeline.connect_database', side_effect=AssertionError('Unexpected connection')), \
+             patch('scraper.pipeline.Anthropic', side_effect=AssertionError('Real Claude forbidden')), \
+             patch('scraper.pipeline.sync_playwright', side_effect=AssertionError('Browser forbidden')), \
+             patch('urllib.request.urlopen', side_effect=AssertionError('HTTP forbidden')), \
+             patch('scraper.discovery.traverse_index', return_value=sources or self.sources), \
+             patch('scraper.extraction.process_single_source', side_effect=lambda s, b: self.texts[s.url]) as extract, \
+             redirect_stdout(self.stdout), redirect_stderr(self.stderr):
+            status = pipeline.compose_indexes([(self.index['name'], self.index['url'])], None, self.output,
+                client=Mock(), model='mocked', output_mode=mode, connection=connection,
+                fixtures=self.collection if fixtures else None)
+        return status, claude, extract
+
+    def test_exact_raw_text_precedes_claude_and_is_independent_of_output_dir_and_cwd(self):
+        elsewhere = self.root / 'elsewhere'
+        elsewhere.mkdir()
+        with chdir(elsewhere):
+            status, claude, _ = self.run_pipeline()
+        self.assertEqual(status, 0)
+        self.assertEqual(claude.call_count, len(self.sources))
+        for source in self.sources:
+            self.assertEqual(self.raw_path(source).read_bytes(), self.texts[source.url].encode('utf-8'))
+        records = json.loads(next(self.output.glob('*.txt')).read_text())
+        self.assertEqual([r['fullText'] for r in records], [[self.texts[s.url]] for s in self.sources])
+        self.assertNotIn('rawText', records[0])
+        self.assertFalse((self.output / 'raw').exists())
+        self.assertFalse((elsewhere / 'output').exists())
+        self.assertEqual(self.raw_path(self.sources[0]).parent.name,
+                         Path(text_export.index_filename(self.index['name'], self.index['url'])).stem)
+
+    def test_raw_is_retained_after_invalid_results_or_api_failures(self):
+        for failure, expected in ((InvalidListingError('Missing deadline', attempts=1), 0),
+                                  (RuntimeError('API unavailable'), 1)):
+            with self.subTest(failure=type(failure).__name__):
+                def fail(*args, **kwargs):
+                    raise failure
+                self.assertEqual(self.run_pipeline(structure=fail)[0], expected)
+                for source in self.sources:
+                    self.assertEqual(self.raw_path(source).read_text(), self.texts[source.url])
+                self.assertEqual(json.loads(next(self.output.glob('*.txt')).read_text()), [])
+
+    def test_raw_is_retained_when_structured_persistence_fails(self):
+        original = text_export.write_records
+        def fail_nonempty(path, records):
+            if records:
+                raise OSError('Structured output failed')
+            return original(path, records)
+        with patch('scraper.text_export.write_records', side_effect=fail_nonempty):
+            self.assertEqual(self.run_pipeline()[0], 1)
+        self.assertTrue(self.raw_path(self.sources[0]).exists())
+        self.assertNotIn('PASS https', self.stdout.getvalue())
+
+    def test_raw_failure_prevents_that_claude_call_and_continues(self):
+        original = text_export.write_raw
+        def fail_first(path, text):
+            if path == self.raw_path(self.sources[0]):
+                raise OSError('Raw destination unavailable')
+            original(path, text)
+        with patch('scraper.text_export.write_raw', side_effect=fail_first):
+            status, claude, _ = self.run_pipeline()
+        self.assertEqual(status, 1)
+        self.assertEqual([c.args[1] for c in claude.call_args_list], [self.sources[1]])
+        self.assertEqual(self.stderr.getvalue().count('FAIL ' + self.sources[0].url), 1)
+        self.assertIn('raw save:', self.stderr.getvalue())
+        self.assertNotIn('PASS ' + self.sources[0].url, self.stdout.getvalue())
+        self.assertIn('1 PASS, 1 FAIL', self.stdout.getvalue())
+        self.assertEqual(len(json.loads(next(self.output.glob('*.txt')).read_text())), 1)
+
+    def test_saved_pdf_text_is_exported_without_changes(self):
+        from scraper.identity import normalize_article_text
+        self.index = next(i for i in self.collection.indexes if i['id'] == 24)
+        self.sources = self.collection.sources(self.index['url'])
+        self.texts = {source.url: normalize_article_text(self.collection.extract(source, self.index['url']))
+                      for source in self.sources}
+        self.assertEqual(self.run_pipeline()[0], 0)
+        for source in self.sources:
+            self.assertEqual(self.raw_path(source).read_bytes(), self.texts[source.url].encode('utf-8'))
+
+    def test_atomic_overwrite_preserves_old_bytes_on_failure_and_other_files(self):
+        source = self.sources[0]
+        path = self.raw_path(source)
+        text_export.write_raw(path, 'previous text')
+        unrelated = path.parent / 'another-article.txt'
+        unrelated.write_text('retain')
+        with patch('pathlib.Path.replace', side_effect=OSError('Replace failed')):
+            with self.assertRaises(OSError):
+                text_export.write_raw(path, self.texts[source.url])
+        self.assertEqual(path.read_text(), 'previous text')
+        self.assertEqual(list(path.parent.glob('*.tmp')), [])
+        self.assertEqual(self.run_pipeline()[0], 0)
+        self.assertEqual(path.read_text(), self.texts[source.url])
+        self.assertEqual(unrelated.read_text(), 'retain')
+
+    def test_filenames_are_safe_and_use_canonical_url_identity(self):
+        url = self.sources[0].url
+        self.assertEqual(self.raw_path(self.sources[0]),
+                         text_export.raw_article_path(self.index['name'], self.index['url'], url + '?utm_source=x#top'))
+        self.assertNotEqual(text_export.raw_article_path(self.index['name'], self.index['url'], url + '?v=1'),
+                            text_export.raw_article_path(self.index['name'], self.index['url'], url + '?v=2'))
+        path = text_export.raw_article_path('../ unsafe index', self.index['url'], 'https://example.org/%2E%2E%2Fescape')
+        self.assertTrue(path.is_relative_to(self.raw_root))
+        self.assertNotIn('..', path.relative_to(self.raw_root).parts)
+
+    @unittest.skipUnless(os.environ.get('RAW_EXPORT_POSTGRES_TESTS') == '1',
+                         'Set RAW_EXPORT_POSTGRES_TESTS=1 for rolled-back checks on devcontainer scraper')
+    def test_live_history_skips_export_and_database_mode_against_real_postgres(self):
+        import psycopg
+        from scraper.identity import content_hash
+        with psycopg.connect('postgresql://scraper:scraper@postgres:5432/scraper',
+                             autocommit=True, connect_timeout=10) as connection:
+            keys = [canonical_source_url(s.url) for s in self.sources]
+            before = connection.execute('SELECT source_url,title,hash,deleted FROM article_history WHERE source_url=ANY(%s) ORDER BY source_url', (keys,)).fetchall()
+            before_opportunities = connection.execute('SELECT count(*) FROM opportunities').fetchone()
+            with connection.transaction():
+                for source, deleted in zip(self.sources, (False, True)):
+                    connection.execute('''INSERT INTO article_history (source_url,title,hash,deleted)
+                        VALUES (%s,%s,%s,%s) ON CONFLICT(source_url) DO UPDATE
+                        SET hash=EXCLUDED.hash,deleted=EXCLUDED.deleted''',
+                        (canonical_source_url(source.url), 'Raw export fixture test', content_hash(self.texts[source.url]), deleted))
+                status, claude, extract = self.run_pipeline(fixtures=False, connection=connection)
+                self.assertEqual(status, 0)
+                claude.assert_not_called()
+                self.assertEqual([c.args[0] for c in extract.call_args_list], [self.sources[0]])
+                self.assertEqual(self.raw_path(self.sources[0]).read_text(), self.texts[self.sources[0].url])
+                self.assertFalse(self.raw_path(self.sources[1]).exists())
+                self.assertIn('SKIPPED (unchanged)', self.stdout.getvalue())
+                self.assertIn('SKIPPED (deleted)', self.stdout.getvalue())
+                self.assertEqual(json.loads(next(self.output.glob('*.txt')).read_text()), [])
+                after = connection.execute('SELECT source_url,hash,deleted FROM article_history WHERE source_url=ANY(%s)', (keys,)).fetchall()
+                self.assertEqual({r[0]:(r[1],r[2]) for r in after},
+                                 {key:(content_hash(self.texts[s.url]), deleted)
+                                  for key,s,deleted in zip(keys,self.sources,(False,True))})
+                # Force new work in database mode, then prove it never calls raw export.
+                connection.execute('UPDATE article_history SET hash=NULL,deleted=FALSE WHERE source_url=%s', (keys[0],))
+                with patch('scraper.text_export.write_raw', side_effect=AssertionError('DB mode exported raw text')):
+                    status, claude, _ = self.run_pipeline(fixtures=False, connection=connection,
+                                                         mode='db', sources=[self.sources[0]])
+                self.assertEqual(status, 0)
+                claude.assert_called_once()
+                raise psycopg.Rollback()
+            self.assertEqual(connection.execute('SELECT source_url,title,hash,deleted FROM article_history WHERE source_url=ANY(%s) ORDER BY source_url', (keys,)).fetchall(), before)
+            self.assertEqual(connection.execute('SELECT count(*) FROM opportunities').fetchone(), before_opportunities)
+
 
 
 class FixtureCheckoutTests(unittest.TestCase):

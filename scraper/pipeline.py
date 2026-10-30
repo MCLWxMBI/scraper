@@ -98,6 +98,7 @@ def compose_indexes(
         index_failed = False
         index_invalid = 0
         index_source_failures = 0
+        index_history_skipped = 0
         records: list[dict] = []
         selected_hashes = {}
 
@@ -161,6 +162,7 @@ def compose_indexes(
                             continue
                     if article.skipped:
                         history_skipped += 1
+                        index_history_skipped += 1
                         if article.skipped == 'unchanged':
                             extracted += 1
                         print(f'{name}: SKIPPED ({article.skipped}): {source.url}', flush=True)
@@ -273,7 +275,7 @@ def compose_indexes(
         counts = (f'{len(records)} PASS, {index_source_failures} FAIL' if output_mode == 'txt'
                   else f'{len(records)} valid, {index_invalid} invalid')
         print(f'{name}: {"FAILED" if index_failed else "COMPLETE"}: '
-              f'{counts}; output={destination}', flush=True)
+              f'{counts}, {index_history_skipped} skipped; output={destination}', flush=True)
 
     counts = (f'{valid} PASS, {source_failures} FAIL' if output_mode == 'txt'
               else f'{extracted} listings extracted, {valid} valid, {invalid} invalid, '

@@ -249,6 +249,15 @@ PASS https://example.gov.au/project
 FAIL https://example.gov.au/other — No deadline timestamp returned
 ```
 
+Each index summary includes its article skip count, including zero. Unchanged
+and deleted articles count as skipped; candidates outside `--limit` do not.
+Database and text modes both report the count, for example:
+
+```text
+Melbourne Water: COMPLETE: 2 valid, 0 invalid, 5 skipped; output=PostgreSQL
+Melbourne Water: COMPLETE: 2 PASS, 0 FAIL, 5 skipped; output=output/melbourne-water-62822941dcc9.txt
+```
+
 `PASS` is printed only after validation and a successful file save. `FAIL`
 includes invalid metadata, missing deadlines, URL/slug problems, extraction/API
 errors, and file-save failures, with a reason. Index and run summaries combine
@@ -336,6 +345,17 @@ To deliberately reimport, ensure the opportunity is gone, then explicitly delete
 its matching canonical `source_url` from `public.article_history`. Normal saves
 never reset `deleted` to false. All opportunity writers must use canonical URLs.
 `TRUNCATE` bypasses row-level deletion triggers; use `DELETE` for post removal.
+
+To clear only history in the devcontainer `scraper` database, run inside the
+devcontainer (stop collection first):
+
+```bash
+./scripts/reset_history.sh
+```
+
+This preserves opportunities and website indexes, but removes all successful
+hashes and deletion markers, making those articles eligible for processing again.
+It targets the Compose PostgreSQL service directly and ignores `DATABASE_URL`.
 
 Run `uv run python -m scraper setup-db` manually to install the table/triggers
 before live collection. Initial setup refuses unexpected existing opportunities
