@@ -1,0 +1,77 @@
+name: Daily scraper
+
+on:
+  schedule:
+    # 01:00 AEDT / 00:00 AEST on the following local calendar day.
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: scraper-production
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          python-version: '3.13'
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Install Chromium
+        run: uv run --frozen playwright install --with-deps chromium
+
+      - name: Collect production opportunities
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p output/logs
+          {
+            missing=0
+            for name in DATABASE_URL CLAUDE_MODEL ANTHROPIC_ORGANIZATION_ID ANTHROPIC_FEDERATION_RULE_ID ANTHROPIC_SERVICE_ACCOUNT_ID ANTHROPIC_WORKSPACE_ID ACTIONS_ID_TOKEN_REQUEST_URL ACTIONS_ID_TOKEN_REQUEST_TOKEN; do
+              value="${!name:-}"
+              if [[ -z "${value//[[:space:]]/}" ]]; then
+                echo "Missing required configuration: $name" >&2
+                missing=1
+              fi
+            done
+            if (( missing )); then
+              exit 1
+            fi
+            uv run --frozen python -u main.py
+          } 2>&1 | tee output/logs/actions-run.txt
+
+      - name: Upload collection logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: scraper-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/logs/actions-run.txt
+            output/logs/scraper.jsonl
+          retention-days: 14
+          if-no-files-found: ignore

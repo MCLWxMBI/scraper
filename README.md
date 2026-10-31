@@ -24,18 +24,13 @@ directory. Supplied environment variables take precedence. A missing or blank
 `DATABASE_URL` is an error; connections do not fall back to individual `PG*`
 variables. `.env` is ignored by Git and credentials are not printed.
 
-A future GitHub Actions workflow can invoke the root `main.py` and explicitly
-map repository secrets into the step environment:
-
-```yaml
-env:
-  DATABASE_URL: ${{ secrets.DATABASE_URL }}
-  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-  CLAUDE_MODEL: ${{ secrets.CLAUDE_MODEL }}
-```
-
-That database must be reachable from the runner; `postgres` above is a local
-Compose hostname. A workflow has not been added yet.
+Local collection uses `ANTHROPIC_API_KEY`. GitHub Actions uses Anthropic OIDC
+instead: `create_claude_client()` selects federation when any of its four
+`ANTHROPIC_*_ID` settings below is configured; otherwise it requires an API key.
+Incomplete federation configuration is an error, with no API-key fallback.
+Unset `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` when using federation;
+conflicting static credentials are rejected. The Claude model, prompts and
+one-call-per-article policy are the same with either authentication method.
 
 Install dependencies and initialize the database explicitly:
 
@@ -44,6 +39,64 @@ uv sync --locked
 uv run playwright install --with-deps chromium
 uv run python -m scraper setup-db
 ```
+
+### Daily production collection with GitHub Actions
+
+[Daily scraper](.github/workflows/scraper.yml) runs at **14:00 UTC daily**:
+**01:00 AEDT / 00:00 AEST on the next local day**. Scheduled starts are best
+effort and can be delayed. To run manually, open **Actions → Daily scraper →
+Run workflow** and select the default branch. Runs on other branches are
+skipped. Both triggers use the shared production concurrency group and a
+six-hour timeout; an active run is not cancelled by a newer invocation.
+
+Under **Settings → Secrets and variables → Actions**, configure:
+
+| Type | Name | Value |
+| --- | --- | --- |
+| Repository secret | `DATABASE_URL` | Production PostgreSQL URL, including the provider's required TLS parameters. |
+| Repository variable | `CLAUDE_MODEL` | Supported structured-output model ID. |
+| Repository variable | `ANTHROPIC_ORGANIZATION_ID` | Anthropic organization ID. |
+| Repository variable | `ANTHROPIC_FEDERATION_RULE_ID` | Anthropic federation rule ID (`fdrl_...`). |
+| Repository variable | `ANTHROPIC_SERVICE_ACCOUNT_ID` | Service account ID (`svac_...`). |
+| Repository variable | `ANTHROPIC_WORKSPACE_ID` | Workspace ID (`wrkspc_...`). |
+
+No `ANTHROPIC_API_KEY` secret is needed. In the Claude Console's **Workload
+identity → Connect workload → GitHub Actions** setup, register the GitHub
+issuer, choose a service account with membership in the target workspace, and
+configure the federation rule to trust only this repository, its default branch
+and `.github/workflows/scraper.yml`. Match the repository's actual OIDC claims,
+including `ref`, `workflow_ref` and `event_name` (`schedule` or
+`workflow_dispatch`), using the rule's conditions. Use audience
+`https://api.anthropic.com`. See [Anthropic's GitHub Actions OIDC guide](https://platform.claude.com/docs/en/manage-claude/wif-providers/github-actions).
+
+The workflow grants `contents: read` and `id-token: write`. GitHub automatically
+provides the identity-request URL and credential. The SDK's token provider
+fetches fresh identity tokens when required and exchanges them for short-lived
+Anthropic access tokens; long runs do not depend on a single startup token.
+Neither identity tokens nor access tokens are written to files or logged.
+Local `.env` API-key runs continue to work without OIDC configuration.
+
+Run authentication and workflow checks without real credentials, database access
+or Claude charges:
+
+```bash
+uv run python -m unittest tests.test_auth tests.test_workflow
+```
+
+The runner installs Python 3.13, locked dependencies and Chromium, then runs
+`uv run --frozen python -u main.py` against all active production indexes.
+Real Claude usage is charged. Existing article history controls skips; valid
+opportunities and history commit together. Operational errors fail the job;
+ordinary invalid articles retain their existing rejection behavior. The
+workflow never initializes, reseeds or resets a database. Production must
+already have the current schema and indexes and be reachable from the runner;
+`postgres` in the local example is a Compose-only hostname.
+
+The Actions console retains normal progress and skipped counts. The
+`scraper-logs-<run-id>-<attempt>` artifact contains `actions-run.txt` (console
+stdout/stderr) and `scraper.jsonl` (article decisions) when available, uploaded
+after success or failure with 14-day retention. Console capture preserves the
+scraper's nonzero exit status. There is no automatic collection retry.
 
 Setup needs no Claude credentials. It applies `sql/schema.sql` and upserts all
 41 index records: **38 active and three inactive**. Barwon Water (8), VEWH
@@ -205,6 +258,8 @@ flowchart TD
 | `scraper/__init__.py`, `scraper/db/__init__.py` | Define the application and database packages without running collection. |
 | `scraper/dates.py` | Computes date-only structuring metadata in Australia/Sydney, independently of host timezone. |
 | `scraper/config.py` | Resolves repository-root `.env` and SQL paths; loads environment defaults without overriding supplied values. |
+| `scraper/auth.py` | Creates API-key or GitHub OIDC Claude clients, obtains fresh identity tokens for SDK refresh, and sanitizes authentication failures. |
+| `.github/workflows/scraper.yml` | Runs full production collection daily or manually using OIDC and a production database secret; retains console and decision logs. |
 | `scraper/models.py` | Defines immutable Source/WebsiteIndex context, opportunity fields, internal processing metadata, and validated geography/content models. |
 | `scraper/discovery.py` | Traverses listings and pagination; live collection prepares article text, checks history, and returns only new/changed work plus skip/error outcomes. Its standalone CLI remains a raw URL-discovery diagnostic. |
 | `scraper/extraction.py` | Renders each source, waits for stable content, and extracts HTML text or the supported special PDFs. |
