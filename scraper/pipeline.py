@@ -4,7 +4,8 @@ Run ``uv run python main.py`` or use ``--index NAME --limit 1`` for a small
 development run. Use --text for JSON-array .txt output plus raw article text, or --fixtures for
 saved historical HTML/PDF input and text output. Live discovery skips deleted
 URLs and successful unchanged article content before Claude calls.
-ANTHROPIC_API_KEY and CLAUDE_MODEL can be supplied in the project's .env file.
+Local ANTHROPIC_API_KEY and CLAUDE_MODEL can be supplied in the project's .env
+file; GitHub Actions can use Anthropic OIDC instead of an API key.
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ from playwright.sync_api import Browser, sync_playwright
 
 from scraper import extraction, discovery, text_export
 from scraper.config import load_environment
+from scraper.auth import create_claude_client
 from scraper.decision_log import DecisionLog, DecisionLogError, DEFAULT_LOG
 from scraper.run_log import RunLogError, RunTranscript
 from scraper.fixtures import FixtureCollection
@@ -35,7 +37,6 @@ from scraper.db.opportunities import (
 from scraper.locations import LocationResolver
 from scraper.models import WebsiteIndex
 from scraper.structuring import (
-    CLAUDE_TIMEOUT_SECONDS,
     InvalidListingError,
     article_slug,
     canonical_source_url,
@@ -361,15 +362,12 @@ def _run(args, parser, *, run_id=None) -> int:
                 check_history_table(connection)
                 if not args.text:
                     check_opportunity_table(connection)
-            api_key = os.getenv('ANTHROPIC_API_KEY', '').strip()
             model = (args.model or os.getenv('CLAUDE_MODEL', '')).strip()
-            if not api_key:
-                raise ValueError('Set ANTHROPIC_API_KEY in .env or the environment')
-            if not model:
-                raise ValueError('Set CLAUDE_MODEL in .env or the environment, or pass --model')
 
             # One Claude API call per article; no SDK or application retries.
-            with Anthropic(api_key=api_key, max_retries=0, timeout=CLAUDE_TIMEOUT_SECONDS) as client:
+            with create_claude_client() as client:
+                if not model:
+                    raise ValueError('Set CLAUDE_MODEL in .env or the environment, or pass --model')
                 if fixtures is not None:
                     print('Fixture input: saved pages only; real Claude calls incur API usage.', flush=True)
                     return compose_indexes(
