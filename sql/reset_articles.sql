@@ -1,4 +1,4 @@
--- DESTRUCTIVE: manually invoked reset for disposable local development databases only.
+-- DESTRUCTIVE: explicitly invoked reset for the deliberately selected database.
 -- Removes articles and deletion markers so every URL can be imported again.
 -- website_indexes and its seed/sequence are left untouched. Not run by setup.
 BEGIN;

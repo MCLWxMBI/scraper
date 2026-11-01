@@ -279,7 +279,8 @@ flowchart TD
 | `scripts/test_history_replay.sh` | Resolves the project root and invokes the discovery-only historical replay runner. |
 | `tests/history_replay.py` | Replays saved listing membership through real discovery preparation against an isolated Compose PostgreSQL database, then cleans up. |
 | `sql/schema.sql` | Defines indexes, opportunities, article history, constraints, and row-locking deletion/protection triggers. |
-| `sql/reset_articles.sql` | Manually truncates opportunities and history in a disposable database; bypasses deletion triggers and preserves website indexes. Never run automatically. |
+| `sql/reset_articles.sql` | Explicitly truncates opportunities and history in the selected database; bypasses deletion triggers and preserves website indexes. Never run automatically. |
+| `scripts/reset_articles.sh`, `scraper/db/reset_articles.py` | Prompt visibly for a database URL and require `RESET` before executing the article reset SQL. |
 | `sql/seed_website_indexes.sql` | Holds the reviewed, pinned index seed with documented local exclusions; returns expected values for verification. |
 
 Tests live in `tests/`. [Source notes](docs/source-notes.md) record discovery
@@ -414,19 +415,27 @@ It targets the Compose PostgreSQL service directly and ignores `DATABASE_URL`.
 
 Run `uv run python -m scraper setup-db` manually to install the table/triggers
 before live collection. Initial setup refuses unexpected existing opportunities
-without successful history. For a **disposable local development database only**, after
-exporting `DATABASE_URL` in your shell, the explicit reset command is:
+without successful history.
+
+To explicitly clear articles in a chosen database, stop collection and run:
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f sql/reset_articles.sql
+./scripts/reset_articles.sh
 ```
 
-This transactionally clears opportunities and article history when present,
-including deletion markers, and leaves website indexes untouched. Setup and
-collection never invoke this reset. Real existing data needs a separately
-planned migration; do not reset it. Integration tests apply setup only inside
-a uniquely named test database on the devcontainer PostgreSQL service, then drop
-that database. They do not change the configured `scraper` development database.
+First paste the PostgreSQL URL at the prompt. **Input is visible, without
+masking**, including any password in the URL. The script uses only that pasted
+URL; it does not load `.env` or use `DATABASE_URL`. It shows the target host and
+database, then requires typing `RESET` before connecting. It works from any
+working directory when invoked by absolute path.
+
+This executes `sql/reset_articles.sql`, which transactionally clears
+opportunities and article history when present, including deletion markers,
+and leaves website indexes and their sequence untouched. The reset is destructive
+and can target production: use it only when deliberately clearing that database.
+Setup, collection, and scheduled workflows never invoke it automatically.
+Connection and SQL errors return nonzero without printing credentials.
+For a schema upgrade that must preserve existing data, plan a migration instead.
 
 Only one collector should run at a time. Deletion can race with already-prepared
 or running Claude work; the guarded save still rejects a deleted identity. A crash after Claude responds but before
