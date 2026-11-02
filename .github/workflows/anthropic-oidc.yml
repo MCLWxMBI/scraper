@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       audience:
-        description: OIDC audience expected by the federation rule (blank uses GitHub's default)
+        description: OIDC audience expected by the federation rule
+        default: https://api.anthropic.com
         required: false
         type: string
 
@@ -19,7 +20,7 @@ jobs:
       - name: Mint GitHub OIDC token and exchange with Anthropic
         shell: bash
         env:
-          OIDC_AUDIENCE: ${{ inputs.audience }}
+          OIDC_AUDIENCE: ${{ inputs.audience || 'https://api.anthropic.com' }}
           ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
           ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
           ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
