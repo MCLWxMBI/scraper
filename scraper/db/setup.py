@@ -26,6 +26,7 @@ def check_schema(conn: psycopg.Connection) -> str:
         LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
         WHERE a.attrelid = 'public.website_indexes'::regclass
           AND a.attnum > 0 AND NOT a.attisdropped
+          AND a.attname IN ('id', 'name', 'index_url', 'active', 'notes')
         ORDER BY a.attnum
     """).fetchall()
     sequence = conn.execute(

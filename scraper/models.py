@@ -176,8 +176,7 @@ class OpportunityMetadata(ContractModel):
                 raise ValueError('Month deadline must be the first day at midnight UTC')
         if self.startDate is not None and deadline is not None:
             start = datetime.fromisoformat(self.startDate)
-            reversed_dates = ((start.year, start.month) > (deadline.year, deadline.month)
-                              if self.submissionDeadlinePrecision == 'month' else start > deadline)
+            reversed_dates = start > deadline
             if reversed_dates:
                 raise ValueError('startDate must not be later than submissionDeadline')
         return self

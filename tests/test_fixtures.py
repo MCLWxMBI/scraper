@@ -65,7 +65,7 @@ class FixtureTests(unittest.TestCase):
         with patch('scraper.pipeline.FixtureCollection', return_value=collection), \
              patch('scraper.pipeline.load_environment'), \
              patch.dict(os.environ, {'ANTHROPIC_API_KEY': 'test-key', 'CLAUDE_MODEL': 'test-model'}, clear=True), \
-             patch('scraper.pipeline.Anthropic') as client, \
+             patch('scraper.auth.Anthropic') as client, \
              patch('scraper.pipeline.connect_database', side_effect=AssertionError('Database forbidden')) as database, \
              patch('scraper.pipeline.sync_playwright', side_effect=AssertionError('Browser forbidden')) as browser, \
              patch('scraper.discovery.traverse_index', side_effect=AssertionError('Discovery forbidden')), \
@@ -103,7 +103,7 @@ class FixtureTests(unittest.TestCase):
         with patch('scraper.pipeline.FixtureCollection', return_value=collection), \
              patch('scraper.pipeline.load_environment'), \
              patch.dict(os.environ, {'ANTHROPIC_API_KEY': 'test', 'CLAUDE_MODEL': 'model'}, clear=True), \
-             patch('scraper.pipeline.Anthropic'), \
+             patch('scraper.auth.Anthropic'), \
              patch('scraper.pipeline.compose_indexes', return_value=0) as compose:
             self.assertEqual(pipeline.main(['--fixtures']), 0)
         self.assertEqual(compose.call_args.args[2], Path('output/fixtures'))
@@ -120,7 +120,7 @@ class FixtureTests(unittest.TestCase):
         collection = FixtureCollection(self.root)
         with patch('scraper.pipeline.FixtureCollection', return_value=collection), \
              patch('scraper.pipeline.load_environment'), patch.dict(os.environ, {}, clear=True), \
-             patch('scraper.pipeline.Anthropic') as client, \
+             patch('scraper.auth.Anthropic') as client, \
              patch('scraper.pipeline.connect_database') as database, \
              redirect_stderr(self.stderr):
             self.assertEqual(pipeline.main(['--fixtures']), 1)
@@ -161,7 +161,7 @@ class FixtureTests(unittest.TestCase):
         collection = FixtureCollection(self.root)
         with patch('scraper.pipeline.FixtureCollection', return_value=collection), \
              patch('scraper.pipeline.load_environment'), patch.dict(os.environ, {}, clear=True), \
-             patch('scraper.pipeline.Anthropic') as client, \
+             patch('scraper.auth.Anthropic') as client, \
              patch('scraper.pipeline.connect_database') as database, \
              redirect_stdout(self.stdout):
             self.assertEqual(pipeline.main(['--fixtures']), 0)
@@ -287,7 +287,7 @@ class BundledCollectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, \
              patch('scraper.pipeline.load_environment'), \
              patch.dict(os.environ, {'ANTHROPIC_API_KEY': 'test', 'CLAUDE_MODEL': 'test-model'}, clear=True), \
-             patch('scraper.pipeline.Anthropic') as client, \
+             patch('scraper.auth.Anthropic') as client, \
              patch('scraper.pipeline.connect_database', side_effect=AssertionError('Database forbidden')), \
              patch('scraper.pipeline.sync_playwright', side_effect=AssertionError('Browser forbidden')), \
              patch('socket.create_connection', side_effect=AssertionError('Network forbidden')), \
@@ -472,7 +472,7 @@ class RawExportTests(unittest.TestCase):
                                submissionDeadline='2027-01-01T00:00:00Z', category=['Water & resources'], tags=None)
         with patch('scraper.pipeline.structure_listing', side_effect=structure or model) as claude, \
              patch('scraper.pipeline.connect_database', side_effect=AssertionError('Unexpected connection')), \
-             patch('scraper.pipeline.Anthropic', side_effect=AssertionError('Real Claude forbidden')), \
+             patch('scraper.auth.Anthropic', side_effect=AssertionError('Real Claude forbidden')), \
              patch('scraper.pipeline.sync_playwright', side_effect=AssertionError('Browser forbidden')), \
              patch('urllib.request.urlopen', side_effect=AssertionError('HTTP forbidden')), \
              patch('scraper.discovery.traverse_index', return_value=sources or self.sources), \

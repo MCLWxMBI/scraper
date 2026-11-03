@@ -3,14 +3,6 @@
 -- Opportunity fields and persistence requirements:
 -- https://github.com/MCLWxMBI/website/blob/main/docs/contracts.md#opportunity
 -- https://github.com/MCLWxMBI/website/blob/main/docs/future-plans.md#opportunity-persistence
-CREATE TABLE IF NOT EXISTS public.website_indexes (
-    id BIGSERIAL PRIMARY KEY NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    index_url TEXT NOT NULL,
-    active BOOLEAN NOT NULL DEFAULT TRUE,
-    notes TEXT
-);
-
 -- CHECK constraints cannot contain subqueries. Keep array validation in a pure
 -- function so null/blank items, empty arrays and duplicate labels are rejected.
 -- Repeated full-text paragraphs are allowed; category/tag labels are unique.
@@ -33,12 +25,25 @@ AS $$
     );
 $$;
 
+CREATE TABLE IF NOT EXISTS public.website_indexes (
+    id BIGSERIAL PRIMARY KEY NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    index_url TEXT NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    notes TEXT,
+    tags TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
+    CONSTRAINT website_indexes_tags_valid CHECK (
+        cardinality(tags) = 0 OR public.opportunity_text_array_valid(tags, TRUE)
+    )
+);
+
 CREATE TABLE IF NOT EXISTS public.opportunities (
     id TEXT PRIMARY KEY CHECK (id ~ '[^[:space:]]'),
     title TEXT NOT NULL CHECK (title ~ '[^[:space:]]'),
     full_text TEXT[] NOT NULL
         CHECK (public.opportunity_text_array_valid(full_text)),
-    source_url TEXT NOT NULL CHECK (source_url ~ '^https://[^[:space:]]+$'),
+    source_url TEXT NOT NULL UNIQUE CHECK (source_url ~ '^https://[^[:space:]]+$'),
+    website_id BIGINT NOT NULL REFERENCES public.website_indexes(id) ON DELETE RESTRICT,
     source_org TEXT NOT NULL CHECK (source_org ~ '[^[:space:]]'),
     jurisdiction TEXT NOT NULL CHECK (jurisdiction IN ('Commonwealth', 'Victoria')),
     start_date TIMESTAMPTZ NULL,
@@ -79,12 +84,7 @@ CREATE TABLE IF NOT EXISTS public.opportunities (
         ) IS TRUE
     ),
     CONSTRAINT opportunities_date_order CHECK (
-        start_date IS NULL OR (isfinite(start_date) AND CASE
-            WHEN submission_deadline_precision = 'month' THEN
-                start_date AT TIME ZONE 'UTC' <
-                    (submission_deadline AT TIME ZONE 'UTC') + INTERVAL '1 month'
-            ELSE start_date <= submission_deadline
-        END)
+        start_date IS NULL OR (isfinite(start_date) AND start_date <= submission_deadline)
     )
 );
 
@@ -100,7 +100,33 @@ CREATE TABLE IF NOT EXISTS public.article_history (
     hash TEXT NULL CHECK (hash IS NULL OR hash ~ '^[0-9a-f]{64}$'),
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
     upload_date DATE NOT NULL DEFAULT ((clock_timestamp() AT TIME ZONE 'Australia/Sydney')::date),
-    source_index_id BIGINT REFERENCES public.website_indexes(id) ON UPDATE CASCADE ON DELETE SET NULL
+    source_index_id BIGINT REFERENCES public.website_indexes(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS opportunities_website_id_idx
+    ON public.opportunities (website_id);
+CREATE INDEX IF NOT EXISTS article_history_source_recent_idx
+    ON public.article_history (source_index_id, upload_date DESC NULLS LAST, source_url);
+
+-- Website application tables; the scraper does not read or write these.
+DO $$ BEGIN
+    CREATE TYPE public.user_role AS ENUM ('user', 'admin');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE TABLE IF NOT EXISTS public.users (
+    id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role public.user_role NOT NULL DEFAULT 'user',
+    disabled BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS public.static_pages (
+    slug TEXT PRIMARY KEY,
+    content_html TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_by INTEGER REFERENCES public.users(id) ON DELETE SET NULL
 );
 
 -- Lock the persistent identity even when a direct insert has no history yet.

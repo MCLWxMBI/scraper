@@ -252,13 +252,13 @@ def check_database(connection, fixtures):
         with connection.transaction():
             require(seed_database(connection) == 0, 'Setup created extra indexes')
         checks.append('41 indexes; 38 active; repeatable setup')
-        save_opportunity(connection, opportunity, content_hash=digest)
+        save_opportunity(connection, opportunity, source_index_id=index['id'], content_hash=digest)
         history = load_history(connection, [source.url])
         require(history[source.url].hash == digest, 'Successful save lost its hash')
         checks.append('opportunity and hash committed')
         bad = opportunity.model_copy(update={'category':['invalid SQL category']})
         try:
-            save_opportunity(connection, bad, content_hash='0'*64)
+            save_opportunity(connection, bad, source_index_id=index['id'], content_hash='0'*64)
         except OpportunityStorageError:
             pass
         else:
@@ -271,7 +271,7 @@ def check_database(connection, fixtures):
             lambda urls: load_history(connection, urls))
         require(prepared.articles[0].hash == digest and not prepared.articles[0].skipped,
                 'Changed content was skipped')
-        save_opportunity(connection, opportunity, content_hash=digest)
+        save_opportunity(connection, opportunity, source_index_id=index['id'], content_hash=digest)
         checks.append('changed hash proceeds and successful save updates it')
         connection.execute('DELETE FROM public.opportunities WHERE id=%s', (opportunity.id,))
         marker = load_history(connection, [source.url])[source.url]
@@ -282,7 +282,7 @@ def check_database(connection, fixtures):
                                               lambda urls: load_history(connection, urls))
         require(prepared.articles[0].skipped == 'deleted', 'Deletion was not skipped')
         try:
-            save_opportunity(connection, opportunity, content_hash=digest)
+            save_opportunity(connection, opportunity, source_index_id=index['id'], content_hash=digest)
         except ArticleDeletedError:
             pass
         else:

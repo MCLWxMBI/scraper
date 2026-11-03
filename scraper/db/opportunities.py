@@ -56,7 +56,7 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
     stored_date = opportunity.upload_date if upload_date is None else upload_date
     if type(stored_date) is not date:
         raise OpportunityStorageError('Upload date must be a date-only value.')
-    if source_index_id is not None and (type(source_index_id) is not int or source_index_id <= 0):
+    if type(source_index_id) is not int or source_index_id <= 0:
         raise OpportunityStorageError('Source index ID must be a positive website index ID.')
     parameters.update(content_hash=content_hash, upload_date=stored_date,
                       source_index_id=source_index_id,
@@ -79,10 +79,10 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
                 raise ArticleDeletedError('Article was deleted; refusing to recreate its opportunity.')
             saved = conn.execute("""
                 INSERT INTO public.opportunities (
-                    id, title, full_text, source_url, source_org, jurisdiction,
+                    id, title, full_text, source_url, website_id, source_org, jurisdiction,
                     start_date, submission_deadline, submission_deadline_precision, category, tags, summary, location
                 ) VALUES (
-                    %(id)s, %(title)s, %(full_text)s, %(source_url)s, %(source_org)s,
+                    %(id)s, %(title)s, %(full_text)s, %(source_url)s, %(source_index_id)s, %(source_org)s,
                     %(jurisdiction)s, %(start_date)s, %(submission_deadline)s,
                     %(submission_deadline_precision)s,
                     %(category)s, %(tags)s, %(summary)s, %(location)s
@@ -90,6 +90,7 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
                 ON CONFLICT (id) DO UPDATE SET
                     title = EXCLUDED.title,
                     full_text = EXCLUDED.full_text,
+                    website_id = EXCLUDED.website_id,
                     source_org = EXCLUDED.source_org,
                     jurisdiction = EXCLUDED.jurisdiction,
                     start_date = EXCLUDED.start_date,
@@ -114,7 +115,7 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
 def check_opportunity_table(connection: psycopg.Connection) -> None:
     try:
         connection.execute('''
-            SELECT id, title, full_text, source_url, source_org, jurisdiction,
+            SELECT id, title, full_text, source_url, website_id, source_org, jurisdiction,
                    start_date, submission_deadline, submission_deadline_precision, category, tags, summary, location
             FROM public.opportunities LIMIT 0
         ''')

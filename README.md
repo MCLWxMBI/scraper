@@ -290,7 +290,8 @@ ordering findings; [the roadmap](docs/roadmap.md) records future work.
 ## Persistence and text-mode results
 
 Default mode checks opportunity/history table access before extraction and commits
-each validated opportunity together with its successful input hash. It creates no output files or directories.
+each validated opportunity together with its successful input hash. Each database
+save sets `opportunities.website_id` to the selected `website_indexes.id`. It creates no output files or directories.
 A record with the same ID and source URL is updated; a different URL sharing an
 ID fails without overwriting the stored record. Empty/invalid-only runs leave
 existing records untouched. Write failures do not count as successful saves.
