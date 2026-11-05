@@ -1,4 +1,4 @@
-"""Create the scraper schema and seed indexes; run without concurrent writers."""
+"""Create the scraper schema and seed categories/indexes; run without concurrent writers."""
 
 from __future__ import annotations
 
@@ -131,7 +131,7 @@ def seed_database(conn: psycopg.Connection) -> int:
     check_opportunity_table(conn)
     sequence = check_schema(conn)
     expected = conn.execute(
-        (SQL_DIR / 'seed_website_indexes.sql').read_text(encoding='utf-8')
+        (SQL_DIR / 'seed.sql').read_text(encoding='utf-8')
     ).fetchall()
     if ([row[0] for row in expected] != list(range(1, 39))
             or sum(row[3] for row in expected) != 36):

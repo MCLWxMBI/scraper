@@ -1,5 +1,6 @@
 """Local article replay and collection integrity; Claude and HTTP stay mocked."""
 
+from tests import TEST_CATEGORIES
 import hashlib
 import io
 import json
@@ -23,6 +24,11 @@ from scraper.structuring import InvalidListingError, article_slug, canonical_sou
 
 class FixtureTests(unittest.TestCase):
     def setUp(self):
+        for target, options in (('scraper.pipeline.load_categories', {'return_value': TEST_CATEGORIES}),
+                                ('scraper.pipeline.connect_database', {})):
+            patcher = patch(target, **options)
+            patcher.start()
+            self.addCleanup(patcher.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
@@ -58,7 +64,7 @@ class FixtureTests(unittest.TestCase):
                            sourceUrl=canonical_source_url(source.url), sourceOrg='Example',
                            fullText=[text], jurisdiction='Victoria', startDate=None,
                            submissionDeadline='2026-11-01T00:00:00Z',
-                           category=['Water & resources'], tags=None)
+                           category=['Water & resources'])
 
     def run_cli(self, args=(), structure=None):
         collection = FixtureCollection(self.root)
@@ -66,7 +72,8 @@ class FixtureTests(unittest.TestCase):
              patch('scraper.pipeline.load_environment'), \
              patch.dict(os.environ, {'ANTHROPIC_API_KEY': 'test-key', 'CLAUDE_MODEL': 'test-model'}, clear=True), \
              patch('scraper.auth.Anthropic') as client, \
-             patch('scraper.pipeline.connect_database', side_effect=AssertionError('Database forbidden')) as database, \
+             patch('scraper.pipeline.load_categories', return_value=TEST_CATEGORIES), \
+             patch('scraper.pipeline.connect_database') as database, \
              patch('scraper.pipeline.sync_playwright', side_effect=AssertionError('Browser forbidden')) as browser, \
              patch('scraper.discovery.traverse_index', side_effect=AssertionError('Discovery forbidden')), \
              patch('scraper.extraction.process_single_source', side_effect=AssertionError('Live extraction forbidden')), \
@@ -74,11 +81,11 @@ class FixtureTests(unittest.TestCase):
              patch('scraper.pipeline.structure_listing', side_effect=structure or self.structured) as claude, \
              redirect_stdout(self.stdout), redirect_stderr(self.stderr):
             status = entrypoint.main(['--fixtures', '--output-dir', str(self.output), *args])
-        database.assert_not_called()
+        database.assert_called_once_with(autocommit=True)
         browser.assert_not_called()
         return status, claude, client
 
-    def test_root_fixture_mode_uses_original_url_and_no_database_or_browser(self):
+    def test_root_fixture_mode_uses_original_url_and_only_category_database_access(self):
         status, claude, client = self.run_cli(['--index', 'EXAMPLE', '--limit', '1'])
         self.assertEqual(status, 0)
         self.assertEqual(claude.call_args.args[1].url, self.url)
@@ -116,7 +123,7 @@ class FixtureTests(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(claude.call_count, 1)
 
-    def test_credentials_are_required_but_database_is_not(self):
+    def test_credentials_are_required_after_loading_categories(self):
         collection = FixtureCollection(self.root)
         with patch('scraper.pipeline.FixtureCollection', return_value=collection), \
              patch('scraper.pipeline.load_environment'), patch.dict(os.environ, {}, clear=True), \
@@ -126,7 +133,7 @@ class FixtureTests(unittest.TestCase):
             self.assertEqual(pipeline.main(['--fixtures']), 1)
         self.assertIn('ANTHROPIC_API_KEY', self.stderr.getvalue())
         client.assert_not_called()
-        database.assert_not_called()
+        database.assert_called_once_with(autocommit=True)
 
     def test_limit_and_canonical_deduplication(self):
         duplicate = dict(self.article, source_url=self.url + '#section')
@@ -280,7 +287,7 @@ class BundledCollectionTests(unittest.TestCase):
                 sourceUrl=canonical_source_url(source.url), sourceOrg=index['name'],
                 fullText=[text], jurisdiction='Victoria', startDate=None,
                 submissionDeadline='2026-11-01T00:00:00Z',
-                category=['Water & resources'], tags=None,
+                category=['Water & resources'],
             )
 
         stdout, stderr = io.StringIO(), io.StringIO()
@@ -288,7 +295,8 @@ class BundledCollectionTests(unittest.TestCase):
              patch('scraper.pipeline.load_environment'), \
              patch.dict(os.environ, {'ANTHROPIC_API_KEY': 'test', 'CLAUDE_MODEL': 'test-model'}, clear=True), \
              patch('scraper.auth.Anthropic') as client, \
-             patch('scraper.pipeline.connect_database', side_effect=AssertionError('Database forbidden')), \
+             patch('scraper.pipeline.load_categories', return_value=TEST_CATEGORIES), \
+             patch('scraper.pipeline.connect_database'), \
              patch('scraper.pipeline.sync_playwright', side_effect=AssertionError('Browser forbidden')), \
              patch('socket.create_connection', side_effect=AssertionError('Network forbidden')), \
              patch('scraper.pipeline.structure_listing', side_effect=structured) as claude, \
@@ -309,7 +317,7 @@ class BundledCollectionTests(unittest.TestCase):
     def test_all_seed_ids_and_resources_have_provenance_and_valid_checksums(self):
         collection = FixtureCollection()
         expected_ids = sorted(int(i) for i in re.findall(
-            r'^  \((\d+),', (PROJECT_DIR / 'sql/seed_website_indexes.sql').read_text(), re.M))
+            r'^  \((\d+),', (PROJECT_DIR / 'sql/seed.sql').read_text(), re.M))
         self.assertEqual(sorted(i['id'] for i in collection.indexes), expected_ids)
         for index in collection.indexes:
             self.assertLessEqual(len(index['articles']), 3)
@@ -326,7 +334,7 @@ class BundledCollectionTests(unittest.TestCase):
         collection = FixtureCollection()
         seed = [(int(number), name, url, active == 'TRUE') for number, name, url, active in re.findall(
             r"^\s*\((\d+), '([^']+)', '([^']+)', (TRUE|FALSE),",
-            (PROJECT_DIR / 'sql/seed_website_indexes.sql').read_text(), re.M)]
+            (PROJECT_DIR / 'sql/seed.sql').read_text(), re.M)]
         self.assertEqual([(i['id'],i['name'],i['url'],i['active']) for i in collection.indexes], seed)
         self.assertEqual([row[0] for row in seed], list(range(1,42)))
         self.assertEqual(sum(row[3] for row in seed), 38)
@@ -469,7 +477,7 @@ class RawExportTests(unittest.TestCase):
             return Opportunity(id=article_slug(source.url), title='Fixture raw export test',
                                sourceUrl=canonical_source_url(source.url), sourceOrg=self.index['name'],
                                fullText=[text], jurisdiction='Victoria', startDate=None,
-                               submissionDeadline='2027-01-01T00:00:00Z', category=['Water & resources'], tags=None)
+                               submissionDeadline='2027-01-01T00:00:00Z', category=['Water & resources'])
         with patch('scraper.pipeline.structure_listing', side_effect=structure or model) as claude, \
              patch('scraper.pipeline.connect_database', side_effect=AssertionError('Unexpected connection')), \
              patch('scraper.auth.Anthropic', side_effect=AssertionError('Real Claude forbidden')), \
@@ -480,7 +488,7 @@ class RawExportTests(unittest.TestCase):
              redirect_stdout(self.stdout), redirect_stderr(self.stderr):
             status = pipeline.compose_indexes([(self.index['name'], self.index['url'])], None, self.output,
                 client=Mock(), model='mocked', output_mode=mode, connection=connection,
-                fixtures=self.collection if fixtures else None)
+                fixtures=self.collection if fixtures else None, categories=TEST_CATEGORIES)
         return status, claude, extract
 
     def test_exact_raw_text_precedes_claude_and_is_independent_of_output_dir_and_cwd(self):

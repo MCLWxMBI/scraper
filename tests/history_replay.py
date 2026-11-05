@@ -242,7 +242,7 @@ def check_database(connection, fixtures):
     opportunity = Opportunity(id=article_slug(source.url), title='Fixture database check',
         sourceUrl=source.url, sourceOrg=index['name'], fullText=[text], jurisdiction='Victoria',
         startDate=None, submissionDeadline='2027-01-01T00:00:00Z',
-        category=['Water & resources'], tags=None)
+        category=['Water & resources'])
     checks = []
     connection.execute('TRUNCATE public.opportunities, public.article_history')
     try:
@@ -256,7 +256,7 @@ def check_database(connection, fixtures):
         history = load_history(connection, [source.url])
         require(history[source.url].hash == digest, 'Successful save lost its hash')
         checks.append('opportunity and hash committed')
-        bad = opportunity.model_copy(update={'category':['invalid SQL category']})
+        bad = opportunity.model_copy(update={'category':[]})
         try:
             save_opportunity(connection, bad, source_index_id=index['id'], content_hash='0'*64)
         except OpportunityStorageError:

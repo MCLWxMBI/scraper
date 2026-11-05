@@ -22,13 +22,7 @@ from scraper.dates import australian_today
 
 
 NonemptyText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-Category = Literal[
-    'Biodiversity & ecosystems',
-    'Climate change',
-    'First Nations & cultural heritage',
-    'Water & resources',
-    'Communities & environment',
-]
+
 Jurisdiction = Literal['Commonwealth', 'Victoria']
 # A list keeps the API schema's array items typed; the local model enforces size.
 Position = Annotated[list[float], Field(min_length=2, max_length=2)]
@@ -124,8 +118,7 @@ class OpportunityMetadata(ContractModel):
         default='datetime', description=('month for a stated or contextually inferred closing month/year; '
                                          'otherwise datetime'),
     )
-    category: Annotated[list[Category], Field(min_length=1)]
-    tags: list[NonemptyText] | None = None
+    category: Annotated[list[NonemptyText], Field(min_length=1, max_length=1)]
     summary: NonemptyText | None = None
 
     @model_validator(mode='before')
@@ -148,23 +141,6 @@ class OpportunityMetadata(ContractModel):
                 raise ValueError('Timestamp must be ISO 8601 UTC ending in Z, including a time')
             datetime.fromisoformat(value)
         return value
-
-    @field_validator('category')
-    @classmethod
-    def check_categories(cls, value: list[Category]) -> list[Category]:
-        if len(value) != len(set(value)):
-            raise ValueError('Categories must be unique')
-        return value
-
-    @field_validator('tags')
-    @classmethod
-    def check_tags(cls, value: list[str] | None) -> list[str] | None:
-        if value is not None:
-            if len(value) != len({tag.casefold() for tag in value}):
-                raise ValueError('Tags must be unique ignoring case')
-            if any(tag.casefold() == 'invite-only' and tag != 'Invite-only' for tag in value):
-                raise ValueError('Use the canonical Invite-only tag')
-        return value or None
 
     @model_validator(mode='after')
     def check_date_order(self) -> Self:

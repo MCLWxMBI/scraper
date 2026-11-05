@@ -57,3 +57,11 @@ WITH seed (id, name, index_url, active, notes) AS (
 )
 SELECT id, name, index_url, active, notes FROM seed ORDER BY id;
 
+-- Category choices for opportunity classification. Caller owns the transaction.
+INSERT INTO public.categories (name) VALUES
+    ('Biodiversity & ecosystems'),
+    ('Climate change'),
+    ('First Nations & cultural heritage'),
+    ('Water & resources'),
+    ('Communities & environment')
+ON CONFLICT (name) DO NOTHING;
