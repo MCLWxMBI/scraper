@@ -6,10 +6,11 @@ import json
 import re
 import sys
 import unicodedata
+from typing import Literal
 from urllib.parse import parse_qsl, unquote, urlsplit
 
 from anthropic import Anthropic
-from pydantic import Field, ValidationError
+from pydantic import Field, ValidationError, create_model
 
 from scraper.models import NonemptyText, Opportunity, OpportunityMetadata, Source
 from scraper.locations import GeographicScope, LocationError, LocationResolver
@@ -88,10 +89,9 @@ null deadline regardless of dates.
 
 Use the actual title and publishing organisation. The index name is only context
 and may name a portal or committee rather than the publisher. jurisdiction must
-be Commonwealth or Victoria. Assign one or more of the supported environmental
-categories only where justified by the article. Do not invent a category to make
-an unrelated article fit. Tags are trimmed nonempty display labels, unique
-ignoring case, or null. Spell the invitation access tag exactly Invite-only.
+be Commonwealth or Victoria. Select exactly one category: the closest match to
+this opportunity from availableCategories supplied in the request. Copy its name
+exactly. Do not invent categories or generate tags.
 Provide a factual plain-text summary of 20-30 words. Keep summarisation confined
 to summary, separate from the minimally cleaned fullText.
 Return geographicScope as a list describing only the place or area affected by
@@ -176,12 +176,21 @@ def structure_listing(
     source: Source,
     *,
     index_name: str,
+    categories: tuple[str, ...],
     client: Anthropic,
     model: str,
     location_resolver: LocationResolver | None = None,
     location_diagnostic=None,
 ) -> Opportunity:
     """Make at most one Claude call, then resolve verified geography in Python."""
+    if not categories:
+        raise InvalidListingError('No category choices supplied', attempts=0, operational_failure=True)
+    # Constrain Claude's response schema to this run's database choices.
+    category_type = Literal[tuple(categories)]
+    response_model = create_model(
+        'CategorizedArticle', __base__=StructuredArticle,
+        category=(list[category_type], Field(min_length=1, max_length=1)),
+    )
     upload_date = australian_today()
     try:
         source_url = canonical_source_url(source.url)
@@ -191,7 +200,10 @@ def structure_listing(
     except ValueError as exc:
         raise InvalidListingError(str(exc), attempts=0) from exc
 
-    content = json.dumps({'indexName': index_name, 'sourceUrl': source_url, 'articleText': text}, ensure_ascii=False)
+    content = json.dumps({
+        'indexName': index_name, 'sourceUrl': source_url,
+        'articleText': text, 'availableCategories': categories,
+    }, ensure_ascii=False)
     # Enforce the one-call budget even when a direct caller uses SDK defaults.
     if isinstance(client, Anthropic):
         client = client.with_options(max_retries=0)
@@ -202,13 +214,15 @@ def structure_listing(
             timeout=CLAUDE_TIMEOUT_SECONDS,
             system=SYSTEM_PROMPT,
             messages=[{'role': 'user', 'content': content}],
-            output_format=StructuredArticle,
+            output_format=response_model,
         )
         if response.stop_reason != 'end_turn':
             raise RuntimeError(f'Claude did not complete the structured response: {response.stop_reason}')
         fields = response.parsed_output
         if not isinstance(fields, StructuredArticle):
             raise RuntimeError('Claude returned no parsed opportunity')
+        if len(fields.category) != 1 or fields.category[0] not in categories:
+            raise ValueError('Claude must select exactly one category from availableCategories')
         if fields.submissionDeadline is None:
             raise ValueError('No deadline timestamp returned')
         opportunity = Opportunity.model_validate({

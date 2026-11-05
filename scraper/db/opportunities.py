@@ -33,7 +33,6 @@ def opportunity_parameters(opportunity: Opportunity) -> dict:
         'submission_deadline': datetime.fromisoformat(opportunity.submissionDeadline),
         'submission_deadline_precision': opportunity.submissionDeadlinePrecision,
         'category': opportunity.category,
-        'tags': opportunity.tags,
         'summary': opportunity.summary,
         'location': (Jsonb(opportunity.location.model_dump(mode='json'))
                      if opportunity.location is not None else None),
@@ -80,12 +79,12 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
             saved = conn.execute("""
                 INSERT INTO public.opportunities (
                     id, title, full_text, source_url, website_id, source_org, jurisdiction,
-                    start_date, submission_deadline, submission_deadline_precision, category, tags, summary, location
+                    start_date, submission_deadline, submission_deadline_precision, category, summary, location
                 ) VALUES (
                     %(id)s, %(title)s, %(full_text)s, %(source_url)s, %(source_index_id)s, %(source_org)s,
                     %(jurisdiction)s, %(start_date)s, %(submission_deadline)s,
                     %(submission_deadline_precision)s,
-                    %(category)s, %(tags)s, %(summary)s, %(location)s
+                    %(category)s, %(summary)s, %(location)s
                 )
                 ON CONFLICT (id) DO UPDATE SET
                     title = EXCLUDED.title,
@@ -97,7 +96,6 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
                     submission_deadline = EXCLUDED.submission_deadline,
                     submission_deadline_precision = EXCLUDED.submission_deadline_precision,
                     category = EXCLUDED.category,
-                    tags = EXCLUDED.tags,
                     summary = EXCLUDED.summary,
                     location = CASE WHEN %(location_lookup_failed)s THEN opportunities.location ELSE EXCLUDED.location END
                 WHERE opportunities.source_url = EXCLUDED.source_url
@@ -116,7 +114,7 @@ def check_opportunity_table(connection: psycopg.Connection) -> None:
     try:
         connection.execute('''
             SELECT id, title, full_text, source_url, website_id, source_org, jurisdiction,
-                   start_date, submission_deadline, submission_deadline_precision, category, tags, summary, location
+                   start_date, submission_deadline, submission_deadline_precision, category, summary, location
             FROM public.opportunities LIMIT 0
         ''')
     except psycopg.Error:

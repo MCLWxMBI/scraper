@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS public.website_indexes (
     )
 );
 
+CREATE TABLE IF NOT EXISTS public.categories (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    CONSTRAINT categories_name_valid CHECK (
+        name ~ '[^[:space:]]' AND name !~ '^[[:space:]]|[[:space:]]$'
+    )
+);
+
 CREATE TABLE IF NOT EXISTS public.opportunities (
     id TEXT PRIMARY KEY CHECK (id ~ '[^[:space:]]'),
     title TEXT NOT NULL CHECK (title ~ '[^[:space:]]'),
@@ -59,19 +67,8 @@ CREATE TABLE IF NOT EXISTS public.opportunities (
             AND EXTRACT(YEAR FROM submission_deadline AT TIME ZONE 'UTC') BETWEEN 1 AND 9999
         )
     ),
-    category TEXT[] NOT NULL CHECK (
-        public.opportunity_text_array_valid(category, TRUE)
-        AND category <@ ARRAY[
-            'Biodiversity & ecosystems',
-            'Climate change',
-            'First Nations & cultural heritage',
-            'Water & resources',
-            'Communities & environment'
-        ]::TEXT[]
-    ),
-    tags TEXT[] NULL CHECK (
-        tags IS NULL OR public.opportunity_text_array_valid(tags, TRUE)
-    ),
+    category TEXT[] NOT NULL CONSTRAINT opportunities_category_valid
+        CHECK (public.opportunity_text_array_valid(category, TRUE)),
     summary TEXT NULL CHECK (summary IS NULL OR summary ~ '[^[:space:]]'),
     location JSONB NULL CHECK (
         location IS NULL OR (
@@ -183,9 +180,9 @@ FOR EACH ROW EXECUTE FUNCTION public.remember_deleted_opportunity();
 -- does. TRUNCATE bypasses row deletion triggers: reserve it for disposable resets.
 
 -- Snake-case columns map to the contract's camelCase fields at the API boundary.
--- Serialize timestamps as ISO 8601 UTC ending in Z. SQL NULL tags/start_date
--- remain JSON null; omit summary/location when NULL. Do not persist status:
+-- Serialize timestamps as ISO 8601 UTC ending in Z. SQL NULL start_date
+-- remains JSON null; omit summary/location when NULL. Do not persist status:
 -- the frontend derives open/upcoming/closed from start_date and deadline.
--- Validate full HTTPS URLs, plain text, canonical Invite-only spelling and full
+-- Validate full HTTPS URLs, plain text, selected category names and full
 -- GeoJSON coordinate bounds/ring closure in the application before inserting.
 -- JSON shape checks here do not replace geometry validation.

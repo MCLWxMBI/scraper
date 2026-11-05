@@ -198,9 +198,10 @@ context. Referenced files are confined to the fixture directory and checked
 against their SHA-256 checksums. Missing resources never trigger downloads.
 
 **This mode calls real Claude and incurs API usage.** Set `ANTHROPIC_API_KEY`
-and `CLAUDE_MODEL` as usual, or supply `--model`. No `DATABASE_URL`, PostgreSQL,
-browser installation or website access is needed. The only network client used
-during fixture runs is Claude. Automated tests mock Claude.
+and `CLAUDE_MODEL` as usual, or supply `--model`. Configure `DATABASE_URL` too:
+fixture runs read category choices from PostgreSQL before calling Claude, but
+make no opportunity or history writes. No browser installation or source website
+access is needed. Automated tests mock the database and Claude.
 
 Results always use the usual JSON-array text files and PASS/FAIL reporting,
 with `output/fixtures/` as the default destination. Raw article files are also
@@ -248,7 +249,7 @@ flowchart TD
     Pipeline --> Raw["text_export.py: output/raw/ extracted article text in text mode"]
     Text --> Decisions
     Setup --> Schema["sql/schema.sql"]
-    Setup --> Seed["sql/seed_website_indexes.sql"]
+    Setup --> Seed["sql/seed.sql"]
 ```
 
 | File | Responsibility and flow |
@@ -272,6 +273,7 @@ flowchart TD
 | `scraper/decision_log.py` | Writes file-only JSONL article decisions, including hash comparisons and committed save outcomes; never installs a console handler. |
 | `scraper/text_export.py` | Generates stable index/article filenames and atomically writes structured JSON-array files and raw UTF-8 article text. |
 | `scraper/db/connection.py` | Connects using DATABASE_URL with a bounded timeout and sanitized diagnostics. |
+| `scraper/db/categories.py` | Loads category names from `public.categories` before Claude startup; empty/unavailable choices stop the run. |
 | `scraper/db/indexes.py` | Retrieves active website IDs, names and URLs in deterministic order and retains IDs through collection. |
 | `scraper/db/history.py` | Batch-reads last successful content hashes and persistent deletion markers; lookup failures stop processing. |
 | `scraper/db/opportunities.py` | Atomically saves an opportunity and its input hash, rejecting deleted identities and cross-URL slug collisions. |
@@ -281,13 +283,26 @@ flowchart TD
 | `sql/schema.sql` | Defines indexes, opportunities, article history, constraints, and row-locking deletion/protection triggers. |
 | `sql/reset_articles.sql` | Explicitly truncates opportunities and history in the selected database; bypasses deletion triggers and preserves website indexes. Never run automatically. |
 | `scripts/reset_articles.sh`, `scraper/db/reset_articles.py` | Prompt visibly for a database URL and require `RESET` before executing the article reset SQL. |
-| `sql/seed_website_indexes.sql` | Holds the reviewed, pinned index seed with documented local exclusions; returns expected values for verification. |
+| `sql/seed.sql` | Seeds categories and the reviewed index catalogue; returns expected index values for verification. |
 
 Tests live in `tests/`. [Source notes](docs/source-notes.md) record discovery
 ordering findings; [the roadmap](docs/roadmap.md) records future work.
 `.agents/current-state.md` contains agent handoff information.
 
 ## Persistence and text-mode results
+
+Every collection run, including fixtures, first reads category names from
+`public.categories`. Claude selects exactly one of these names; the scraper
+validates it and saves a one-item `category` array. Opportunity tags are no longer
+generated, exported or stored. `website_indexes.tags` remains website-owned.
+Setup executes `sql/seed.sql` to seed the five initial category names, preserving
+existing rows. Existing databases need `sql/schema.sql`, then
+`sql/migrations/20261105_categories.sql`, then `sql/seed.sql`, applied explicitly
+in one transaction. The migration removes the old opportunity tags column and
+replaces the fixed category-name check with array validation; category choices
+are validated against the database list before saving. It preserves history
+upload dates and website index tags. Production has not been migrated by this
+change.
 
 Default mode checks opportunity/history table access before extraction and commits
 each validated opportunity together with its successful input hash. Each database
@@ -337,8 +352,7 @@ other indexes remain untouched. Files contain only that run's successful records
     "jurisdiction": "Victoria",
     "startDate": null,
     "submissionDeadline": "2026-10-23T06:00:00Z",
-    "category": ["Water & resources"],
-    "tags": null
+    "category": ["Water & resources"]
   }
 ]
 ```
@@ -650,7 +664,7 @@ uv run python -m unittest tests.test_deadline_precision tests.test_eligibility
 ```
 
 The devcontainer development database is recreated from `sql/schema.sql` when
-schema changes are applied, then seeded from `sql/seed_website_indexes.sql`.
+schema changes are applied, then seeded from `sql/seed.sql`.
 The deadline precision column defaults to `datetime`; month-level values must
 be normalized to the beginning of the month in UTC.
 
@@ -665,7 +679,7 @@ helper URLs map to the parent inquiry. Ambiguous URLs and cross-URL slug
 collisions are rejected.
 
 SQL uses snake-case columns, `TIMESTAMPTZ` dates, ordered `TEXT[]` full text,
-required `category TEXT[]`, nullable `tags TEXT[]`, optional summary, and optional
+required `category TEXT[]`, optional summary, and optional
 `location JSONB`. SQL checks basic content, dates, arrays, supported values, and
 location shape; the application validates full URLs and GeoJSON coordinates and
 rings. There is no stored open/upcoming/closed status. API serialization must

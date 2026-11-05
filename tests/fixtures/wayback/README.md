@@ -4,7 +4,8 @@ This collection supports `python main.py --fixtures` and offline regression
 tests. CLI replay starts from the manifest's saved article samples, not from
 listing discovery. It calls **real Claude**, needs `ANTHROPIC_API_KEY` and
 `CLAUDE_MODEL`, and incurs API usage. It writes JSON-array text files under
-`output/fixtures/` by default and does not use PostgreSQL or a browser.
+`output/fixtures/` by default. It reads category choices from PostgreSQL but makes
+no opportunity/history writes and does not use a browser.
 
 ```bash
 uv run python main.py --fixtures --index "Coliban Water" --limit 1

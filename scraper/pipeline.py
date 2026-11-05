@@ -30,6 +30,7 @@ from scraper.run_log import RunLogError, RunTranscript
 from scraper.fixtures import FixtureCollection
 from scraper.db.connection import DatabaseError, connect_database
 from scraper.db.indexes import load_active_indexes
+from scraper.db.categories import load_categories
 from scraper.db.history import HistoryError, check_history_table
 from scraper.db.opportunities import (
     OpportunityStorageError, check_opportunity_table, save_opportunity,
@@ -56,6 +57,7 @@ def compose_indexes(
     *,
     client: Anthropic,
     model: str,
+    categories: tuple[str, ...],
     output_mode: Literal['db', 'txt'] = 'db',
     connection: psycopg.Connection | None = None,
     fixtures: FixtureCollection | None = None,
@@ -70,6 +72,8 @@ def compose_indexes(
     unchanged to extraction. Missing deadlines are normal invalid results; API,
     traversal, extraction, database/file errors and slug collisions cause a nonzero exit.
     """
+    if not categories:
+        raise DatabaseError('No categories configured; stopping before Claude processing.')
     if limit is not None and limit <= 0:
         raise ValueError('limit must be a positive integer')
     if output_mode not in {'db', 'txt'}:
@@ -205,7 +209,7 @@ def compose_indexes(
 
                     print(f'{name}: structuring with Claude: {source.url}', flush=True)
                     try:
-                        opportunity = structure_listing(text, source, index_name=name, client=client, model=model,
+                        opportunity = structure_listing(text, source, index_name=name, client=client, model=model, categories=categories,
                             location_resolver=resolver,
                             location_diagnostic=(lambda **fields: decision(source.url, 'location', **fields))
                                                 if decision else None)
@@ -362,6 +366,9 @@ def _run(args, parser, *, run_id=None) -> int:
                 check_history_table(connection)
                 if not args.text:
                     check_opportunity_table(connection)
+            if connection is None:
+                connection = resources.enter_context(connect_database(autocommit=True))
+            categories = load_categories(connection)
             model = (args.model or os.getenv('CLAUDE_MODEL', '')).strip()
 
             # One Claude API call per article; no SDK or application retries.
@@ -372,7 +379,7 @@ def _run(args, parser, *, run_id=None) -> int:
                     print('Fixture input: saved pages only; real Claude calls incur API usage.', flush=True)
                     return compose_indexes(
                         indexes, None, args.output_dir or Path('output/fixtures'), args.limit,
-                        client=client, model=model, output_mode='txt', fixtures=fixtures, decision_log=decision_log,
+                        client=client, model=model, categories=categories, output_mode='txt', fixtures=fixtures, decision_log=decision_log,
                         refresh_locations=args.refresh_locations,
                     )
                 with sync_playwright() as playwright:
@@ -380,7 +387,7 @@ def _run(args, parser, *, run_id=None) -> int:
                     try:
                         return compose_indexes(
                             indexes, browser, args.output_dir or Path('output'), args.limit,
-                            client=client, model=model, output_mode='txt' if args.text else 'db',
+                            client=client, model=model, categories=categories, output_mode='txt' if args.text else 'db',
                             connection=connection, decision_log=decision_log,
                             refresh_locations=args.refresh_locations,
                         )
