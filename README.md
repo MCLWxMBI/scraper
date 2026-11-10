@@ -23,6 +23,9 @@ repository-root `.env` using `override=False`, regardless of the working
 directory. Supplied environment variables take precedence. A missing or blank
 `DATABASE_URL` is an error; connections do not fall back to individual `PG*`
 variables. `.env` is ignored by Git and credentials are not printed.
+Shared database connections retry connection errors twice after the initial
+attempt, waiting 1 then 2 seconds. Each attempt has a 10-second connection timeout.
+This applies to collection, setup and run-log uploads; SQL writes are not retried.
 
 Local collection uses `ANTHROPIC_API_KEY`. GitHub Actions uses Anthropic OIDC
 instead: `create_claude_client()` selects federation when any of its four
@@ -88,13 +91,16 @@ The runner installs Python 3.13, locked dependencies and Chromium, then runs
 Real Claude usage is charged. Existing article history controls skips; valid
 opportunities and history commit together. Operational errors fail the job;
 ordinary invalid articles retain their existing rejection behavior. The
-workflow never initializes, reseeds or resets a database. Production must
+workflow never initializes, reseeds or resets a database. Run logging additionally requires
+`sql/migrations/20261110_scraper_runs.sql` to be applied before deployment.
+Production must
 already have the current schema and indexes and be reachable from the runner;
 `postgres` in the local example is a Compose-only hostname.
 
 The Actions console retains normal progress and skipped counts. The
 `scraper-logs-<run-id>-<attempt>` artifact contains `actions-run.txt` (console
-stdout/stderr) and `scraper.jsonl` (article decisions) when available, uploaded
+stdout/stderr) and `scraper.jsonl` (article decisions), plus `run-results.json` (source results
+and saved opportunity titles) when available, uploaded
 after success or failure with 14-day retention. Console capture preserves the
 scraper's nonzero exit status. There is no automatic collection retry.
 
@@ -744,3 +750,14 @@ These checks use saved article text and mocked Claude/geographic services. They
 read the actual seeded website IDs and roll back every test transaction. They do
 not create databases, reset data, load `.env` or use a remote `DATABASE_URL`.
 The database must already have the current `sql/schema.sql` and seed applied.
+
+## GitHub run results
+
+Collection checkpoints source results and saved titles locally; a separate
+`if: always()` workflow step uploads the final summary to `public.scraper_runs`.
+This step uses its own database connection and retries connection establishment.
+It inserts only the six-column table's run fields; it does not require GitHub IDs.
+Insert/commit failures are not retried, to avoid duplicate rows. Missing/partial
+checkpoints retain a failed/interrupted run summary. The JSON checkpoint is also
+included in the log artifact. See [logs_plan.md](logs_plan.md) for the table and
+JSON formats, deployment prerequisite, and failure behavior.

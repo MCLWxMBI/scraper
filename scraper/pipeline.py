@@ -27,6 +27,7 @@ from scraper.config import load_environment
 from scraper.auth import create_claude_client
 from scraper.decision_log import DecisionLog, DecisionLogError, DEFAULT_LOG
 from scraper.run_log import RunLogError, RunTranscript
+from scraper.run_results import RunResults
 from scraper.fixtures import FixtureCollection
 from scraper.db.connection import DatabaseError, connect_database
 from scraper.db.indexes import load_active_indexes
@@ -64,6 +65,7 @@ def compose_indexes(
     decision_log: DecisionLog | None = None,
     refresh_locations: bool = False,
     location_resolver: LocationResolver | None = None,
+    run_results: RunResults | None = None,
 ) -> int:
     """Save validated records to the selected destination and continue on errors.
 
@@ -92,10 +94,14 @@ def compose_indexes(
     for item in indexes:
         index = item if isinstance(item, WebsiteIndex) else WebsiteIndex(None, *item)
         name, url = index.name, index.url
+        if run_results is not None:
+            run_results.start_source(index)
         decision = decision_log.for_index(name, url) if decision_log else None
         skip_reason = fixtures.skip_reason(url) if fixtures is not None else None
         if skip_reason is not None:
             skipped += 1
+            if run_results is not None:
+                run_results.finish_source('skipped')
             print(f'{name}: SKIPPED ({skip_reason})', flush=True)
             continue
 
@@ -107,10 +113,14 @@ def compose_indexes(
         records: list[dict] = []
         selected_hashes = {}
 
-        def source_failed(source_url: str, reason: str, *, phase='processing', logged=False) -> None:
+        def source_failed(source_url: str, reason: str, *, phase='processing', logged=False, invalid_result=False) -> None:
             nonlocal source_failures, index_source_failures
             if decision is not None and not logged:
                 decision(source_url, 'failed', reason=phase, current_hash=selected_hashes.get(source_url))
+            if run_results is not None:
+                run_results.article('invalid' if invalid_result else 'failed')
+                if not invalid_result:
+                    run_results.fail_source(f'Article failed during {phase}.')
             source_failures += 1
             index_source_failures += 1
             if output_mode == 'txt':
@@ -138,15 +148,21 @@ def compose_indexes(
             except (DecisionLogError, RunLogError):
                 raise
             except HistoryError as exc:
+                if run_results is not None:
+                    run_results.fail_source('Article history lookup failed.')
                 print(f'{name}: HISTORY FAILED: {_error(exc)} [index={url}]', file=sys.stderr, flush=True)
                 return 1
             except Exception as exc:
                 if decision is not None:
                     decision(url, 'failed', reason='traversal')
                 index_failed = True
+                if run_results is not None:
+                    run_results.fail_source('Source discovery failed.')
                 print(f'{name}: TRAVERSAL FAILED: {_error(exc)} [index={url}]', file=sys.stderr, flush=True)
             else:
                 selected = prepared.articles
+                if run_results is not None:
+                    run_results.discovered(prepared.discovered)
                 selected_hashes = {article.source.url: article.hash for article in selected}
                 print(f'{name}: {prepared.discovered} listings discovered, {len(selected)} selected', flush=True)
                 if len(selected) < prepared.discovered:
@@ -166,6 +182,8 @@ def compose_indexes(
                             source_failed(source.url, f'raw save: {_error(exc)}', phase='raw_save')
                             continue
                     if article.skipped:
+                        if run_results is not None:
+                            run_results.article('skipped')
                         history_skipped += 1
                         index_history_skipped += 1
                         if article.skipped == 'unchanged':
@@ -176,7 +194,7 @@ def compose_indexes(
                         if article.invalid:
                             invalid += 1
                             index_invalid += 1
-                            source_failed(source.url, article.error, logged=True)
+                            source_failed(source.url, article.error, logged=True, invalid_result=True)
                         else:
                             extraction_failed += 1
                             index_failed = True
@@ -193,7 +211,7 @@ def compose_indexes(
                     except ValueError as exc:
                         invalid += 1
                         index_invalid += 1
-                        source_failed(source.url, str(exc), phase='validation')
+                        source_failed(source.url, str(exc), phase='validation', invalid_result=True)
                         if output_mode == 'db':
                             print(f'{name}: INVALID: {source.url}: {exc}', file=sys.stderr, flush=True)
                         continue
@@ -217,7 +235,7 @@ def compose_indexes(
                         invalid += 1
                         index_invalid += 1
                         index_failed = index_failed or exc.operational_failure
-                        source_failed(source.url, str(exc), phase='validation')
+                        source_failed(source.url, str(exc), phase='validation', invalid_result=not exc.operational_failure)
                         if output_mode == 'db':
                             print(f'{name}: INVALID: {source.url}: {exc}', file=sys.stderr, flush=True)
                         continue
@@ -253,6 +271,8 @@ def compose_indexes(
                         except (OSError, UnicodeError) as exc:
                             source_failed(source.url, f'output save: {_error(exc)}', phase='output_save')
                             raise
+                    if run_results is not None:
+                        run_results.article('passed', opportunity.title)
                     if decision is not None:
                         if output_mode == 'db':
                             # A nested transaction is only a savepoint; do not
@@ -271,8 +291,13 @@ def compose_indexes(
                         print(f'{name}: VALID: {opportunity.id}', flush=True)
         except (OSError, UnicodeError) as exc:
             index_failed = True
+            if run_results is not None:
+                run_results.fail_source('Source output or checkpoint write failed.')
             print(f'{name}: FILE FAILED: {path}: {_error(exc)}', file=sys.stderr, flush=True)
 
+        if run_results is not None:
+            run_results.finish_source('failed' if index_failed else
+                                      'empty' if not run_results.source['discovered_count'] else 'passed')
         if index_failed:
             failed += 1
         else:
@@ -304,6 +329,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--log-file', type=Path, default=DEFAULT_LOG,
                         help='Article decision JSONL log (default: project output/logs/scraper.jsonl)')
+    parser.add_argument('--run-results', type=Path,
+                        default=os.environ.get('SCRAPER_RESULTS_FILE'),
+                        help='Optional JSON checkpoint for the separate run-log upload step')
     parser.add_argument('--refresh-locations', action='store_true',
                         help='Reprocess unchanged articles for geography updates; deleted URLs stay excluded')
     parser.add_argument('--fixtures', action='store_true',
@@ -322,20 +350,39 @@ def main(argv: list[str] | None = None) -> int:
     if args.model is not None and not args.model.strip():
         parser.error('--model must not be empty')
 
-    if args.text or args.fixtures:
-        original_stderr = sys.stderr
-        try:
-            with RunTranscript() as transcript:
-                print(f'Run log: {transcript.path}', flush=True)
-                return _run(args, parser, run_id=transcript.run_id)
-        except RunLogError as exc:
-            # The context has restored stderr, even if the transcript failed.
-            print(f'Composer failed: {exc}', file=original_stderr, flush=True)
-            return 1
-    return _run(args, parser)
+    results = None
+    try:
+        if args.run_results is not None:
+            results = RunResults(args.run_results)
+        options = {'run_results': results} if results is not None else {}
+        if args.text or args.fixtures:
+            original_stderr = sys.stderr
+            try:
+                with RunTranscript() as transcript:
+                    print(f'Run log: {transcript.path}', flush=True)
+                    code = _run(args, parser, run_id=transcript.run_id, **options)
+            except RunLogError as exc:
+                print(f'Composer failed: {exc}', file=original_stderr, flush=True)
+                code = 1
+        else:
+            code = _run(args, parser, **options)
+        if results is not None:
+            results.finish('passed' if code == 0 else 'failed')
+        return code
+    except KeyboardInterrupt:
+        if results is not None:
+            results.finish('interrupted')
+        raise
+    except SystemExit as exc:
+        if results is not None:
+            results.finish('passed' if exc.code in (None, 0) else 'failed')
+        raise
+    except OSError:
+        print('Composer failed: could not write run results checkpoint.', file=sys.stderr, flush=True)
+        return 1
 
 
-def _run(args, parser, *, run_id=None) -> int:
+def _run(args, parser, *, run_id=None, run_results=None) -> int:
     try:
         load_environment()
         with ExitStack() as resources:
@@ -380,7 +427,7 @@ def _run(args, parser, *, run_id=None) -> int:
                     return compose_indexes(
                         indexes, None, args.output_dir or Path('output/fixtures'), args.limit,
                         client=client, model=model, categories=categories, output_mode='txt', fixtures=fixtures, decision_log=decision_log,
-                        refresh_locations=args.refresh_locations,
+                        refresh_locations=args.refresh_locations, run_results=run_results,
                     )
                 with sync_playwright() as playwright:
                     browser = playwright.chromium.launch(headless=True)
@@ -389,7 +436,7 @@ def _run(args, parser, *, run_id=None) -> int:
                             indexes, browser, args.output_dir or Path('output'), args.limit,
                             client=client, model=model, categories=categories, output_mode='txt' if args.text else 'db',
                             connection=connection, decision_log=decision_log,
-                            refresh_locations=args.refresh_locations,
+                            refresh_locations=args.refresh_locations, run_results=run_results,
                         )
                     finally:
                         browser.close()

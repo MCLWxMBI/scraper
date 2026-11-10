@@ -23,6 +23,9 @@ jobs:
       run:
         shell: bash
     steps:
+      - name: Record run start time
+        run: echo "SCRAPER_RUN_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -40,7 +43,10 @@ jobs:
         run: uv run --frozen playwright install --with-deps chromium
 
       - name: Collect production opportunities
+        id: scraper
+        timeout-minutes: 330
         env:
+          SCRAPER_RESULTS_FILE: output/logs/run-results.json
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL }}
           ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
@@ -65,6 +71,15 @@ jobs:
             uv run --frozen python -u main.py
           } 2>&1 | tee output/logs/actions-run.txt
 
+      - name: Upload scraper run to database
+        if: always()
+        timeout-minutes: 5
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SCRAPER_STEP_OUTCOME: ${{ steps.scraper.outcome }}
+          SCRAPER_JOB_STATUS: ${{ job.status }}
+        run: uv run --frozen python -m scraper.upload_run_log
+
       - name: Upload collection logs
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -73,5 +88,6 @@ jobs:
           path: |
             output/logs/actions-run.txt
             output/logs/scraper.jsonl
+            output/logs/run-results.json
           retention-days: 14
           if-no-files-found: ignore
