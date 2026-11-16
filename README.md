@@ -23,9 +23,13 @@ repository-root `.env` using `override=False`, regardless of the working
 directory. Supplied environment variables take precedence. A missing or blank
 `DATABASE_URL` is an error; connections do not fall back to individual `PG*`
 variables. `.env` is ignored by Git and credentials are not printed.
-Shared database connections retry connection errors twice after the initial
-attempt, waiting 1 then 2 seconds. Each attempt has a 10-second connection timeout.
-This applies to collection, setup and run-log uploads; SQL writes are not retried.
+Database connection failures retry twice after the initial attempt, waiting
+1 then 2 seconds. Each new connection has a 10-second timeout. If an established
+connection drops, the shared handle reconnects and repeats the failed read or
+complete opportunity/history, setup, or run-log transaction. Article saves reuse
+the existing Claude result. Query/constraint/permission errors are not connection
+failures and are not retried. Caller-owned outer transactions are never silently
+discarded and replayed.
 
 Local collection uses `ANTHROPIC_API_KEY`. GitHub Actions uses Anthropic OIDC
 instead: `create_claude_client()` selects federation when any of its four
@@ -755,9 +759,21 @@ The database must already have the current `sql/schema.sql` and seed applied.
 
 Collection checkpoints source results and saved titles locally; a separate
 `if: always()` workflow step uploads the final summary to `public.scraper_runs`.
-This step uses its own database connection and retries connection establishment.
-It inserts only the six-column table's run fields; it does not require GitHub IDs.
-Insert/commit failures are not retried, to avoid duplicate rows. Missing/partial
+This step uses its own database connection and reconnects on connection failures.
+It reserves one primary key and reuses it when retrying its transaction, including
+an uncertain commit, so a reconnect cannot insert duplicate rows. The table
+retains its six columns and does not require GitHub IDs. Missing/partial
 checkpoints retain a failed/interrupted run summary. The JSON checkpoint is also
 included in the log artifact. See [logs_plan.md](logs_plan.md) for the table and
 JSON formats, deployment prerequisite, and failure behavior.
+
+To verify recovery from dropped PostgreSQL connections:
+
+```bash
+DATABASE_RECONNECT_POSTGRES_TESTS=1 uv run python -m unittest tests.test_database_reconnect_postgres
+```
+
+This opt-in test creates and removes an isolated database on the local Compose
+service. It terminates only its own test connections, checks history and save
+recovery, and simulates a lost log-commit acknowledgement. It makes no Claude or
+website calls and does not load a potentially production DATABASE_URL.

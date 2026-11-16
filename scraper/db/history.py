@@ -6,7 +6,7 @@ from collections.abc import Iterable
 
 import psycopg
 
-from scraper.db.connection import DatabaseError
+from scraper.db.connection import DatabaseError, read_rows
 
 HISTORY_BATCH_SIZE = 500
 
@@ -24,7 +24,7 @@ class ArticleHistory:
 
 def check_history_table(connection: psycopg.Connection) -> None:
     try:
-        connection.execute('SELECT source_url, title, hash, deleted, upload_date, source_index_id FROM public.article_history LIMIT 0')
+        read_rows(connection, 'SELECT source_url, title, hash, deleted, upload_date, source_index_id FROM public.article_history LIMIT 0')
     except psycopg.errors.UndefinedTable as exc:
         state = f' (SQLSTATE {exc.sqlstate})' if exc.sqlstate else ''
         raise HistoryError(
@@ -80,10 +80,10 @@ def load_history(connection: psycopg.Connection, urls: Iterable[str]) -> dict[st
     history = {}
     try:
         for start in range(0, len(keys), HISTORY_BATCH_SIZE):
-            rows = connection.execute('''
+            rows = read_rows(connection, '''
                 SELECT source_url, hash, deleted, upload_date, source_index_id FROM public.article_history
                 WHERE source_url = ANY(%s)
-            ''', (keys[start:start + HISTORY_BATCH_SIZE],)).fetchall()
+            ''', (keys[start:start + HISTORY_BATCH_SIZE],))
             history.update((url, ArticleHistory(digest, deleted, upload_date, index_id))
                            for url, digest, deleted, upload_date, index_id in rows)
     except psycopg.errors.UndefinedTable as exc:

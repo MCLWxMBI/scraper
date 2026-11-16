@@ -2,12 +2,12 @@
 
 import psycopg
 
-from scraper.db.connection import DatabaseError
+from scraper.db.connection import DatabaseError, read_rows
 
 
 def load_categories(connection: psycopg.Connection) -> tuple[str, ...]:
     try:
-        rows = connection.execute('SELECT name FROM public.categories ORDER BY id').fetchall()
+        rows = read_rows(connection, 'SELECT name FROM public.categories ORDER BY id')
     except psycopg.Error:
         raise DatabaseError('Could not load categories from public.categories; check schema and SELECT permissions.') from None
     if not rows:

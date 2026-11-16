@@ -8,7 +8,7 @@ from psycopg.types.json import Jsonb
 
 from scraper.models import Opportunity
 from scraper.identity import canonical_source_url
-from scraper.db.connection import DatabaseError
+from scraper.db.connection import DatabaseError, is_connection_error, read_rows, run_database_operation
 
 
 class OpportunityStorageError(RuntimeError):
@@ -60,11 +60,12 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
     parameters.update(content_hash=content_hash, upload_date=stored_date,
                       source_index_id=source_index_id,
                       location_lookup_failed=opportunity.location_lookup_failed)
-    try:
-        with conn.transaction():
+
+    def persist(active):
+        with active.transaction():
             # This upsert acquires the same identity-row lock as the deletion
             # trigger. Never resurrect a tombstone, including after a Claude call.
-            tracked = conn.execute("""
+            tracked = active.execute("""
                 INSERT INTO public.article_history (source_url, title, hash, upload_date, source_index_id)
                 VALUES (%(source_url)s, %(title)s, %(content_hash)s, %(upload_date)s, %(source_index_id)s)
                 ON CONFLICT (source_url) DO UPDATE SET
@@ -76,7 +77,7 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
             """, parameters).fetchone()
             if tracked is None:
                 raise ArticleDeletedError('Article was deleted; refusing to recreate its opportunity.')
-            saved = conn.execute("""
+            saved = active.execute("""
                 INSERT INTO public.opportunities (
                     id, title, full_text, source_url, website_id, source_org, jurisdiction,
                     start_date, submission_deadline, submission_deadline_precision, category, summary, location
@@ -105,6 +106,8 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
                 raise OpportunityStorageError(
                     f'Slug collision for {opportunity.id!r}: stored source URL differs.'
                 )
+    try:
+        run_database_operation(conn, persist)
     except psycopg.Error as exc:
         state = f' (SQLSTATE {exc.sqlstate})' if exc.sqlstate else ''
         raise OpportunityStorageError(f'Opportunity database write failed{state}.') from None
@@ -112,10 +115,13 @@ def save_opportunity(conn: psycopg.Connection, opportunity: Opportunity, *, cont
 
 def check_opportunity_table(connection: psycopg.Connection) -> None:
     try:
-        connection.execute('''
+        read_rows(connection, '''
             SELECT id, title, full_text, source_url, website_id, source_org, jurisdiction,
                    start_date, submission_deadline, submission_deadline_precision, category, summary, location
             FROM public.opportunities LIMIT 0
         ''')
-    except psycopg.Error:
+    except psycopg.Error as exc:
+        # Setup must be able to replay its whole transaction after a disconnect.
+        if is_connection_error(exc):
+            raise
         raise DatabaseError('Opportunity table is unavailable; check the current sql/schema.sql, development database setup and permissions.') from None

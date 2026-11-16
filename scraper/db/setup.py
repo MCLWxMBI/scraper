@@ -9,7 +9,7 @@ import psycopg
 from psycopg import sql
 
 from scraper.config import ConfigurationError, SQL_DIR, load_environment
-from scraper.db.connection import connect_database
+from scraper.db.connection import connect_database, run_database_operation
 from scraper.db.opportunities import check_opportunity_table
 
 
@@ -165,7 +165,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         load_environment()
         with connect_database() as conn:
-            extra = seed_database(conn)
+            def setup(active):
+                with active.transaction():
+                    return seed_database(active)
+            extra = run_database_operation(conn, setup)
     except (SetupError, ConfigurationError) as exc:
         print(f'Database setup failed: {exc}', file=sys.stderr)
         return 1

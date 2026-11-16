@@ -11,7 +11,7 @@ import psycopg
 from psycopg.types.json import Jsonb
 
 from scraper.config import ConfigurationError, load_environment
-from scraper.db.connection import connect_database
+from scraper.db.connection import connect_database, read_rows, run_database_operation
 from scraper.run_results import RunResults, utc_now
 
 
@@ -51,17 +51,23 @@ def read_results(path: Path, outcome: str, job_status: str) -> dict:
 
 
 def upload_results(data: dict) -> None:
-    # Retry connection establishment only. Once INSERT/COMMIT starts, a lost
-    # connection can leave the outcome unknown; retrying could duplicate the row.
     connection = connect_database()
     with connection:
-        connection.execute("SET LOCAL statement_timeout = '20s'")
-        connection.execute('''
-            INSERT INTO public.scraper_runs (
-                started_at, finished_at, status, sources, extracted_opportunities
-            ) VALUES (%s, %s, %s, %s, %s)
-        ''', (data['started_at'], data['finished_at'], data['status'],
-              Jsonb(data['sources']), Jsonb(data['extracted_opportunities'])))
+        # Reserve one primary key for all retries, including an uncertain commit.
+        # A failed reservation may leave a sequence gap, but never a duplicate row.
+        identifier = read_rows(connection, "SELECT nextval(pg_get_serial_sequence('public.scraper_runs', 'id'))")[0][0]
+
+        def persist(active):
+            with active.transaction():
+                active.execute("SET LOCAL statement_timeout = '20s'")
+                active.execute('''
+                    INSERT INTO public.scraper_runs (
+                        id, started_at, finished_at, status, sources, extracted_opportunities
+                    ) VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO NOTHING
+                ''', (identifier, data['started_at'], data['finished_at'], data['status'],
+                      Jsonb(data['sources']), Jsonb(data['extracted_opportunities'])))
+        run_database_operation(connection, persist)
 
 
 def main(argv=None) -> int:
