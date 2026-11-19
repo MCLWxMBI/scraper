@@ -86,7 +86,7 @@ def check_existing_articles(conn: psycopg.Connection) -> None:
         """).fetchone()[0]
     if untracked:
         raise SetupError(
-            'Existing opportunities lack successful article history. '
+            'Existing opportunities lack processed article history. '
             'For a disposable database, manually run sql/reset_articles.sql before setup. '
             'No existing articles were deleted.'
         )

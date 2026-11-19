@@ -121,7 +121,7 @@ schemas are checked before seeding. Table/row changes roll back on error;
 sequence advancement never moves backward but may leave gaps after rollback.
 Run setup without concurrent writers. Setup adds article history and deletion
 triggers; it does not migrate incompatible opportunity columns. It refuses
-existing opportunities without successful history rather than guessing content
+existing opportunities without processed history rather than guessing content
 hashes or deleting data. Collection never creates tables or reseeds.
 
 ## Commands
@@ -285,7 +285,7 @@ flowchart TD
 | `scraper/db/connection.py` | Connects using DATABASE_URL with a bounded timeout and sanitized diagnostics. |
 | `scraper/db/categories.py` | Loads category names from `public.categories` before Claude startup; empty/unavailable choices stop the run. |
 | `scraper/db/indexes.py` | Retrieves active website IDs, names and URLs in deterministic order and retains IDs through collection. |
-| `scraper/db/history.py` | Batch-reads last successful content hashes and persistent deletion markers; lookup failures stop processing. |
+| `scraper/db/history.py` | Reads processed-content hashes, records missing deadlines, and preserves deletion markers; lookup failures stop processing. |
 | `scraper/db/opportunities.py` | Atomically saves an opportunity and its input hash, rejecting deleted identities and cross-URL slug collisions. |
 | `scraper/db/setup.py` | Applies schema, checks index-table compatibility, seeds and verifies records, and advances the ID sequence. |
 | `scripts/test_history_replay.sh` | Resolves the project root and invokes the discovery-only historical replay runner. |
@@ -382,18 +382,20 @@ The standalone `python -m scraper discover` command remains raw URL discovery
 without article extraction, history filtering or Claude calls.
 
 History uses the canonical `source_url` as its primary key, a descriptive
-`title`, a last-successful content `hash`, `deleted BOOLEAN DEFAULT FALSE`, a required
+`title`, a last-processed content `hash`, `deleted BOOLEAN DEFAULT FALSE`, a required
 `upload_date DATE`, and nullable `source_index_id` referencing `website_indexes.id`.
 The website ID is retained from the initial index query, not inferred from an
 article URL or looked up separately for each article.
 
-`upload_date` is captured immediately before the first successfully saved
-structuring attempt, using the calendar date in `Australia/Sydney` (AEST/AEDT).
+`upload_date` is captured immediately before the first persisted
+structuring attempt (a saved opportunity or a validated missing-deadline result), using the calendar date in `Australia/Sydney` (AEST/AEDT).
 It is a date-only `YYYY-MM-DD`, with no timezone attached; do not convert the
-Sydney date through UTC. Both fields are saved with the real title and successful
-content hash in the same transaction as the opportunity. Discovery stays read-only:
-there are no provisional rows, placeholder titles or null-hash discovery records.
-Failed structuring or persistence creates no new history. Updates retain the first
+Sydney date through UTC. Both fields are saved with the real title and processed
+content hash. A valid opportunity and its hash commit together; valid Claude
+output with no deadline commits only its history row in database mode. Discovery
+stays read-only: there are no provisional rows, placeholder titles or null-hash
+discovery records. Other invalid output, API failures and failed writes do not
+advance history. Updates retain the first
 upload date and website index ID; an unknown index ID can be filled when later known.
 The date has a Sydney-date database default for direct/trigger insertion paths,
 so `upload_date=NULL` is rejected. Deletion preserves both fields; deleting an index
@@ -404,8 +406,18 @@ This compares extracted text, not raw HTML, listing positions, or titles alone.
 Changes to navigation retained by the existing extractor can also change a hash.
 
 After validation, the opportunity and its hash commit in one transaction.
-Article extraction, metadata validation, Claude API and storage failures leave
-the prior successful hash untouched and remain eligible on the next run. `SKIPPED (unchanged)` and
+Valid Claude output with no deadline raises a distinct missing-deadline result.
+In database mode its input hash is stored in the existing history row without
+creating or updating an opportunity. Subsequent matching content skips Claude;
+changed content or `--refresh-locations` allows another attempt. Deleted markers
+are never cleared, and existing upload dates and source index metadata are
+preserved. An existing opportunity remains as previously saved. Because the
+existing hash is reused, a later unchanged skip cannot distinguish a prior
+successful opportunity from a prior missing-deadline result. Text and fixture
+runs do not write this history.
+
+Article extraction, other metadata validation, Claude API and storage failures
+leave the prior processed hash untouched and remain eligible on the next run. `SKIPPED (unchanged)` and
 `SKIPPED (deleted)` are reported separately from source PASS/FAIL outcomes.
 History lookup failures stop collection before further Claude processing.
 
@@ -440,7 +452,7 @@ It targets the Compose PostgreSQL service directly and ignores `DATABASE_URL`.
 
 Run `uv run python -m scraper setup-db` manually to install the table/triggers
 before live collection. Initial setup refuses unexpected existing opportunities
-without successful history.
+without processed history.
 
 To explicitly clear articles in a chosen database, stop collection and run:
 
@@ -508,7 +520,7 @@ relative to the project root. Override it with `main.py --log-file PATH`.
 The JSONL events stay out of terminal PASS/FAIL output and JSON-array `.txt`
 files. Each event includes its run, UTC timestamp, index, original/canonical
 source URL and decision: `new`, `changed`, `unchanged`, `deleted`, `failed` or
-`saved`, `refresh`, `structured` or `location`. Hash comparisons include previous/current hashes where available.
+`saved`, `refresh`, `structured`, `missing_deadline` or `location`. Hash comparisons include previous/current hashes where available.
 Location events include outcomes, provider/dataset identifiers and up to 400 characters
 of supporting source evidence. The JSONL log excludes exception details, full
 article bodies and credentials. A
@@ -700,7 +712,7 @@ omit absent summary/location.
 `scraper.db.opportunities`. The writer uses a savepoint inside an existing
 transaction; its caller owns the connection and outer commit. Composer uses an
 autocommit connection so each record's transaction commits independently.
-Live discovery now compares extracted-content hashes with successful history.
+Live discovery compares extracted-content hashes with processed history.
 Invalid results and failures remain retryable. Fixture replay bypasses history.
 
 ## Validation

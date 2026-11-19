@@ -144,6 +144,15 @@ class InvalidListingError(RuntimeError):
         self.operational_failure = operational_failure
 
 
+class MissingDeadlineError(InvalidListingError):
+    """Otherwise valid Claude output has no participation deadline."""
+
+    def __init__(self, title, upload_date):
+        super().__init__('No deadline timestamp returned', attempts=1)
+        self.title = title
+        self.upload_date = upload_date
+
+
 def article_slug(url: str) -> str:
     """Derive identity from an article URL, never from generated display content."""
     parts = urlsplit(canonical_source_url(url))
@@ -221,15 +230,19 @@ def structure_listing(
         fields = response.parsed_output
         if not isinstance(fields, StructuredArticle):
             raise RuntimeError('Claude returned no parsed opportunity')
+        # Only cache an absent deadline after every other returned field validates.
+        fields = StructuredArticle.model_validate(fields.model_dump())
         if len(fields.category) != 1 or fields.category[0] not in categories:
             raise ValueError('Claude must select exactly one category from availableCategories')
         if fields.submissionDeadline is None:
-            raise ValueError('No deadline timestamp returned')
+            raise MissingDeadlineError(fields.title, upload_date)
         opportunity = Opportunity.model_validate({
             **fields.model_dump(exclude={'geographicScope'}),
             'id': identifier,
             'sourceUrl': source_url,
         })
+    except MissingDeadlineError:
+        raise
     except Exception as exc:
         raise InvalidListingError(
             f'Invalid after 1 Claude attempt: {_reason(exc)}', attempts=1,

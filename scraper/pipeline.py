@@ -3,7 +3,7 @@
 Run ``uv run python main.py`` or use ``--index NAME --limit 1`` for a small
 development run. Use --text for JSON-array .txt output plus raw article text, or --fixtures for
 saved historical HTML/PDF input and text output. Live discovery skips deleted
-URLs and successful unchanged article content before Claude calls.
+URLs and unchanged processed article content before Claude calls.
 Local ANTHROPIC_API_KEY and CLAUDE_MODEL can be supplied in the project's .env
 file; GitHub Actions can use Anthropic OIDC instead of an API key.
 """
@@ -32,7 +32,7 @@ from scraper.fixtures import FixtureCollection
 from scraper.db.connection import DatabaseError, connect_database
 from scraper.db.indexes import load_active_indexes
 from scraper.db.categories import load_categories
-from scraper.db.history import HistoryError, check_history_table
+from scraper.db.history import HistoryError, check_history_table, record_missing_deadline
 from scraper.db.opportunities import (
     OpportunityStorageError, check_opportunity_table, save_opportunity,
 )
@@ -40,6 +40,7 @@ from scraper.locations import LocationResolver
 from scraper.models import WebsiteIndex
 from scraper.structuring import (
     InvalidListingError,
+    MissingDeadlineError,
     article_slug,
     canonical_source_url,
     structure_listing,
@@ -231,6 +232,34 @@ def compose_indexes(
                             location_resolver=resolver,
                             location_diagnostic=(lambda **fields: decision(source.url, 'location', **fields))
                                                 if decision else None)
+                    except MissingDeadlineError as exc:
+                        invalid += 1
+                        index_invalid += 1
+                        remembered = False
+                        if output_mode == 'db':
+                            try:
+                                remembered = record_missing_deadline(
+                                    connection, source_url, exc.title, article.hash,
+                                    exc.upload_date, index.id)
+                                remembered = remembered and (
+                                    connection.info.transaction_status == psycopg.pq.TransactionStatus.IDLE)
+                            except HistoryError as error:
+                                index_failed = True
+                                source_failed(source.url, str(error), phase='history_save')
+                                print(f'{name}: DATABASE FAILED: {identifier}: {error}',
+                                      file=sys.stderr, flush=True)
+                                continue
+                        if decision is not None:
+                            decision(source.url, 'missing_deadline', current_hash=article.hash,
+                                     history_advanced=remembered, upload_date=exc.upload_date.isoformat(),
+                                     source_index_id=index.id, index_catalog='fixtures' if fixtures else 'database')
+                        source_failed(source.url, str(exc), phase='missing_deadline',
+                                      logged=decision is not None, invalid_result=True)
+                        if output_mode == 'db':
+                            suffix = '; unchanged content will skip Claude' if remembered else ''
+                            print(f'{name}: MISSING DEADLINE: {source.url}: {exc}{suffix}',
+                                  file=sys.stderr, flush=True)
+                        continue
                     except InvalidListingError as exc:
                         invalid += 1
                         index_invalid += 1
